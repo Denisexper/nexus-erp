@@ -33,27 +33,25 @@ const controller = new ProductController({
 const router = Router();
 
 const PRODUCT_AUDIT_FIELDS = [
-    'subCategory', 'category', 'unit', 'purchaseUnit', 'saleUnit', 'code', 'sku',
+    'subCategory', 'category', 'purchaseUnit', 'saleUnit', 'internalCode', 'originalCode', 'sku',
     'name', 'size', 'dimensions', 'description', 'presentation', 'isActive'
 ];
 
 const productAudit = {
     entityModel: ProductModel,
-    snapshot: { fields: PRODUCT_AUDIT_FIELDS, populate: ['subCategory', 'category', 'unit', 'purchaseUnit', 'saleUnit'] },
+    snapshot: { fields: PRODUCT_AUDIT_FIELDS, populate: ['subCategory', 'category', 'purchaseUnit', 'saleUnit'] },
     compareFields: PRODUCT_AUDIT_FIELDS
 };
 
-// Productos, sin sección propia en el ERS v0.5 (llega solo hasta el
-// capítulo 6.5). Construido a partir del diagrama de BD de Denis + las
-// reglas generales RN-013 (código único) y RN-014 (no eliminar productos
-// con movimientos históricos, satisfecha gratis por el patrón isActive sin
-// borrado físico que ya usa toda la app). FK a `sub-categories` + FK
-// `category` denormalizada (ERS v0.6): se recalcula sola en el caso de uso
-// a partir de subCategory.category, el cliente no puede setearla directo,
-// así nunca queda desincronizada. + 3 FKs independientes a `units` (base,
-// compra, venta), todas editables (son atributos del producto, no
-// relaciones de identidad). `uuid` se autogenera en el caso de uso, nunca
-// lo manda el cliente.
+// Módulo de Gestión de Productos, ERS v0.7 cap. 6.7. FK a `sub-categories`
+// + FK `category` denormalizada: se recalcula sola en el caso de uso a
+// partir de subCategory.category, el cliente no puede setearla directo,
+// así nunca queda desincronizada (RN-PRO-003). 2 FKs independientes a
+// `units`: purchaseUnit (debe tener type=purchase, RN-PRO-008) y saleUnit
+// (debe tener type=sale, RN-PRO-009). `uuid` se autogenera en el caso de
+// uso, nunca lo manda el cliente. `internalCode` único y obligatorio
+// (RN-PRO-005), `sku` único cuando se proporciona (RN-PRO-004),
+// `originalCode` libre sin restricción de unicidad.
 const routes = [
     {
         method: 'GET',

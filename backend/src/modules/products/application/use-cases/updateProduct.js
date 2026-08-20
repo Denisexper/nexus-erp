@@ -2,7 +2,10 @@ import {
   ProductNotFoundError,
   SubCategoryNotFoundForProductError,
   UnitNotFoundForProductError,
-  DuplicateProductCodeError,
+  InvalidPurchaseUnitTypeError,
+  InvalidSaleUnitTypeError,
+  DuplicateInternalCodeError,
+  DuplicateSkuError,
 } from '../../domain/errors.js';
 
 export class UpdateProductUseCase {
@@ -16,9 +19,14 @@ export class UpdateProductUseCase {
     const product = await this.productRepository.findById(id);
     if (!product) throw new ProductNotFoundError();
 
-    if (changes.code && changes.code !== product.code) {
-      const codeTaken = await this.productRepository.findByCode(changes.code);
-      if (codeTaken) throw new DuplicateProductCodeError();
+    if (changes.internalCode && changes.internalCode !== product.internalCode) {
+      const internalCodeTaken = await this.productRepository.findByInternalCode(changes.internalCode);
+      if (internalCodeTaken) throw new DuplicateInternalCodeError();
+    }
+
+    if (changes.sku && changes.sku !== product.sku) {
+      const skuTaken = await this.productRepository.findBySku(changes.sku);
+      if (skuTaken) throw new DuplicateSkuError();
     }
 
     if (changes.subCategory) {
@@ -29,10 +37,17 @@ export class UpdateProductUseCase {
       changes.category = subCategory.category?._id ?? subCategory.category;
     }
 
-    const unitFields = ['unit', 'purchaseUnit', 'saleUnit'].filter((field) => changes[field]);
-    if (unitFields.length > 0) {
-      const foundUnits = await Promise.all(unitFields.map((field) => this.unitRepository.findById(changes[field])));
-      if (foundUnits.some((found) => !found)) throw new UnitNotFoundForProductError();
+    // RN-PRO-008/009: purchase_unit debe ser type=purchase y sale_unit type=sale.
+    if (changes.purchaseUnit) {
+      const purchaseUnit = await this.unitRepository.findById(changes.purchaseUnit);
+      if (!purchaseUnit) throw new UnitNotFoundForProductError();
+      if (purchaseUnit.type !== 'purchase') throw new InvalidPurchaseUnitTypeError();
+    }
+
+    if (changes.saleUnit) {
+      const saleUnit = await this.unitRepository.findById(changes.saleUnit);
+      if (!saleUnit) throw new UnitNotFoundForProductError();
+      if (saleUnit.type !== 'sale') throw new InvalidSaleUnitTypeError();
     }
 
     return this.productRepository.update(id, changes);

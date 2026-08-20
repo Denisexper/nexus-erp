@@ -3,11 +3,11 @@ export class Product {
     id,
     subCategory,
     category,
-    unit,
     purchaseUnit,
     saleUnit,
     uuid,
-    code,
+    internalCode,
+    originalCode,
     sku,
     name,
     size,
@@ -21,11 +21,11 @@ export class Product {
     this.id = id;
     this.subCategory = subCategory; // id de SubCategory, o subdocumento poblado
     this.category = category; // id de Category, denormalizado desde subCategory.category (ERS v0.6)
-    this.unit = unit; // id de Unit (unidad base/stock), o subdocumento poblado
-    this.purchaseUnit = purchaseUnit; // id de Unit (unidad de compra), o subdocumento poblado
-    this.saleUnit = saleUnit; // id de Unit (unidad de venta), o subdocumento poblado
+    this.purchaseUnit = purchaseUnit; // id de Unit con type=purchase, o subdocumento poblado
+    this.saleUnit = saleUnit; // id de Unit con type=sale, o subdocumento poblado
     this.uuid = uuid;
-    this.code = code;
+    this.internalCode = internalCode;
+    this.originalCode = originalCode;
     this.sku = sku;
     this.name = name;
     this.size = size;

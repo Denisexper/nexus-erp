@@ -154,7 +154,7 @@ function Products() {
               <input
                 type="text"
                 class="input-field"
-                placeholder="Buscar por nombre, código o SKU..."
+                placeholder="Buscar por nombre, código interno, código original o SKU..."
                 value={searchInput()}
                 onInput={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && applyFilters()}
@@ -223,7 +223,7 @@ function Products() {
                       Sub-categoría
                     </th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Unidades (base/compra/venta)
+                      Unidades (compra/venta)
                     </th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
@@ -247,7 +247,7 @@ function Products() {
                             {product.name}
                           </p>
                           <p class="text-xs text-gray-500 dark:text-gray-400">
-                            {product.code}
+                            {product.internalCode}
                             {product.sku ? ` • ${product.sku}` : ""}
                           </p>
                         </td>
@@ -255,7 +255,6 @@ function Products() {
                           {product.subCategory?.name || "-"}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                          {product.unit?.name || "-"} /{" "}
                           {product.purchaseUnit?.name || "-"} /{" "}
                           {product.saleUnit?.name || "-"}
                         </td>
