@@ -7,8 +7,12 @@ export class ProductRepository {
     throw new Error('ProductRepository.findById no implementado');
   }
 
-  async findByCode(_code) {
-    throw new Error('ProductRepository.findByCode no implementado');
+  async findByInternalCode(_internalCode) {
+    throw new Error('ProductRepository.findByInternalCode no implementado');
+  }
+
+  async findBySku(_sku) {
+    throw new Error('ProductRepository.findBySku no implementado');
   }
 
   async create(_product) {

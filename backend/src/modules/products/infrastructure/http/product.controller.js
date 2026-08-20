@@ -3,7 +3,10 @@ import {
   ProductNotFoundError,
   SubCategoryNotFoundForProductError,
   UnitNotFoundForProductError,
-  DuplicateProductCodeError,
+  InvalidPurchaseUnitTypeError,
+  InvalidSaleUnitTypeError,
+  DuplicateInternalCodeError,
+  DuplicateSkuError,
 } from '../../domain/errors.js';
 
 const toProductDTO = (product) => ({
@@ -11,11 +14,11 @@ const toProductDTO = (product) => ({
   id: product.id,
   subCategory: product.subCategory,
   category: product.category,
-  unit: product.unit,
   purchaseUnit: product.purchaseUnit,
   saleUnit: product.saleUnit,
   uuid: product.uuid,
-  code: product.code,
+  internalCode: product.internalCode,
+  originalCode: product.originalCode,
   sku: product.sku,
   name: product.name,
   size: product.size,
@@ -35,10 +38,10 @@ const pickDefinedFields = (body, keys) =>
 
 const PRODUCT_FIELDS = [
   'subCategory',
-  'unit',
   'purchaseUnit',
   'saleUnit',
-  'code',
+  'internalCode',
+  'originalCode',
   'sku',
   'name',
   'size',
@@ -62,7 +65,10 @@ export class ProductController {
     if (error instanceof ProductNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof SubCategoryNotFoundForProductError) return res.status(400).json({ msj: error.message });
     if (error instanceof UnitNotFoundForProductError) return res.status(400).json({ msj: error.message });
-    if (error instanceof DuplicateProductCodeError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InvalidPurchaseUnitTypeError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InvalidSaleUnitTypeError) return res.status(400).json({ msj: error.message });
+    if (error instanceof DuplicateInternalCodeError) return res.status(400).json({ msj: error.message });
+    if (error instanceof DuplicateSkuError) return res.status(400).json({ msj: error.message });
     return res.status(500).json({ msj: fallbackMsj, error: error.message });
   }
 

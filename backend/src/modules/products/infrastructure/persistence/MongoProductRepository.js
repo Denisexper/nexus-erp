@@ -10,11 +10,11 @@ const toDomain = (doc) =>
               id: doc._id.toString(),
               subCategory: doc.subCategory,
               category: doc.category,
-              unit: doc.unit,
               purchaseUnit: doc.purchaseUnit,
               saleUnit: doc.saleUnit,
               uuid: doc.uuid,
-              code: doc.code,
+              internalCode: doc.internalCode,
+              originalCode: doc.originalCode,
               sku: doc.sku,
               name: doc.name,
               size: doc.size,
@@ -36,7 +36,6 @@ const assertValidId = (id) => {
 const POPULATE = [
     { path: 'subCategory', select: 'name category' },
     { path: 'category', select: 'name' },
-    { path: 'unit', select: 'name type' },
     { path: 'purchaseUnit', select: 'name type' },
     { path: 'saleUnit', select: 'name type' },
 ];
@@ -48,7 +47,8 @@ export class MongoProductRepository extends ProductRepository {
         if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: 'i' } },
-                { code: { $regex: search, $options: 'i' } },
+                { internalCode: { $regex: search, $options: 'i' } },
+                { originalCode: { $regex: search, $options: 'i' } },
                 { sku: { $regex: search, $options: 'i' } },
             ];
         }
@@ -75,8 +75,13 @@ export class MongoProductRepository extends ProductRepository {
         return toDomain(doc);
     }
 
-    async findByCode(code) {
-        const doc = await ProductModel.findOne({ code });
+    async findByInternalCode(internalCode) {
+        const doc = await ProductModel.findOne({ internalCode });
+        return toDomain(doc);
+    }
+
+    async findBySku(sku) {
+        const doc = await ProductModel.findOne({ sku });
         return toDomain(doc);
     }
 
@@ -84,11 +89,11 @@ export class MongoProductRepository extends ProductRepository {
         const doc = await ProductModel.create({
             subCategory: product.subCategory,
             category: product.category,
-            unit: product.unit,
             purchaseUnit: product.purchaseUnit,
             saleUnit: product.saleUnit,
             uuid: product.uuid,
-            code: product.code,
+            internalCode: product.internalCode,
+            originalCode: product.originalCode,
             sku: product.sku,
             name: product.name,
             size: product.size,

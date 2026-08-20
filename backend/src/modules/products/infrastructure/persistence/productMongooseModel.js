@@ -11,11 +11,6 @@ const productSchema = new Schema({
         ref: 'Category',
         required: [true, 'La categoría es obligatoria']
     },
-    unit: {
-        type: Schema.Types.ObjectId,
-        ref: 'Unit',
-        required: [true, 'La unidad base es obligatoria']
-    },
     purchaseUnit: {
         type: Schema.Types.ObjectId,
         ref: 'Unit',
@@ -31,15 +26,21 @@ const productSchema = new Schema({
         required: true,
         unique: true
     },
-    code: {
+    internalCode: {
         type: String,
-        required: [true, 'El código del producto es obligatorio'],
+        required: [true, 'El código interno del producto es obligatorio'],
         unique: true,
+        trim: true
+    },
+    originalCode: {
+        type: String,
         trim: true
     },
     sku: {
         type: String,
-        trim: true
+        trim: true,
+        unique: true,
+        sparse: true
     },
     name: {
         type: String,
