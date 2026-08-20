@@ -3,10 +3,10 @@ import { productsApi } from "../../services/products.api";
 
 const FIELD_LABELS = {
   subCategory: "Sub-categoría",
-  unit: "Unidad base",
   purchaseUnit: "Unidad de compra",
   saleUnit: "Unidad de venta",
-  code: "Código",
+  internalCode: "Código interno",
+  originalCode: "Código original",
   sku: "SKU",
   name: "Nombre",
   size: "Tamaño",

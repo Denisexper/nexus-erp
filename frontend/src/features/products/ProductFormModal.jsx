@@ -4,8 +4,9 @@ import { subCategoriesApi } from "../../services/subCategories.api";
 import { unitsApi } from "../../services/units.api";
 import { showToast } from "../../utils/toast";
 
-// subCategory/unit llegan poblados desde el backend (subdocumento Mongoose)
-// o como id crudo; aquí normalizamos a un id de string.
+// subCategory/purchaseUnit/saleUnit llegan poblados desde el backend
+// (subdocumento Mongoose) o como id crudo; aquí normalizamos a un id de
+// string.
 const extractId = (value) => {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -16,10 +17,10 @@ function ProductFormModal(props) {
   const isEditing = () => !!props.product;
 
   const [subCategory, setSubCategory] = createSignal("");
-  const [unit, setUnit] = createSignal("");
   const [purchaseUnit, setPurchaseUnit] = createSignal("");
   const [saleUnit, setSaleUnit] = createSignal("");
-  const [code, setCode] = createSignal("");
+  const [internalCode, setInternalCode] = createSignal("");
+  const [originalCode, setOriginalCode] = createSignal("");
   const [sku, setSku] = createSignal("");
   const [name, setName] = createSignal("");
   const [size, setSize] = createSignal("");
@@ -37,15 +38,18 @@ function ProductFormModal(props) {
   const [units] = createResource(() =>
     unitsApi.getAll({ isActive: true, limit: 1000 }),
   );
+  // RN-PRO-008/009: purchase_unit debe ser type=purchase, sale_unit type=sale.
+  const purchaseUnits = () => units()?.data?.filter((u) => u.type === "purchase") || [];
+  const saleUnits = () => units()?.data?.filter((u) => u.type === "sale") || [];
 
   // Precargar el formulario al abrir en modo edición (o limpiarlo en modo creación)
   createEffect(() => {
     const product = props.product;
     setSubCategory(extractId(product?.subCategory));
-    setUnit(extractId(product?.unit));
     setPurchaseUnit(extractId(product?.purchaseUnit));
     setSaleUnit(extractId(product?.saleUnit));
-    setCode(product?.code || "");
+    setInternalCode(product?.internalCode || "");
+    setOriginalCode(product?.originalCode || "");
     setSku(product?.sku || "");
     setName(product?.name || "");
     setSize(product?.size || "");
@@ -62,10 +66,10 @@ function ProductFormModal(props) {
 
     const payload = {
       subCategory: subCategory(),
-      unit: unit(),
       purchaseUnit: purchaseUnit(),
       saleUnit: saleUnit(),
-      code: code(),
+      internalCode: internalCode(),
+      originalCode: originalCode(),
       sku: sku(),
       name: name(),
       size: size(),
@@ -107,17 +111,17 @@ function ProductFormModal(props) {
         </div>
 
         <form onSubmit={handleSubmit} class="p-6 space-y-4 overflow-y-auto">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Código *
+                Código interno *
               </label>
               <input
                 type="text"
                 required
                 class="input-field w-full"
-                value={code()}
-                onInput={(e) => setCode(e.target.value)}
+                value={internalCode()}
+                onInput={(e) => setInternalCode(e.target.value)}
               />
             </div>
 
@@ -130,6 +134,18 @@ function ProductFormModal(props) {
                 class="input-field w-full"
                 value={sku()}
                 onInput={(e) => setSku(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Código original
+              </label>
+              <input
+                type="text"
+                class="input-field w-full"
+                value={originalCode()}
+                onInput={(e) => setOriginalCode(e.target.value)}
               />
             </div>
           </div>
@@ -179,33 +195,7 @@ function ProductFormModal(props) {
             </Show>
           </div>
 
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Unidad base *
-              </label>
-              <Show
-                when={!units.loading}
-                fallback={
-                  <div class="input-field bg-gray-100 dark:bg-gray-800">
-                    Cargando...
-                  </div>
-                }
-              >
-                <select
-                  class="input-field w-full"
-                  required
-                  value={unit()}
-                  onChange={(e) => setUnit(e.target.value)}
-                >
-                  <option value="">Selecciona...</option>
-                  <For each={units()?.data}>
-                    {(u) => <option value={u._id}>{u.name}</option>}
-                  </For>
-                </select>
-              </Show>
-            </div>
-
+          <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Unidad de compra *
@@ -225,7 +215,7 @@ function ProductFormModal(props) {
                   onChange={(e) => setPurchaseUnit(e.target.value)}
                 >
                   <option value="">Selecciona...</option>
-                  <For each={units()?.data}>
+                  <For each={purchaseUnits()}>
                     {(u) => <option value={u._id}>{u.name}</option>}
                   </For>
                 </select>
@@ -251,7 +241,7 @@ function ProductFormModal(props) {
                   onChange={(e) => setSaleUnit(e.target.value)}
                 >
                   <option value="">Selecciona...</option>
-                  <For each={units()?.data}>
+                  <For each={saleUnits()}>
                     {(u) => <option value={u._id}>{u.name}</option>}
                   </For>
                 </select>

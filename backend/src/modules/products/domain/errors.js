@@ -29,8 +29,26 @@ export class UnitNotFoundForProductError extends DomainError {
   }
 }
 
-export class DuplicateProductCodeError extends DomainError {
+export class InvalidPurchaseUnitTypeError extends DomainError {
   constructor() {
-    super('Ya existe un producto con ese código');
+    super('La unidad de compra debe ser una unidad de tipo compra');
+  }
+}
+
+export class InvalidSaleUnitTypeError extends DomainError {
+  constructor() {
+    super('La unidad de venta debe ser una unidad de tipo venta');
+  }
+}
+
+export class DuplicateInternalCodeError extends DomainError {
+  constructor() {
+    super('Ya existe un producto con ese código interno');
+  }
+}
+
+export class DuplicateSkuError extends DomainError {
+  constructor() {
+    super('Ya existe un producto con ese SKU');
   }
 }
