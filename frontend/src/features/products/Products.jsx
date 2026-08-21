@@ -9,6 +9,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import ProductFormModal from "./ProductFormModal";
 import ProductHistoryModal from "./ProductHistoryModal";
+import ProductImagesModal from "./ProductImagesModal";
 
 function Products() {
   const auth = useAuth();
@@ -61,6 +62,9 @@ function Products() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedProduct, setSelectedProduct] = createSignal(null);
 
+  const [showImagesModal, setShowImagesModal] = createSignal(false);
+  const [imagesProduct, setImagesProduct] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -95,6 +99,11 @@ function Products() {
   const openHistory = (product) => {
     setSelectedProduct(product);
     setShowHistoryModal(true);
+  };
+
+  const openImages = (product) => {
+    setImagesProduct(product);
+    setShowImagesModal(true);
   };
 
   const handleSaved = () => {
@@ -231,7 +240,8 @@ function Products() {
                     <Show
                       when={
                         auth.hasPermission("products.update") ||
-                        auth.hasPermission("logs.read")
+                        auth.hasPermission("logs.read") ||
+                        auth.hasPermission("product_images.view")
                       }
                     >
                       <th class="px-6 py-3"></th>
@@ -270,6 +280,14 @@ function Products() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <Show when={auth.hasPermission("product_images.view")}>
+                              <button
+                                onClick={() => openImages(product)}
+                                class="text-xs px-3 py-1.5 rounded-md border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors"
+                              >
+                                Imágenes
+                              </button>
+                            </Show>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(product)}
@@ -338,6 +356,13 @@ function Products() {
           <ProductHistoryModal
             product={selectedProduct()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showImagesModal()}>
+          <ProductImagesModal
+            product={imagesProduct()}
+            onClose={() => setShowImagesModal(false)}
           />
         </Show>
       </Layout>

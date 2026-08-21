@@ -1,4 +1,5 @@
 const API_URL = "http://localhost:4000/api";
+export const SERVER_URL = API_URL.replace(/\/api$/, "");
 
 class HttpClient {
   constructor() {
@@ -36,6 +37,35 @@ class HttpClient {
 
       if (!response.ok) {
         throw new Error(data.msj || "Error en la petición");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("API Error:", error);
+      throw error;
+    }
+  }
+
+  // Para subir archivos (FormData): no fijamos Content-Type, el browser
+  // arma el boundary del multipart solo.
+  async upload(endpoint, formData, options = {}) {
+    const token = this.getToken();
+
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: "POST",
+        body: formData,
+        ...options,
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...options.headers,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.msj || "Error al subir el archivo");
       }
 
       return data;
