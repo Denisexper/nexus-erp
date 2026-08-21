@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import path from "node:path";
 
 import { port } from "#shared/lib/env.js";
 import { mongoConnect } from "#shared/lib/db.js";
@@ -24,6 +25,7 @@ import subCategoriesRoutes, { subCategoryRoutes as subCategoryRoutesMetadata } f
 import suppliersRoutes, { supplierRoutes as supplierRoutesMetadata } from "#modules/suppliers/infrastructure/http/supplier.routes.js";
 import supplierContactsRoutes, { supplierContactRoutes as supplierContactRoutesMetadata } from "#modules/supplier-contacts/infrastructure/http/supplierContact.routes.js";
 import productsRoutes, { productRoutes as productRoutesMetadata } from "#modules/products/infrastructure/http/product.routes.js";
+import productImagesRoutes, { productImageRoutes as productImageRoutesMetadata } from "#modules/product-images/infrastructure/http/productImage.routes.js";
 
 // bootstrap: sincronizar el catálogo de permisos y los roles del sistema
 import { MongoPermissionRepository } from "#modules/permissions/infrastructure/persistence/MongoPermissionRepository.js";
@@ -49,6 +51,9 @@ server.use(
 // Configuramos morgan (ver las peticiones http en la terminal)
 server.use(morgan("dev"));
 
+// Archivos subidos (ej. imágenes de producto), servidos como estáticos
+server.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 // Rate limit global: 100 req / 15 min por IP sobre toda la API
 server.use("/api", globalRateLimiter);
 
@@ -63,7 +68,7 @@ mongoConnect().then(async () => {
 
   await seedGeo();
 
-  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata];
+  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata];
 
   // Auto-descubrir y sincronizar permisos desde la metadata de las rutas
   const syncDiscoveredPermissions = new SyncDiscoveredPermissionsUseCase(new MongoPermissionRepository());
@@ -94,3 +99,4 @@ server.use("/api/sub-categories", subCategoriesRoutes);
 server.use("/api/suppliers", suppliersRoutes);
 server.use("/api/supplier-contacts", supplierContactsRoutes);
 server.use("/api/products", productsRoutes);
+server.use("/api/product-images", productImagesRoutes);
