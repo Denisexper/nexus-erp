@@ -58,4 +58,22 @@ export class MongoProductImageRepository extends ProductImageRepository {
         });
         return toDomain(doc);
     }
+
+    async findCoversByProducts(productIds) {
+        // .aggregate() no castea strings contra el schema como sí hace .find(),
+        // hay que convertir a ObjectId a mano o el $in no encuentra nada.
+        const objectIds = productIds
+            .filter((id) => mongoose.Types.ObjectId.isValid(id))
+            .map((id) => new mongoose.Types.ObjectId(id));
+
+        if (objectIds.length === 0) return [];
+
+        const results = await ProductImageModel.aggregate([
+            { $match: { productId: { $in: objectIds }, isActive: true } },
+            { $sort: { createdAt: 1 } },
+            { $group: { _id: '$productId', path: { $first: '$path' } } },
+        ]);
+
+        return results.map((r) => ({ productId: r._id.toString(), path: r.path }));
+    }
 }
