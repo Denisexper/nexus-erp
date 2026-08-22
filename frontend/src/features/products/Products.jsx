@@ -7,9 +7,11 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import Layout from "../../components/layout/Layout";
 import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
+import { productImagesApi } from "../../services/productImages.api";
 import ProductFormModal from "./ProductFormModal";
 import ProductHistoryModal from "./ProductHistoryModal";
 import ProductImagesModal from "./ProductImagesModal";
+import ProductCard from "./ProductCard";
 
 function Products() {
   const auth = useAuth();
@@ -54,6 +56,18 @@ function Products() {
       filters.limit = params.limit;
       return productsApi.getAll(filters);
     },
+  );
+
+  const [viewMode, setViewMode] = createSignal("table");
+
+  const [covers] = createResource(
+    () => {
+      if (viewMode() !== "grid") return null;
+      if (!auth.hasPermission("product_images.view")) return null;
+      const ids = products()?.data?.map((p) => p._id);
+      return ids && ids.length > 0 ? ids : null;
+    },
+    (productIds) => productImagesApi.getCovers(productIds),
   );
 
   const [showFormModal, setShowFormModal] = createSignal(false);
@@ -207,8 +221,38 @@ function Products() {
             </div>
           </div>
 
-          {/* Tabla */}
-          <div class="card overflow-hidden p-0">
+          {/* Toggle vista */}
+          <div class="flex justify-end mb-4">
+            <div class="inline-flex rounded-md border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <button
+                onClick={() => setViewMode("table")}
+                class={`text-xs px-3 py-1.5 transition-colors ${
+                  viewMode() === "table"
+                    ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
+                }`}
+              >
+                Tabla
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                class={`text-xs px-3 py-1.5 transition-colors ${
+                  viewMode() === "grid"
+                    ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
+                }`}
+              >
+                Cards
+              </button>
+            </div>
+          </div>
+
+          {/* Tabla / Cards */}
+          <div
+            class={
+              viewMode() === "table" ? "card overflow-hidden p-0" : ""
+            }
+          >
             <Show when={products.loading}>
               <div class="p-8 text-center text-gray-500 dark:text-gray-400">
                 Cargando productos...
@@ -222,6 +266,25 @@ function Products() {
             </Show>
 
             <Show when={products()}>
+              <Show
+                when={viewMode() === "table"}
+                fallback={
+                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <For each={products()?.data}>
+                      {(product) => (
+                        <ProductCard
+                          product={product}
+                          coverPath={covers()?.data?.[product._id]}
+                          openImages={openImages}
+                          openHistory={openHistory}
+                          openEdit={openEdit}
+                          toggleStatus={toggleStatus}
+                        />
+                      )}
+                    </For>
+                  </div>
+                }
+              >
               <table class="w-full">
                 <thead>
                   <tr class="border-b border-gray-200 dark:border-gray-800">
@@ -332,6 +395,7 @@ function Products() {
                   </For>
                 </tbody>
               </table>
+              </Show>
 
               <Show when={products()?.pagination}>
                 <Pagination

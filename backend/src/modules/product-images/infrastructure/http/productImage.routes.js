@@ -9,6 +9,7 @@ import { ProductImageModel } from '../persistence/productImageMongooseModel.js';
 import { MongoProductImageRepository } from '../persistence/MongoProductImageRepository.js';
 import { UploadProductImageUseCase } from '../../application/use-cases/uploadProductImage.js';
 import { ListProductImagesUseCase } from '../../application/use-cases/listProductImages.js';
+import { ListProductImageCoversUseCase } from '../../application/use-cases/listProductImageCovers.js';
 import { ActivateProductImageUseCase } from '../../application/use-cases/activateProductImage.js';
 import { DeactivateProductImageUseCase } from '../../application/use-cases/deactivateProductImage.js';
 import { ProductImageController } from './productImage.controller.js';
@@ -22,6 +23,7 @@ const controller = new ProductImageController({
     listProductImages: new ListProductImagesUseCase(productImageRepository, productRepository),
     activateProductImage: new ActivateProductImageUseCase(productImageRepository),
     deactivateProductImage: new DeactivateProductImageUseCase(productImageRepository),
+    listProductImageCovers: new ListProductImageCoversUseCase(productImageRepository),
 });
 
 const router = Router();
@@ -45,6 +47,14 @@ const routes = [
         permission: 'product_images.view',
         description: 'Listar imágenes de un producto',
         handler: controller.getAll,
+        middlewares: []
+    },
+    {
+        method: 'GET',
+        path: '/covers',
+        permission: 'product_images.view',
+        description: 'Obtener portadas (thumbnail) de varios productos',
+        handler: controller.getCovers,
         middlewares: []
     },
     {
