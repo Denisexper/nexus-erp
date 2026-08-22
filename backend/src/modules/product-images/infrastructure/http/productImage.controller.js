@@ -18,11 +18,18 @@ const toProductImageDTO = (image) => ({
 });
 
 export class ProductImageController {
-  constructor({ uploadProductImage, listProductImages, activateProductImage, deactivateProductImage }) {
+  constructor({
+    uploadProductImage,
+    listProductImages,
+    activateProductImage,
+    deactivateProductImage,
+    listProductImageCovers,
+  }) {
     this.uploadProductImageUseCase = uploadProductImage;
     this.listProductImagesUseCase = listProductImages;
     this.activateProductImageUseCase = activateProductImage;
     this.deactivateProductImageUseCase = deactivateProductImage;
+    this.listProductImageCoversUseCase = listProductImageCovers;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -59,6 +66,25 @@ export class ProductImageController {
       res.status(201).json({ msj: 'Imagen cargada exitosamente', newProductImage: toProductImageDTO(image) });
     } catch (error) {
       this.#handleError(res, error, 'Error cargando imagen');
+    }
+  };
+
+  getCovers = async (req, res) => {
+    try {
+      const productIds = (req.query.productIds || '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+
+      const covers = await this.listProductImageCoversUseCase.execute(productIds);
+      const data = covers.reduce((acc, c) => {
+        acc[c.productId] = c.path;
+        return acc;
+      }, {});
+
+      res.status(200).json({ msj: 'Portadas obtenidas correctamente', data });
+    } catch (error) {
+      this.#handleError(res, error, 'Error obteniendo portadas de productos');
     }
   };
 

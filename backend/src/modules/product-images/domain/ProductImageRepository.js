@@ -14,4 +14,8 @@ export class ProductImageRepository {
   async update(_id, _changes) {
     throw new Error('ProductImageRepository.update no implementado');
   }
+
+  async findCoversByProducts(_productIds) {
+    throw new Error('ProductImageRepository.findCoversByProducts no implementado');
+  }
 }

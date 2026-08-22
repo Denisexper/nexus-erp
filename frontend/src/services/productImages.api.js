@@ -25,4 +25,11 @@ export const productImagesApi = {
       method: "PATCH",
     });
   },
+
+  getCovers(productIds = []) {
+    const params = new URLSearchParams({
+      productIds: productIds.join(","),
+    }).toString();
+    return http.request(`/product-images/covers${params ? `?${params}` : ""}`);
+  },
 };
