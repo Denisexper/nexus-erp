@@ -37,6 +37,7 @@ const FIELD_LABELS = {
   position: "Posición",
   capacity: "Capacidad",
   isActive: "Estado",
+  path: "Archivo",
 };
 
 // label con género correcto para el título de la modal ("Empresa creada" vs
@@ -48,6 +49,7 @@ const RESOURCE_META = {
   warehouse_categories: { label: "Categoría de almacén", created: "creada", updated: "actualizada", deleted: "eliminada" },
   warehouses: { label: "Almacén", created: "creado", updated: "actualizado", deleted: "eliminado" },
   locations: { label: "Ubicación", created: "creada", updated: "actualizada", deleted: "eliminada" },
+  product_images: { label: "Imagen", created: "creada", updated: "actualizada", deleted: "eliminada" },
   auth: { label: "Sesión", created: "creada", updated: "actualizada", deleted: "eliminada" },
 };
 

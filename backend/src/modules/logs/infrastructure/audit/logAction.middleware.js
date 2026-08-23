@@ -18,6 +18,10 @@ const writeLogEntryUseCase = new WriteLogEntryUseCase(new MongoLogRepository());
  * @param {Object} [config.snapshot] - { fields, populate, transform } usados para el "antes"
  * @param {string} [config.responseKey] - clave del body de respuesta donde viene la entidad (ej. 'newUser')
  * @param {string[]} [config.compareFields] - campos a comparar para calcular changedFields
+ * @param {(entity: Object) => (string|Promise<string>)} [config.resolveEntityName] - obtiene el
+ *   nombre human-readable de la entidad para "Registro afectado". Por defecto usa `entity.name`,
+ *   que solo existe en algunos modelos: los módulos cuya entidad no tiene ese campo (ej. locations,
+ *   product-images) deben pasar su propio resolver.
  */
 export const logAction = ({
     action,
@@ -26,6 +30,7 @@ export const logAction = ({
     snapshot: { fields = [], populate = null, transform = null } = {},
     responseKey = null,
     compareFields = fields,
+    resolveEntityName = (entity) => entity.name,
 }) => {
     return async (req, res, next) => {
         let dataBefore = null;
@@ -53,7 +58,7 @@ export const logAction = ({
                 if (entity) {
                     logData.entityId = entity.id;
                     logData.entityModel = entityModel.modelName;
-                    logData.entityName = entity.name;
+                    logData.entityName = await resolveEntityName(entity);
                     logData.dataAfter = action === 'delete'
                         ? null
                         : fields.reduce((snapshot, field) => {
