@@ -35,7 +35,9 @@ const router = Router();
 const locationAudit = {
     entityModel: LocationModel,
     snapshot: { fields: ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'] },
-    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive']
+    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'],
+    // Location no tiene campo `name`: su identidad human-readable es el código.
+    resolveEntityName: (entity) => entity.code
 };
 
 // rutas con metadata. ERS 6.5.7: locations.view/create/update/activate/

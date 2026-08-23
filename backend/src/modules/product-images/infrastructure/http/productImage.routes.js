@@ -28,10 +28,18 @@ const controller = new ProductImageController({
 
 const router = Router();
 
+// ProductImage no tiene campo `name` propio: su identidad human-readable
+// para la bitácora es el nombre del producto al que pertenece.
+const resolveProductImageName = async (entity) => {
+    const product = await productRepository.findById(entity.productId);
+    return product ? `Imagen de ${product.name}` : 'Imagen de producto';
+};
+
 const productImageAudit = {
     entityModel: ProductImageModel,
     snapshot: { fields: ['productId', 'path', 'isActive'] },
-    compareFields: ['isActive']
+    compareFields: ['isActive'],
+    resolveEntityName: resolveProductImageName
 };
 
 // Módulo de Imágenes de Producto, ERS v0.7 cap. 6.7.5/6.7.16 (RN-PRO-016/017/018).
