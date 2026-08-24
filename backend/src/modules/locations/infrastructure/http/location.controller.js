@@ -7,6 +7,7 @@ import {
   DuplicateLocationCoordinatesError,
   InvalidBatchRangeError,
   BatchSizeExceededError,
+  LocationHasStockError,
 } from '../../domain/errors.js';
 import { MongoLogRepository } from '#modules/logs/infrastructure/persistence/MongoLogRepository.js';
 import { WriteLogEntryUseCase } from '#modules/logs/application/use-cases/writeLogEntry.js';
@@ -81,6 +82,7 @@ export class LocationController {
     if (error instanceof DuplicateLocationCoordinatesError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidBatchRangeError) return res.status(400).json({ msj: error.message });
     if (error instanceof BatchSizeExceededError) return res.status(400).json({ msj: error.message });
+    if (error instanceof LocationHasStockError) return res.status(400).json({ msj: error.message });
     return res.status(500).json({ msj: fallbackMsj, error: error.message });
   }
 

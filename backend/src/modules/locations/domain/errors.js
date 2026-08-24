@@ -52,3 +52,9 @@ export class BatchSizeExceededError extends DomainError {
     super(`El lote generaría ${requested} ubicaciones y el máximo permitido es ${max}. Reducí los rangos.`);
   }
 }
+
+export class LocationHasStockError extends DomainError {
+  constructor() {
+    super('No se puede desactivar la ubicación: todavía tiene existencias registradas en el kardex');
+  }
+}

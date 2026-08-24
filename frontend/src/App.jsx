@@ -27,6 +27,7 @@ const SupplierContacts = lazy(() =>
   import("./features/supplier-contacts/SupplierContacts"),
 );
 const Products = lazy(() => import("./features/products/Products"));
+const Kardex = lazy(() => import("./features/kardex/Kardex"));
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           />
           <Route path="/warehouses" component={Warehouses} />
           <Route path="/locations" component={Locations} />
+          <Route path="/kardex" component={Kardex} />
           <Route path="/countries" component={Countries} />
           <Route path="/categories" component={Categories} />
           <Route path="/sub-categories" component={SubCategories} />

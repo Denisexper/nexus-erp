@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
+import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
 
 import { LocationModel } from '../persistence/locationMongooseModel.js';
 import { MongoLocationRepository } from '../persistence/MongoLocationRepository.js';
@@ -19,6 +20,7 @@ import { LocationController } from './location.controller.js';
 // --- Composition root ---
 const locationRepository = new MongoLocationRepository();
 const warehouseRepository = new MongoWarehouseRepository();
+const kardexRepository = new MongoKardexRepository();
 
 const controller = new LocationController({
     listLocations: new ListLocationsUseCase(locationRepository),
@@ -27,7 +29,7 @@ const controller = new LocationController({
     createLocationsBatch: new CreateLocationsBatchUseCase(locationRepository, warehouseRepository),
     updateLocation: new UpdateLocationUseCase(locationRepository),
     activateLocation: new ActivateLocationUseCase(locationRepository),
-    deactivateLocation: new DeactivateLocationUseCase(locationRepository),
+    deactivateLocation: new DeactivateLocationUseCase(locationRepository, kardexRepository),
 });
 
 const router = Router();
