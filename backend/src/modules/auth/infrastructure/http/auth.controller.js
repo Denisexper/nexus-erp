@@ -5,6 +5,7 @@ const toAuthUserDTO = (user, roleDoc) => ({
   id: user.id,
   name: user.name,
   email: user.email,
+  companyId: user.company?._id || user.company,
   role: roleDoc?.name || user.role?.name || user.role,
   roleId: roleDoc?.id || user.role?._id || user.role,
   permissions: roleDoc?.permissions || user.role?.permissions,
@@ -51,9 +52,9 @@ export class AuthController {
 
   login = async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { slug, email, password } = req.body;
       const { token, user } = await this.loginUseCase.execute(
-        { email, password },
+        { slug, email, password },
         { ipAddress: req.ip, userAgent: req.get('user-agent') },
       );
 
@@ -90,6 +91,7 @@ export class AuthController {
           id: user.id,
           name: user.name,
           email: user.email,
+          companyId: user.company?._id || user.company,
           role: user.role?.name,
           roleId: user.role?._id,
           permissions: user.role?.permissions,

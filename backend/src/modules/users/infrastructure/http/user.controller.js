@@ -85,7 +85,13 @@ export class UserController {
   create = async (req, res) => {
     try {
       const { name, email, password, role } = req.body;
-      const { user, role: roleDoc } = await this.createUserUseCase.execute({ name, email, password, role });
+      const { user, role: roleDoc } = await this.createUserUseCase.execute({
+        name,
+        email,
+        password,
+        role,
+        companyId: req.user.companyId,
+      });
 
       res.status(201).json({
         msj: 'user creado exitosamente',

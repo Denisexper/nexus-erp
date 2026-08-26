@@ -13,6 +13,7 @@ import userRoutes, { userRoutes as userRoutesMetadata } from "#modules/users/inf
 import rolesRoutes, { roleRoutes as roleRoutesMetadata } from "#modules/roles/infrastructure/http/role.routes.js";
 import logsRoutes, { logRoutes as logRoutesMetadata } from "#modules/logs/infrastructure/http/log.routes.js";
 import companiesRoutes, { companyRoutes as companyRoutesMetadata } from "#modules/companies/infrastructure/http/company.routes.js";
+import publicCompaniesRoutes from "#modules/companies/infrastructure/http/publicCompany.routes.js";
 import geoRoutes, { geoRoutes as geoRoutesMetadata } from "#modules/geo/infrastructure/http/geo.routes.js";
 import branchesRoutes, { branchRoutes as branchRoutesMetadata } from "#modules/branches/infrastructure/http/branch.routes.js";
 import warehouseCategoriesRoutes, { warehouseCategoryRoutes as warehouseCategoryRoutesMetadata } from "#modules/warehouse-categories/infrastructure/http/warehouseCategory.routes.js";
@@ -82,6 +83,9 @@ mongoConnect().then(async () => {
 // Inicializar rutas
 // Rutas de autenticación (públicas)
 server.use("/api", authRoutes);
+
+// Resolución pública de tenant (búsqueda de empresa por nombre/slug, sin auth)
+server.use("/api/public/companies", publicCompaniesRoutes);
 
 // Rutas de recursos (protegidas)
 server.use("/api", userRoutes);

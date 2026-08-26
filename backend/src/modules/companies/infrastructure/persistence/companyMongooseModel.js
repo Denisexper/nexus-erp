@@ -11,6 +11,14 @@ const companySchema = new Schema({
         required: [true, 'El nombre comercial es obligatorio'],
         trim: true
     },
+    slug: {
+        type: String,
+        required: [true, 'El slug es obligatorio'],
+        unique: true,
+        trim: true,
+        lowercase: true,
+        match: [/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Slug no válido']
+    },
     nit: {
         type: String,
         required: [true, 'El NIT es obligatorio'],

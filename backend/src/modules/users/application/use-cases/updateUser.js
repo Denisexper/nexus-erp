@@ -11,7 +11,7 @@ export class UpdateUserUseCase {
     if (!user) throw new UserNotFoundError();
 
     if (email && email !== user.email) {
-      const emailTaken = await this.userRepository.findByEmail(email);
+      const emailTaken = await this.userRepository.findByEmailAndCompany(email, user.company);
       if (emailTaken) throw new DuplicateEmailError();
     }
 

@@ -8,13 +8,20 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 5 * 60 * 1000;
 
 export class LoginUseCase {
-  constructor(userRepository, writeLogEntryUseCase) {
+  constructor(userRepository, companyRepository, writeLogEntryUseCase) {
     this.userRepository = userRepository;
+    this.companyRepository = companyRepository;
     this.writeLogEntryUseCase = writeLogEntryUseCase;
   }
 
-  async execute({ email, password }, { ipAddress, userAgent } = {}) {
-    const user = await this.userRepository.findByEmail(email);
+  async execute({ slug, email, password }, { ipAddress, userAgent } = {}) {
+    // No distinguimos "el slug no existe" de "password incorrecta": ambos
+    // devuelven el mismo InvalidCredentialsError genérico, para no filtrar
+    // qué empresas existen a través del propio login.
+    const company = await this.companyRepository.findBySlug(slug);
+    if (!company || !company.isActive) throw new InvalidCredentialsError();
+
+    const user = await this.userRepository.findByEmailAndCompany(email, company.id);
     if (!user) throw new InvalidCredentialsError();
 
     if (!user.isActive) throw new UserInactiveError();
@@ -42,6 +49,7 @@ export class LoginUseCase {
       id: updated.id,
       email: updated.email,
       roleId: updated.role?._id || updated.role,
+      companyId: company.id,
     });
 
     // El log de login no debe tumbar el login si falla; solo se reporta.

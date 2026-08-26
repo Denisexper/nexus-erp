@@ -12,6 +12,7 @@ const toDomain = (doc) =>
               email: doc.email,
               password: doc.password,
               role: doc.role,
+              company: doc.company,
               isActive: doc.isActive,
               lastLogin: doc.lastLogin,
               failedLoginAttempts: doc.failedLoginAttempts,
@@ -67,8 +68,8 @@ export class MongoUserRepository extends UserRepository {
         return toDomain(doc);
     }
 
-    async findByEmail(email) {
-        const doc = await UserModel.findOne({ email }).populate('role');
+    async findByEmailAndCompany(email, companyId) {
+        const doc = await UserModel.findOne({ email, company: companyId }).populate('role');
         return toDomain(doc);
     }
 
@@ -78,6 +79,7 @@ export class MongoUserRepository extends UserRepository {
             email: user.email,
             password: user.password,
             role: user.role,
+            company: user.company,
         });
         const populated = await doc.populate('role');
         return toDomain(populated);

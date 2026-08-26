@@ -34,7 +34,7 @@ const router = Router();
 
 // Config de auditoría compartida por las rutas de empresas
 const COMPANY_AUDIT_FIELDS = [
-    'name', 'commercialName', 'nit', 'nrc',
+    'name', 'commercialName', 'slug', 'nit', 'nrc',
     'commercialLine1', 'commercialLine2', 'commercialLine3',
     'address', 'department', 'municipality', 'district',
     'phone', 'email', 'webSite', 'logo', 'isActive'
