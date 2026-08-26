@@ -8,7 +8,7 @@ export class BranchRepository {
     throw new Error('BranchRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('BranchRepository.findById no implementado');
   }
 

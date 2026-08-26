@@ -67,9 +67,9 @@ export class MongoBranchRepository extends BranchRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await BranchModel.findById(id).populate(POPULATE);
+        const doc = await BranchModel.findOne({ _id: id, company: companyId }).populate(POPULATE);
         return toDomain(doc);
     }
 

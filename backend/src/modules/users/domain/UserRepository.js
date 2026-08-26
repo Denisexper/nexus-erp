@@ -12,8 +12,8 @@ export class UserRepository {
     throw new Error('UserRepository.findById no implementado');
   }
 
-  async findByEmail(_email) {
-    throw new Error('UserRepository.findByEmail no implementado');
+  async findByEmailAndCompany(_email, _companyId) {
+    throw new Error('UserRepository.findByEmailAndCompany no implementado');
   }
 
   async create(_user) {

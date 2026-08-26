@@ -1,6 +1,8 @@
 import {
   InvalidCompanyIdError,
   CompanyNotFoundError,
+  DuplicateSlugError,
+  InvalidSlugError,
   DuplicateNitError,
   DuplicateNrcError,
   InvalidLocationError,
@@ -14,6 +16,7 @@ const toCompanyDTO = (company) => ({
   id: company.id,
   name: company.name,
   commercialName: company.commercialName,
+  slug: company.slug,
   nit: company.nit,
   nrc: company.nrc,
   commercialLine1: company.commercialLine1,
@@ -41,6 +44,7 @@ const pickDefinedFields = (body, keys) =>
 const COMPANY_FIELDS = [
   'name',
   'commercialName',
+  'slug',
   'nit',
   'nrc',
   'commercialLine1',
@@ -70,6 +74,8 @@ export class CompanyController {
   #handleError(res, error, fallbackMsj) {
     if (error instanceof InvalidCompanyIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof CompanyNotFoundError) return res.status(404).json({ msj: error.message });
+    if (error instanceof DuplicateSlugError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InvalidSlugError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateNitError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateNrcError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidLocationError) return res.status(400).json({ msj: error.message });

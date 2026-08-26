@@ -76,7 +76,7 @@ export class BranchController {
 
   getOne = async (req, res) => {
     try {
-      const branch = await this.getBranchByIdUseCase.execute(req.params.id);
+      const branch = await this.getBranchByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sucursal encontrada', data: toBranchDTO(branch) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo sucursal');
@@ -96,7 +96,7 @@ export class BranchController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, UPDATE_FIELDS);
-      const branch = await this.updateBranchUseCase.execute(req.params.id, changes);
+      const branch = await this.updateBranchUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Sucursal actualizada correctamente', branch: toBranchDTO(branch) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando sucursal');
@@ -105,7 +105,7 @@ export class BranchController {
 
   activate = async (req, res) => {
     try {
-      const branch = await this.activateBranchUseCase.execute(req.params.id);
+      const branch = await this.activateBranchUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sucursal activada correctamente', branch: toBranchDTO(branch) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la sucursal');
@@ -114,7 +114,7 @@ export class BranchController {
 
   deactivate = async (req, res) => {
     try {
-      const branch = await this.deactivateBranchUseCase.execute(req.params.id);
+      const branch = await this.deactivateBranchUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sucursal desactivada correctamente', branch: toBranchDTO(branch) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la sucursal');

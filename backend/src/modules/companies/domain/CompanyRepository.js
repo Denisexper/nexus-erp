@@ -12,6 +12,22 @@ export class CompanyRepository {
     throw new Error('CompanyRepository.findById no implementado');
   }
 
+  async findBySlug(_slug) {
+    throw new Error('CompanyRepository.findBySlug no implementado');
+  }
+
+  /**
+   * Búsquedas públicas (sin auth): solo devuelven campos seguros
+   * (slug, commercialName, logo), nunca nit/nrc/email/phone/address.
+   */
+  async searchPublic(_criteria) {
+    throw new Error('CompanyRepository.searchPublic no implementado');
+  }
+
+  async findPublicBySlug(_slug) {
+    throw new Error('CompanyRepository.findPublicBySlug no implementado');
+  }
+
   async findByNit(_nit) {
     throw new Error('CompanyRepository.findByNit no implementado');
   }

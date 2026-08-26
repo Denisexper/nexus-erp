@@ -7,8 +7,8 @@ export class UpdateBranchUseCase {
     this.geoRepository = geoRepository;
   }
 
-  async execute(id, changes) {
-    const branch = await this.branchRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const branch = await this.branchRepository.findById(id, companyId);
     if (!branch) throw new BranchNotFoundError();
 
     if (changes.name && changes.name !== branch.name) {

@@ -1,5 +1,8 @@
 import { isValidGeoLocation, extractGeoId } from '#shared/lib/geoValidation.js';
-import { CompanyNotFoundError, DuplicateNitError, DuplicateNrcError, InvalidLocationError } from '../../domain/errors.js';
+import { slugify } from '#shared/lib/slugify.js';
+import { CompanyNotFoundError, DuplicateSlugError, InvalidSlugError, DuplicateNitError, DuplicateNrcError, InvalidLocationError } from '../../domain/errors.js';
+
+const SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export class UpdateCompanyUseCase {
   constructor(companyRepository, geoRepository) {
@@ -10,6 +13,16 @@ export class UpdateCompanyUseCase {
   async execute(id, changes) {
     const company = await this.companyRepository.findById(id);
     if (!company) throw new CompanyNotFoundError();
+
+    if (changes.slug && changes.slug !== company.slug) {
+      const normalizedSlug = slugify(changes.slug);
+      if (!normalizedSlug || !SLUG_REGEX.test(normalizedSlug)) throw new InvalidSlugError();
+
+      const slugTaken = await this.companyRepository.findBySlug(normalizedSlug);
+      if (slugTaken) throw new DuplicateSlugError();
+
+      changes = { ...changes, slug: normalizedSlug };
+    }
 
     if (changes.nit && changes.nit !== company.nit) {
       const nitTaken = await this.companyRepository.findByNit(changes.nit);

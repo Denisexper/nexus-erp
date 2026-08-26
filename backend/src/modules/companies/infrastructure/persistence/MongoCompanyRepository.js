@@ -10,6 +10,7 @@ const toDomain = (doc) =>
               id: doc._id.toString(),
               name: doc.name,
               commercialName: doc.commercialName,
+              slug: doc.slug,
               nit: doc.nit,
               nrc: doc.nrc,
               commercialLine1: doc.commercialLine1,
@@ -84,6 +85,37 @@ export class MongoCompanyRepository extends CompanyRepository {
         return toDomain(doc);
     }
 
+    async findBySlug(slug) {
+        const doc = await CompanyModel.findOne({ slug });
+        return toDomain(doc);
+    }
+
+    // Nunca traen a memoria nit/nrc/email/phone/address: el .select() limita
+    // lo que Mongo devuelve, no es solo un filtro aplicado después.
+    async searchPublic({ search, limit = 10 } = {}) {
+        const filter = { isActive: true };
+
+        if (search) {
+            filter.$or = [
+                { commercialName: { $regex: search, $options: 'i' } },
+                { slug: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const cappedLimit = Math.min(Number(limit) || 10, 10);
+
+        const docs = await CompanyModel.find(filter)
+            .select('slug commercialName logo')
+            .limit(cappedLimit);
+
+        return docs.map((doc) => ({ slug: doc.slug, commercialName: doc.commercialName, logo: doc.logo }));
+    }
+
+    async findPublicBySlug(slug) {
+        const doc = await CompanyModel.findOne({ slug, isActive: true }).select('slug commercialName logo');
+        return doc ? { slug: doc.slug, commercialName: doc.commercialName, logo: doc.logo } : null;
+    }
+
     async findByNit(nit) {
         const doc = await CompanyModel.findOne({ nit });
         return toDomain(doc);
@@ -98,6 +130,7 @@ export class MongoCompanyRepository extends CompanyRepository {
         const doc = await CompanyModel.create({
             name: company.name,
             commercialName: company.commercialName,
+            slug: company.slug,
             nit: company.nit,
             nrc: company.nrc,
             commercialLine1: company.commercialLine1,

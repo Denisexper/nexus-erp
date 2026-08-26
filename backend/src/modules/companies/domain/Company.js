@@ -3,6 +3,7 @@ export class Company {
     id,
     name,
     commercialName,
+    slug,
     nit,
     nrc,
     commercialLine1,
@@ -23,6 +24,7 @@ export class Company {
     this.id = id;
     this.name = name;
     this.commercialName = commercialName;
+    this.slug = slug;
     this.nit = nit;
     this.nrc = nrc;
     this.commercialLine1 = commercialLine1;

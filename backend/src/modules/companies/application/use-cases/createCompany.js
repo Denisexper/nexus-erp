@@ -1,4 +1,5 @@
 import { isValidGeoLocation } from '#shared/lib/geoValidation.js';
+import { slugify } from '#shared/lib/slugify.js';
 import { Company } from '../../domain/Company.js';
 import { DuplicateNitError, DuplicateNrcError, InvalidLocationError } from '../../domain/errors.js';
 
@@ -6,6 +7,19 @@ export class CreateCompanyUseCase {
   constructor(companyRepository, geoRepository) {
     this.companyRepository = companyRepository;
     this.geoRepository = geoRepository;
+  }
+
+  async #generateUniqueSlug(seed) {
+    const base = slugify(seed);
+    let candidate = base;
+    let suffix = 2;
+
+    while (await this.companyRepository.findBySlug(candidate)) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+
+    return candidate;
   }
 
   async execute(data) {
@@ -22,7 +36,9 @@ export class CreateCompanyUseCase {
     });
     if (!validLocation) throw new InvalidLocationError();
 
-    const company = new Company(data);
+    const slug = await this.#generateUniqueSlug(data.commercialName || data.name);
+
+    const company = new Company({ ...data, slug });
     return this.companyRepository.create(company);
   }
 }
