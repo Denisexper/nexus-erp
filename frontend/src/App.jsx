@@ -1,9 +1,10 @@
-import { Route, Router as SolidRouter } from "@solidjs/router";
+import { Route, Router as SolidRouter, Navigate } from "@solidjs/router";
 import { lazy } from "solid-js";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "solid-sonner";
 
+const CompanySearch = lazy(() => import("./pages/CompanySearch"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Users = lazy(() => import("./pages/Users"));
@@ -35,7 +36,8 @@ function App() {
       <AuthProvider>
         <Toaster position="top-right" richColors closeButton expand={false} />
         <SolidRouter>
-          <Route path="/login" component={Login} />
+          <Route path="/login" component={() => <Navigate href="/" />} />
+          <Route path="/login/:slug" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/users" component={Users} />
           <Route path="/logs" component={Logs} />
@@ -56,7 +58,7 @@ function App() {
           <Route path="/suppliers" component={Suppliers} />
           <Route path="/supplier-contacts" component={SupplierContacts} />
           <Route path="/products" component={Products} />
-          <Route path="/" component={Login} />
+          <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>
     </ThemeProvider>
