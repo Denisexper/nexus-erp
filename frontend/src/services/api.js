@@ -14,10 +14,10 @@ class ApiService {
   }
 
   // Auth
-  async login(email, password) {
+  async login(slug, email, password) {
     const data = await http.request("/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ slug, email, password }),
     });
 
     if (data.token) {

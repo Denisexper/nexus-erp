@@ -37,9 +37,9 @@ export function AuthProvider(props) {
     }
   });
 
-  const login = async (email, password) => {
+  const login = async (slug, email, password) => {
     try {
-      const data = await api.login(email, password);
+      const data = await api.login(slug, email, password);
       setUser(data.user);
       return { success: true, user: data.user };
     } catch (error) {
