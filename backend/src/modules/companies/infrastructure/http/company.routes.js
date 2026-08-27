@@ -33,6 +33,16 @@ const controller = new CompanyController({
 
 const router = Router();
 
+// El handler de historial es genérico (compartido por todos los módulos) y no
+// filtra por tenant, así que la ownership check se hace acá antes de llegar
+// a él en vez de tocar el handler compartido.
+const requireOwnCompany = (req, res, next) => {
+    if (req.params.id !== req.user.companyId) {
+        return res.status(404).json({ msj: 'Empresa no encontrada' });
+    }
+    next();
+};
+
 // Config de auditoría compartida por las rutas de empresas
 const COMPANY_AUDIT_FIELDS = [
     'name', 'commercialName', 'slug', 'nit', 'nrc',
@@ -74,7 +84,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la empresa',
         handler: createEntityHistoryHandler(CompanyModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompany]
     },
     {
         method: 'POST',
