@@ -10,8 +10,8 @@ export class UpdateCompanyUseCase {
     this.geoRepository = geoRepository;
   }
 
-  async execute(id, changes) {
-    const company = await this.companyRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const company = await this.companyRepository.findById(id, companyId);
     if (!company) throw new CompanyNotFoundError();
 
     if (changes.slug && changes.slug !== company.slug) {

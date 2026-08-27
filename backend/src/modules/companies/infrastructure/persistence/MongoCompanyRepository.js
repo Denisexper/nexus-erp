@@ -48,8 +48,12 @@ const GEO_POPULATE = [
  * ObjectId). El dominio y los casos de uso no saben que esta clase existe.
  */
 export class MongoCompanyRepository extends CompanyRepository {
-    async findAll({ search, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ companyId, search, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
+
+        if (companyId) {
+            filter._id = companyId;
+        }
 
         if (search) {
             filter.$or = [
@@ -79,8 +83,12 @@ export class MongoCompanyRepository extends CompanyRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    // Company es la raíz del tenant: no tiene un campo `company` propio para
+    // filtrar como Role/Branch, así que el "ownership check" es comparar el id
+    // pedido contra el companyId del JWT antes de tocar la base de datos.
+    async findById(id, companyId) {
         assertValidId(id);
+        if (companyId && id !== companyId) return null;
         const doc = await CompanyModel.findById(id).populate(GEO_POPULATE);
         return toDomain(doc);
     }
