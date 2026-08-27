@@ -1,10 +1,14 @@
 import { Schema, model } from 'mongoose';
 
 const roleSchema = new Schema({
+    company: {
+        type: Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'La empresa es obligatoria']
+    },
     name: {
         type: String,
         required: [true, 'El nombre del rol es obligatorio'],
-        unique: true,
         trim: true,
         lowercase: true
     },
@@ -32,5 +36,11 @@ const roleSchema = new Schema({
 }, {
     timestamps: true
 });
+
+// El nombre del rol es único dentro de la misma empresa, no global (mismo
+// patrón que branchSchema.index({company:1, name:1}) y userSchema.index
+// ({company:1, email:1})): dos empresas distintas pueden tener cada una su
+// propio rol "admin" sin chocar.
+roleSchema.index({ company: 1, name: 1 }, { unique: true });
 
 export const RoleModel = model('Role', roleSchema);

@@ -10,8 +10,8 @@ export class DeleteRoleUseCase {
     this.countUsersWithRole = countUsersWithRole;
   }
 
-  async execute(id) {
-    const role = await this.roleRepository.findById(id);
+  async execute(id, companyId) {
+    const role = await this.roleRepository.findById(id, companyId);
     if (!role) throw new RoleNotFoundError();
 
     if (role.isSystem) throw new SystemRoleImmutableError();
