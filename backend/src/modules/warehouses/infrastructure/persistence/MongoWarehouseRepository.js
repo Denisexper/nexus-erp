@@ -54,15 +54,21 @@ export class MongoWarehouseRepository extends WarehouseRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, branchIds) {
         assertValidId(id);
-        const doc = await WarehouseModel.findById(id).populate(POPULATE);
+        const filter = branchIds ? { _id: id, branch: { $in: branchIds } } : { _id: id };
+        const doc = await WarehouseModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 
     async findByNameAndBranch(name, branchId) {
         const doc = await WarehouseModel.findOne({ name, branch: branchId });
         return toDomain(doc);
+    }
+
+    async findIdsByBranches(branchIds) {
+        const docs = await WarehouseModel.find({ branch: { $in: branchIds } }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(warehouse) {

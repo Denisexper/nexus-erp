@@ -3,7 +3,7 @@ export class KardexRepository {
     throw new Error('KardexRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _locationIds) {
     throw new Error('KardexRepository.findById no implementado');
   }
 
@@ -27,7 +27,10 @@ export class KardexRepository {
   }
 
   // Existencia de un producto en cada ubicación donde tiene stock.
-  async getStockByProduct(_productId) {
+  // `locationIds`, cuando se pasa, restringe el resultado a las ubicaciones
+  // de una company (Product todavía es global, así que sin esto se verían
+  // existencias de otros tenants para el mismo producto compartido).
+  async getStockByProduct(_productId, _locationIds) {
     throw new Error('KardexRepository.getStockByProduct no implementado');
   }
 

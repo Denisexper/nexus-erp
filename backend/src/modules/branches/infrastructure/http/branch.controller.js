@@ -28,7 +28,9 @@ const pickDefinedFields = (body, keys) =>
     return changes;
   }, {});
 
-const CREATE_FIELDS = ['company', 'name', 'address', 'department', 'municipality', 'district', 'phone', 'email'];
+// `company` no viene del body: siempre se fuerza desde req.user.companyId
+// (ver create() más abajo), nunca se confía en lo que mande el cliente.
+const CREATE_FIELDS = ['name', 'address', 'department', 'municipality', 'district', 'phone', 'email'];
 // `company` no es editable después de creada la sucursal (ver updateBranch.js).
 const UPDATE_FIELDS = ['name', 'address', 'department', 'municipality', 'district', 'phone', 'email'];
 
@@ -53,8 +55,14 @@ export class BranchController {
 
   getAll = async (req, res) => {
     try {
-      const { search, company, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listBranchesUseCase.execute({ search, company, isActive, page, limit });
+      const { search, isActive, page = 1, limit = 10 } = req.query;
+      const result = await this.listBranchesUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de sucursales vacia' : 'Sucursales obtenidas correctamente',
@@ -86,7 +94,7 @@ export class BranchController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, CREATE_FIELDS);
-      const branch = await this.createBranchUseCase.execute(data);
+      const branch = await this.createBranchUseCase.execute({ ...data, company: req.user.companyId });
       res.status(201).json({ msj: 'Sucursal creada exitosamente', newBranch: toBranchDTO(branch) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando sucursal');

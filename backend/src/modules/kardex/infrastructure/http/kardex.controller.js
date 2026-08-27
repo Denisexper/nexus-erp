@@ -68,7 +68,15 @@ export class KardexController {
   getAll = async (req, res) => {
     try {
       const { product, location, type, reason, page = 1, limit = 20 } = req.query;
-      const result = await this.listMovementsUseCase.execute({ product, location, type, reason, page, limit });
+      const result = await this.listMovementsUseCase.execute({
+        companyId: req.user.companyId,
+        product,
+        location,
+        type,
+        reason,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de movimientos vacia' : 'Movimientos obtenidos correctamente',
@@ -90,7 +98,7 @@ export class KardexController {
 
   getOne = async (req, res) => {
     try {
-      const movement = await this.getMovementByIdUseCase.execute(req.params.id);
+      const movement = await this.getMovementByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Movimiento encontrado', data: toMovementDTO(movement) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo movimiento');
@@ -100,7 +108,7 @@ export class KardexController {
   createMovement = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, MOVEMENT_FIELDS);
-      const movement = await this.registerMovementUseCase.execute(data);
+      const movement = await this.registerMovementUseCase.execute(data, req.user.companyId);
       res.status(201).json({ msj: 'Movimiento registrado exitosamente', newMovement: toMovementDTO(movement) });
     } catch (error) {
       this.#handleError(res, error, 'Error registrando movimiento');
@@ -110,7 +118,7 @@ export class KardexController {
   createTransfer = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, TRANSFER_FIELDS);
-      const result = await this.registerTransferUseCase.execute(data);
+      const result = await this.registerTransferUseCase.execute(data, req.user.companyId);
 
       if (req.user) {
         try {
@@ -139,7 +147,7 @@ export class KardexController {
 
   getStockByLocation = async (req, res) => {
     try {
-      const stock = await this.getStockByLocationUseCase.execute(req.params.locationId);
+      const stock = await this.getStockByLocationUseCase.execute(req.params.locationId, req.user.companyId);
       res.status(200).json({ msj: 'Existencias obtenidas correctamente', data: stock });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo existencias de la ubicación');
@@ -148,7 +156,7 @@ export class KardexController {
 
   getStockByProduct = async (req, res) => {
     try {
-      const stock = await this.getStockByProductUseCase.execute(req.params.productId);
+      const stock = await this.getStockByProductUseCase.execute(req.params.productId, req.user.companyId);
       res.status(200).json({ msj: 'Existencias obtenidas correctamente', data: stock });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo existencias del producto');

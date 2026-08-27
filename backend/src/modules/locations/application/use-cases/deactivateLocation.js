@@ -1,13 +1,17 @@
 import { LocationNotFoundError, LocationHasStockError } from '../../domain/errors.js';
+import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 
 export class DeactivateLocationUseCase {
-  constructor(locationRepository, kardexRepository) {
+  constructor(locationRepository, kardexRepository, branchRepository, warehouseRepository) {
     this.locationRepository = locationRepository;
     this.kardexRepository = kardexRepository;
+    this.branchRepository = branchRepository;
+    this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(id) {
-    const location = await this.locationRepository.findById(id);
+  async execute(id, companyId) {
+    const warehouseIds = await resolveWarehouseIdsForCompany(companyId, this.branchRepository, this.warehouseRepository);
+    const location = await this.locationRepository.findById(id, warehouseIds);
     if (!location) throw new LocationNotFoundError();
 
     // RN-WHS-007: no desactivar una ubicación con existencias.

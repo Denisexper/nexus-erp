@@ -1,4 +1,5 @@
 import { Location } from '../../domain/Location.js';
+import { resolveBranchIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   WarehouseNotFoundForLocationError,
   InvalidCapacityError,
@@ -34,13 +35,15 @@ const buildCode = ({ aisle, rack, level, position }) =>
   [aisle, rack, level, position].filter(Boolean).join('-');
 
 export class CreateLocationsBatchUseCase {
-  constructor(locationRepository, warehouseRepository) {
+  constructor(locationRepository, warehouseRepository, branchRepository) {
     this.locationRepository = locationRepository;
     this.warehouseRepository = warehouseRepository;
+    this.branchRepository = branchRepository;
   }
 
-  async execute(data) {
-    const warehouse = await this.warehouseRepository.findById(data.warehouse);
+  async execute(data, companyId) {
+    const branchIds = await resolveBranchIdsForCompany(companyId, this.branchRepository);
+    const warehouse = await this.warehouseRepository.findById(data.warehouse, branchIds);
     if (!warehouse) throw new WarehouseNotFoundForLocationError();
 
     if (!(Number(data.capacity) > 0)) throw new InvalidCapacityError();
