@@ -1,4 +1,5 @@
 import { Location } from '../../domain/Location.js';
+import { resolveBranchIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   WarehouseNotFoundForLocationError,
   DuplicateLocationCodeError,
@@ -7,14 +8,17 @@ import {
 } from '../../domain/errors.js';
 
 export class CreateLocationUseCase {
-  constructor(locationRepository, warehouseRepository) {
+  constructor(locationRepository, warehouseRepository, branchRepository) {
     this.locationRepository = locationRepository;
     this.warehouseRepository = warehouseRepository;
+    this.branchRepository = branchRepository;
   }
 
-  async execute(data) {
-    // RN-WHS-005: toda ubicación debe pertenecer a un único almacén (la FK ya lo garantiza).
-    const warehouse = await this.warehouseRepository.findById(data.warehouse);
+  async execute(data, companyId) {
+    // RN-WHS-005: toda ubicación debe pertenecer a un único almacén (la FK ya
+    // lo garantiza), y ese almacén tiene que ser de la company del usuario.
+    const branchIds = await resolveBranchIdsForCompany(companyId, this.branchRepository);
+    const warehouse = await this.warehouseRepository.findById(data.warehouse, branchIds);
     if (!warehouse) throw new WarehouseNotFoundForLocationError();
 
     // RN-WHS-006: código único dentro del almacén.

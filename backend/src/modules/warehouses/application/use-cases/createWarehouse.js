@@ -12,9 +12,11 @@ export class CreateWarehouseUseCase {
     this.warehouseCategoryRepository = warehouseCategoryRepository;
   }
 
-  async execute(data) {
-    // RN-WHS-001: todo almacén debe pertenecer a una sucursal.
-    const branch = await this.branchRepository.findById(data.branch);
+  async execute(data, companyId) {
+    // RN-WHS-001: todo almacén debe pertenecer a una sucursal, y esa sucursal
+    // tiene que ser de la company del usuario (si no, cualquiera con permiso
+    // de crear almacenes podría colgarle uno a una sucursal ajena).
+    const branch = await this.branchRepository.findById(data.branch, companyId);
     if (!branch) throw new BranchNotFoundForWarehouseError();
 
     // RN-WHS-002: todo almacén debe tener una categoría asignada.

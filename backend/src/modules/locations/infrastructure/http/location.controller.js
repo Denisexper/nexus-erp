@@ -89,7 +89,14 @@ export class LocationController {
   getAll = async (req, res) => {
     try {
       const { search, warehouse, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listLocationsUseCase.execute({ search, warehouse, isActive, page, limit });
+      const result = await this.listLocationsUseCase.execute({
+        companyId: req.user.companyId,
+        search,
+        warehouse,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de ubicaciones vacia' : 'Ubicaciones obtenidas correctamente',
@@ -111,7 +118,7 @@ export class LocationController {
 
   getOne = async (req, res) => {
     try {
-      const location = await this.getLocationByIdUseCase.execute(req.params.id);
+      const location = await this.getLocationByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Ubicación encontrada', data: toLocationDTO(location) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo ubicación');
@@ -121,7 +128,7 @@ export class LocationController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, CREATE_FIELDS);
-      const location = await this.createLocationUseCase.execute(data);
+      const location = await this.createLocationUseCase.execute(data, req.user.companyId);
       res.status(201).json({ msj: 'Ubicación creada exitosamente', newLocation: toLocationDTO(location) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando ubicación');
@@ -131,7 +138,7 @@ export class LocationController {
   createBatch = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, BATCH_FIELDS);
-      const result = await this.createLocationsBatchUseCase.execute(data);
+      const result = await this.createLocationsBatchUseCase.execute(data, req.user.companyId);
 
       if (req.user) {
         try {
@@ -160,7 +167,7 @@ export class LocationController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, UPDATE_FIELDS);
-      const location = await this.updateLocationUseCase.execute(req.params.id, changes);
+      const location = await this.updateLocationUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Ubicación actualizada correctamente', location: toLocationDTO(location) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando ubicación');
@@ -169,7 +176,7 @@ export class LocationController {
 
   activate = async (req, res) => {
     try {
-      const location = await this.activateLocationUseCase.execute(req.params.id);
+      const location = await this.activateLocationUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Ubicación activada correctamente', location: toLocationDTO(location) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la ubicación');
@@ -178,7 +185,7 @@ export class LocationController {
 
   deactivate = async (req, res) => {
     try {
-      const location = await this.deactivateLocationUseCase.execute(req.params.id);
+      const location = await this.deactivateLocationUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Ubicación desactivada correctamente', location: toLocationDTO(location) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la ubicación');

@@ -3,12 +3,18 @@ export class WarehouseRepository {
     throw new Error('WarehouseRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _branchIds) {
     throw new Error('WarehouseRepository.findById no implementado');
   }
 
   async findByNameAndBranch(_name, _branchId) {
     throw new Error('WarehouseRepository.findByNameAndBranch no implementado');
+  }
+
+  // Usado por locations/kardex para resolver "qué almacenes son de mi
+  // company" antes de filtrar, igual que BranchRepository.findIdsByCompany.
+  async findIdsByBranches(_branchIds) {
+    throw new Error('WarehouseRepository.findIdsByBranches no implementado');
   }
 
   async create(_warehouse) {

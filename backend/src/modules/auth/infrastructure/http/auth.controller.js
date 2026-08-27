@@ -84,7 +84,7 @@ export class AuthController {
 
   me = async (req, res) => {
     try {
-      const user = await this.getUserByIdUseCase.execute(req.user.id);
+      const user = await this.getUserByIdUseCase.execute(req.user.id, req.user.companyId);
       res.status(200).json({
         msj: 'perfil obtenido',
         data: {

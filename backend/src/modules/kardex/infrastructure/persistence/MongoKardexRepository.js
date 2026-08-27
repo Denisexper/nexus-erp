@@ -56,9 +56,10 @@ export class MongoKardexRepository extends KardexRepository {
         return { items: docs.map(toDomain), total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / limit) || 1 };
     }
 
-    async findById(id) {
+    async findById(id, locationIds) {
         assertValidId(id);
-        const doc = await KardexMovementModel.findById(id).populate(POPULATE);
+        const filter = locationIds ? { _id: id, location: { $in: locationIds } } : { _id: id };
+        const doc = await KardexMovementModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 
@@ -122,9 +123,14 @@ export class MongoKardexRepository extends KardexRepository {
         ]);
     }
 
-    async getStockByProduct(productId) {
+    async getStockByProduct(productId, locationIds) {
+        const match = { product: new mongoose.Types.ObjectId(productId) };
+        if (locationIds) {
+            match.location = { $in: locationIds.map((id) => new mongoose.Types.ObjectId(id)) };
+        }
+
         return KardexMovementModel.aggregate([
-            { $match: { product: new mongoose.Types.ObjectId(productId) } },
+            { $match: match },
             { $group: { _id: '$location', stock: { $sum: SIGNED_QUANTITY } } },
             { $match: { stock: { $gt: 0 } } },
             { $lookup: { from: 'locations', localField: '_id', foreignField: '_id', as: 'location' } },

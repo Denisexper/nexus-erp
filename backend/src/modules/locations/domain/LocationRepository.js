@@ -3,8 +3,14 @@ export class LocationRepository {
     throw new Error('LocationRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _warehouseIds) {
     throw new Error('LocationRepository.findById no implementado');
+  }
+
+  // Usado por kardex para resolver "qué ubicaciones son de mi company" antes
+  // de filtrar, igual que BranchRepository.findIdsByCompany.
+  async findIdsByWarehouses(_warehouseIds) {
+    throw new Error('LocationRepository.findIdsByWarehouses no implementado');
   }
 
   async findByCodeAndWarehouse(_code, _warehouseId) {

@@ -22,15 +22,28 @@ const branchRepository = new MongoBranchRepository();
 const warehouseCategoryRepository = new MongoWarehouseCategoryRepository();
 
 const controller = new WarehouseController({
-    listWarehouses: new ListWarehousesUseCase(warehouseRepository),
-    getWarehouseById: new GetWarehouseByIdUseCase(warehouseRepository),
+    listWarehouses: new ListWarehousesUseCase(warehouseRepository, branchRepository),
+    getWarehouseById: new GetWarehouseByIdUseCase(warehouseRepository, branchRepository),
     createWarehouse: new CreateWarehouseUseCase(warehouseRepository, branchRepository, warehouseCategoryRepository),
-    updateWarehouse: new UpdateWarehouseUseCase(warehouseRepository, warehouseCategoryRepository),
-    activateWarehouse: new ActivateWarehouseUseCase(warehouseRepository),
-    deactivateWarehouse: new DeactivateWarehouseUseCase(warehouseRepository),
+    updateWarehouse: new UpdateWarehouseUseCase(warehouseRepository, warehouseCategoryRepository, branchRepository),
+    activateWarehouse: new ActivateWarehouseUseCase(warehouseRepository, branchRepository),
+    deactivateWarehouse: new DeactivateWarehouseUseCase(warehouseRepository, branchRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico y no filtra por tenant; la ownership
+// check pasa por la misma cadena warehouse -> branch -> company.
+const requireOwnCompanyWarehouse = async (req, res, next) => {
+    try {
+        const branchIds = await branchRepository.findIdsByCompany(req.user.companyId);
+        const doc = await WarehouseModel.findOne({ _id: req.params.id, branch: { $in: branchIds } }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Almacén no encontrado' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 const warehouseAudit = {
     entityModel: WarehouseModel,
@@ -65,7 +78,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios del almacén',
         handler: createEntityHistoryHandler(WarehouseModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyWarehouse]
     },
     {
         method: 'POST',

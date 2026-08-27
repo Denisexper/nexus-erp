@@ -1,10 +1,9 @@
 import { createSignal, createResource, createEffect, Show, For } from "solid-js";
 import { branchesApi } from "../../services/branches.api";
-import { companiesApi } from "../../services/companies.api";
 import { geoApi } from "../../services/geo.api";
 import { showToast } from "../../utils/toast";
 
-// company/department/municipality/district llegan poblados desde el backend
+// department/municipality/district llegan poblados desde el backend
 // (subdocumento Mongoose) o como id crudo; aquí normalizamos a un id de string.
 const extractId = (value) => {
   if (!value) return "";
@@ -15,7 +14,6 @@ const extractId = (value) => {
 function BranchFormModal(props) {
   const isEditing = () => !!props.branch;
 
-  const [company, setCompany] = createSignal("");
   const [name, setName] = createSignal("");
   const [address, setAddress] = createSignal("");
   const [department, setDepartment] = createSignal("");
@@ -26,11 +24,6 @@ function BranchFormModal(props) {
 
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
-
-  // Solo empresas activas: una empresa inactiva no puede generar nuevas transacciones (RN-EMP-005)
-  const [companies] = createResource(() =>
-    companiesApi.getAll({ isActive: true, limit: 1000 }),
-  );
 
   const [departments] = createResource(() => geoApi.getDepartments());
   const [municipalities] = createResource(
@@ -45,7 +38,6 @@ function BranchFormModal(props) {
   // Precargar el formulario al abrir en modo edición (o limpiarlo en modo creación)
   createEffect(() => {
     const branch = props.branch;
-    setCompany(extractId(branch?.company));
     setName(branch?.name || "");
     setAddress(branch?.address || "");
     setDepartment(extractId(branch?.department));
@@ -74,7 +66,6 @@ function BranchFormModal(props) {
     setError("");
 
     const payload = {
-      company: company(),
       name: name(),
       address: address(),
       department: department(),
@@ -86,7 +77,6 @@ function BranchFormModal(props) {
 
     try {
       if (isEditing()) {
-        // company no es editable una vez creada la sucursal; el backend la ignora si se envía
         await branchesApi.update(props.branch._id, payload);
         showToast.success("Sucursal actualizada correctamente");
       } else {
@@ -118,38 +108,6 @@ function BranchFormModal(props) {
         </div>
 
         <form onSubmit={handleSubmit} class="p-6 space-y-4 overflow-y-auto">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Empresa *
-            </label>
-            <Show
-              when={!companies.loading}
-              fallback={
-                <div class="input-field bg-gray-100 dark:bg-gray-800">
-                  Cargando...
-                </div>
-              }
-            >
-              <select
-                class="input-field w-full disabled:opacity-60"
-                required
-                disabled={isEditing()}
-                value={company()}
-                onChange={(e) => setCompany(e.target.value)}
-              >
-                <option value="">Selecciona...</option>
-                <For each={companies()?.data}>
-                  {(c) => <option value={c._id}>{c.commercialName}</option>}
-                </For>
-              </select>
-            </Show>
-            <Show when={isEditing()}>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                La empresa de una sucursal no puede modificarse.
-              </p>
-            </Show>
-          </div>
-
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Nombre de la sucursal *

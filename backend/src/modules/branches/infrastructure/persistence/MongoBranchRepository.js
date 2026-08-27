@@ -78,6 +78,11 @@ export class MongoBranchRepository extends BranchRepository {
         return toDomain(doc);
     }
 
+    async findIdsByCompany(companyId) {
+        const docs = await BranchModel.find({ company: companyId }).select('_id');
+        return docs.map((doc) => doc._id.toString());
+    }
+
     async create(branch) {
         const doc = await BranchModel.create({
             company: branch.company,

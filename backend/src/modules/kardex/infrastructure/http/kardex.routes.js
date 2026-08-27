@@ -4,6 +4,8 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { MongoProductRepository } from '#modules/products/infrastructure/persistence/MongoProductRepository.js';
 import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
+import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
+import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 
 import { KardexMovementModel } from '../persistence/kardexMongooseModel.js';
 import { MongoKardexRepository } from '../persistence/MongoKardexRepository.js';
@@ -19,14 +21,16 @@ import { KardexController } from './kardex.controller.js';
 const kardexRepository = new MongoKardexRepository();
 const productRepository = new MongoProductRepository();
 const locationRepository = new MongoLocationRepository();
+const warehouseRepository = new MongoWarehouseRepository();
+const branchRepository = new MongoBranchRepository();
 
 const controller = new KardexController({
-    listMovements: new ListMovementsUseCase(kardexRepository),
-    getMovementById: new GetMovementByIdUseCase(kardexRepository),
-    registerMovement: new RegisterMovementUseCase(kardexRepository, productRepository, locationRepository),
-    registerTransfer: new RegisterTransferUseCase(kardexRepository, productRepository, locationRepository),
-    getStockByLocation: new GetStockByLocationUseCase(kardexRepository, locationRepository),
-    getStockByProduct: new GetStockByProductUseCase(kardexRepository, productRepository),
+    listMovements: new ListMovementsUseCase(kardexRepository, branchRepository, warehouseRepository, locationRepository),
+    getMovementById: new GetMovementByIdUseCase(kardexRepository, branchRepository, warehouseRepository, locationRepository),
+    registerMovement: new RegisterMovementUseCase(kardexRepository, productRepository, locationRepository, branchRepository, warehouseRepository),
+    registerTransfer: new RegisterTransferUseCase(kardexRepository, productRepository, locationRepository, branchRepository, warehouseRepository),
+    getStockByLocation: new GetStockByLocationUseCase(kardexRepository, locationRepository, branchRepository, warehouseRepository),
+    getStockByProduct: new GetStockByProductUseCase(kardexRepository, productRepository, branchRepository, warehouseRepository, locationRepository),
 });
 
 const router = Router();

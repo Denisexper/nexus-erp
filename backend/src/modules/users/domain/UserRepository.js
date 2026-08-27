@@ -8,7 +8,7 @@ export class UserRepository {
     throw new Error('UserRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('UserRepository.findById no implementado');
   }
 
@@ -24,7 +24,7 @@ export class UserRepository {
     throw new Error('UserRepository.update no implementado');
   }
 
-  async remove(_id) {
+  async remove(_id, _companyId) {
     throw new Error('UserRepository.remove no implementado');
   }
 

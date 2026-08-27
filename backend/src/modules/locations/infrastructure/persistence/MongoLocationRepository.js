@@ -54,10 +54,16 @@ export class MongoLocationRepository extends LocationRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, warehouseIds) {
         assertValidId(id);
-        const doc = await LocationModel.findById(id).populate(POPULATE);
+        const filter = warehouseIds ? { _id: id, warehouse: { $in: warehouseIds } } : { _id: id };
+        const doc = await LocationModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
+    }
+
+    async findIdsByWarehouses(warehouseIds) {
+        const docs = await LocationModel.find({ warehouse: { $in: warehouseIds } }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async findByCodeAndWarehouse(code, warehouseId) {
