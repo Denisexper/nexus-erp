@@ -17,7 +17,7 @@ export class CreateUserUseCase {
     const existing = await this.userRepository.findByEmailAndCompany(email, companyId);
     if (existing) throw new DuplicateEmailError();
 
-    const roleDoc = await this.roleRepository.findByIdOrName(role || 'user');
+    const roleDoc = await this.roleRepository.findByIdOrName(role || 'user', companyId);
     if (!roleDoc) throw new InvalidRoleError();
 
     const passwordHash = await hashPassword(password);

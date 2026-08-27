@@ -4,9 +4,16 @@ import { Company } from '../../domain/Company.js';
 import { DuplicateNitError, DuplicateNrcError, InvalidLocationError } from '../../domain/errors.js';
 
 export class CreateCompanyUseCase {
-  constructor(companyRepository, geoRepository) {
+  /**
+   * @param {import('../../domain/CompanyRepository.js').CompanyRepository} companyRepository
+   * @param {import('#modules/geo/domain/GeoRepository.js').GeoRepository} geoRepository
+   * @param {(companyId: string) => Promise<void>} seedRolesForCompany - siembra
+   *   admin/moderator/user para la empresa recién creada (ver seedRoles.js)
+   */
+  constructor(companyRepository, geoRepository, seedRolesForCompany) {
     this.companyRepository = companyRepository;
     this.geoRepository = geoRepository;
+    this.seedRolesForCompany = seedRolesForCompany;
   }
 
   async #generateUniqueSlug(seed) {
@@ -39,6 +46,12 @@ export class CreateCompanyUseCase {
     const slug = await this.#generateUniqueSlug(data.commercialName || data.name);
 
     const company = new Company({ ...data, slug });
-    return this.companyRepository.create(company);
+    const created = await this.companyRepository.create(company);
+
+    // Sin esto la empresa queda sin ningún rol y nadie podría loguearse en
+    // su tenant (login exige {slug, email, password} + un rol resuelto).
+    await this.seedRolesForCompany(created.id);
+
+    return created;
   }
 }

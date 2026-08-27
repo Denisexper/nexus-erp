@@ -5,8 +5,8 @@ export class GetRoleByIdUseCase {
     this.roleRepository = roleRepository;
   }
 
-  async execute(id) {
-    const role = await this.roleRepository.findById(id);
+  async execute(id, companyId) {
+    const role = await this.roleRepository.findById(id, companyId);
     if (!role) throw new RoleNotFoundError();
     return role;
   }

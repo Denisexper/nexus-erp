@@ -32,7 +32,7 @@ import kardexRoutes, { kardexRoutes as kardexRoutesMetadata } from "#modules/kar
 // bootstrap: sincronizar el catálogo de permisos y los roles del sistema
 import { MongoPermissionRepository } from "#modules/permissions/infrastructure/persistence/MongoPermissionRepository.js";
 import { SyncDiscoveredPermissionsUseCase } from "#modules/permissions/application/use-cases/syncDiscoveredPermissions.js";
-import { seedRoles } from "#modules/roles/infrastructure/seed/seedRoles.js";
+import { seedRolesForAllCompanies } from "#modules/roles/infrastructure/seed/seedRoles.js";
 import { seedGeo } from "#modules/geo/infrastructure/persistence/seed/seedGeo.js";
 
 // Configurar servidor
@@ -74,10 +74,11 @@ mongoConnect().then(async () => {
 
   // Auto-descubrir y sincronizar permisos desde la metadata de las rutas
   const syncDiscoveredPermissions = new SyncDiscoveredPermissionsUseCase(new MongoPermissionRepository());
-  const discoveredPermissionCodes = await syncDiscoveredPermissions.execute(routeModules);
+  await syncDiscoveredPermissions.execute(routeModules);
 
-  // Sincronizar roles del sistema (admin siempre recibe todos los permisos descubiertos)
-  await seedRoles(discoveredPermissionCodes);
+  // Sincronizar roles del sistema de cada empresa (admin siempre recibe
+  // todos los permisos descubiertos, leídos del catálogo ya sincronizado arriba)
+  await seedRolesForAllCompanies();
 });
 
 // Inicializar rutas

@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoGeoRepository } from '#modules/geo/infrastructure/persistence/MongoGeoRepository.js';
+import { seedRolesForCompany } from '#modules/roles/infrastructure/seed/seedRoles.js';
 
 import { CompanyModel } from '../persistence/companyMongooseModel.js';
 import { MongoCompanyRepository } from '../persistence/MongoCompanyRepository.js';
@@ -24,7 +25,7 @@ const geoRepository = new MongoGeoRepository();
 const controller = new CompanyController({
     listCompanies: new ListCompaniesUseCase(companyRepository),
     getCompanyById: new GetCompanyByIdUseCase(companyRepository),
-    createCompany: new CreateCompanyUseCase(companyRepository, geoRepository),
+    createCompany: new CreateCompanyUseCase(companyRepository, geoRepository, seedRolesForCompany),
     updateCompany: new UpdateCompanyUseCase(companyRepository, geoRepository),
     activateCompany: new ActivateCompanyUseCase(companyRepository),
     deactivateCompany: new DeactivateCompanyUseCase(companyRepository),
