@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import CompanyFormModal from "./CompanyFormModal";
 import CompanyHistoryModal from "./CompanyHistoryModal";
+import CompanyDetailModal from "./CompanyDetailModal";
 
 function Companies() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ function Companies() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedCompany, setSelectedCompany] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailCompany, setDetailCompany] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -85,6 +89,11 @@ function Companies() {
   const openHistory = (company) => {
     setSelectedCompany(company);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (company) => {
+    setDetailCompany(company);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -207,14 +216,7 @@ function Companies() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("companies.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,6 +280,12 @@ function Companies() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(company)}
+                              class="text-xs px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              Detalle
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(company)}
@@ -348,6 +356,13 @@ function Companies() {
           <CompanyHistoryModal
             company={selectedCompany()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <CompanyDetailModal
+            company={detailCompany()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>

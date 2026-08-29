@@ -11,6 +11,7 @@ import { productImagesApi } from "../../services/productImages.api";
 import ProductFormModal from "./ProductFormModal";
 import ProductHistoryModal from "./ProductHistoryModal";
 import ProductImagesModal from "./ProductImagesModal";
+import ProductDetailModal from "./ProductDetailModal";
 import ProductCard from "./ProductCard";
 
 function Products() {
@@ -79,6 +80,9 @@ function Products() {
   const [showImagesModal, setShowImagesModal] = createSignal(false);
   const [imagesProduct, setImagesProduct] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailProduct, setDetailProduct] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -118,6 +122,11 @@ function Products() {
   const openImages = (product) => {
     setImagesProduct(product);
     setShowImagesModal(true);
+  };
+
+  const openDetail = (product) => {
+    setDetailProduct(product);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -278,6 +287,7 @@ function Products() {
                           openImages={openImages}
                           openHistory={openHistory}
                           openEdit={openEdit}
+                          openDetail={openDetail}
                           toggleStatus={toggleStatus}
                         />
                       )}
@@ -300,15 +310,7 @@ function Products() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("products.update") ||
-                        auth.hasPermission("logs.read") ||
-                        auth.hasPermission("product_images.view")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -343,6 +345,12 @@ function Products() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(product)}
+                              class="text-xs px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              Detalle
+                            </button>
                             <Show when={auth.hasPermission("product_images.view")}>
                               <button
                                 onClick={() => openImages(product)}
@@ -427,6 +435,13 @@ function Products() {
           <ProductImagesModal
             product={imagesProduct()}
             onClose={() => setShowImagesModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <ProductDetailModal
+            product={detailProduct()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>
