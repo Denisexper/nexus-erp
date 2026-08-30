@@ -9,6 +9,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import SupplierFormModal from "./SupplierFormModal";
 import SupplierHistoryModal from "./SupplierHistoryModal";
+import SupplierDetailModal from "./SupplierDetailModal";
 
 function Suppliers() {
   const auth = useAuth();
@@ -61,6 +62,9 @@ function Suppliers() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedSupplier, setSelectedSupplier] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailSupplier, setDetailSupplier] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -95,6 +99,11 @@ function Suppliers() {
   const openHistory = (supplier) => {
     setSelectedSupplier(supplier);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (supplier) => {
+    setDetailSupplier(supplier);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -225,14 +234,7 @@ function Suppliers() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("suppliers.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,6 +273,13 @@ function Suppliers() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(supplier)}
+                              title="Ver detalle"
+                              class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              👁️
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(supplier)}
@@ -341,6 +350,13 @@ function Suppliers() {
           <SupplierHistoryModal
             supplier={selectedSupplier()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <SupplierDetailModal
+            supplier={detailSupplier()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>
