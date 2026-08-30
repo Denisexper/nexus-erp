@@ -47,9 +47,10 @@ function ProductCard(props) {
       <div class="flex flex-wrap gap-1">
         <button
           onClick={() => props.openDetail(product)}
+          title="Ver detalle"
           class="text-xs px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
         >
-          Detalle
+          👁️
         </button>
         <Show when={auth.hasPermission("product_images.view")}>
           <button

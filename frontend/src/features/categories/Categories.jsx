@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import CategoryFormModal from "./CategoryFormModal";
 import CategoryHistoryModal from "./CategoryHistoryModal";
+import CategoryDetailModal from "./CategoryDetailModal";
 
 function Categories() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ function Categories() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedCategory, setSelectedCategory] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailCategory, setDetailCategory] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -85,6 +89,11 @@ function Categories() {
   const openHistory = (category) => {
     setSelectedCategory(category);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (category) => {
+    setDetailCategory(category);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -198,14 +207,7 @@ function Categories() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("categories.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -232,6 +234,13 @@ function Categories() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(category)}
+                              title="Ver detalle"
+                              class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              👁️
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(category)}
@@ -304,6 +313,13 @@ function Categories() {
           <CategoryHistoryModal
             category={selectedCategory()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <CategoryDetailModal
+            category={detailCategory()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>
