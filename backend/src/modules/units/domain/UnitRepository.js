@@ -3,12 +3,16 @@ export class UnitRepository {
     throw new Error('UnitRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('UnitRepository.findById no implementado');
   }
 
-  async findByName(_name) {
-    throw new Error('UnitRepository.findByName no implementado');
+  async findByNameAndCompany(_name, _companyId) {
+    throw new Error('UnitRepository.findByNameAndCompany no implementado');
+  }
+
+  async findIdsByCompany(_companyId) {
+    throw new Error('UnitRepository.findIdsByCompany no implementado');
   }
 
   async create(_unit) {

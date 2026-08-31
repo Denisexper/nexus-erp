@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Product } from '../../domain/Product.js';
+import { resolveCategoryIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   SubCategoryNotFoundForProductError,
   UnitNotFoundForProductError,
@@ -10,20 +11,26 @@ import {
 } from '../../domain/errors.js';
 
 export class CreateProductUseCase {
-  constructor(productRepository, subCategoryRepository, unitRepository) {
+  constructor(productRepository, subCategoryRepository, unitRepository, categoryRepository) {
     this.productRepository = productRepository;
     this.subCategoryRepository = subCategoryRepository;
     this.unitRepository = unitRepository;
+    this.categoryRepository = categoryRepository;
   }
 
   async execute(data) {
-    const subCategory = await this.subCategoryRepository.findById(data.subCategory);
+    // La sub-categoría tiene que ser de la company del usuario (si no,
+    // cualquiera con permiso de crear productos podría colgarle uno a una
+    // sub-categoría ajena), igual que warehouse valida su branch.
+    const categoryIds = await resolveCategoryIdsForCompany(data.company, this.categoryRepository);
+    const subCategory = await this.subCategoryRepository.findById(data.subCategory, categoryIds);
     if (!subCategory) throw new SubCategoryNotFoundForProductError();
 
-    // RN-PRO-006/007: unidad de compra y de venta son FKs independientes.
+    // RN-PRO-006/007: unidad de compra y de venta son FKs independientes,
+    // también deben ser de la company del usuario.
     const [purchaseUnit, saleUnit] = await Promise.all([
-      this.unitRepository.findById(data.purchaseUnit),
-      this.unitRepository.findById(data.saleUnit),
+      this.unitRepository.findById(data.purchaseUnit, data.company),
+      this.unitRepository.findById(data.saleUnit, data.company),
     ]);
     if (!purchaseUnit || !saleUnit) throw new UnitNotFoundForProductError();
 
@@ -31,13 +38,13 @@ export class CreateProductUseCase {
     if (purchaseUnit.type !== 'purchase') throw new InvalidPurchaseUnitTypeError();
     if (saleUnit.type !== 'sale') throw new InvalidSaleUnitTypeError();
 
-    // RN-PRO-005: código interno único.
-    const internalCodeTaken = await this.productRepository.findByInternalCode(data.internalCode);
+    // RN-PRO-005: código interno único (dentro de la empresa).
+    const internalCodeTaken = await this.productRepository.findByInternalCodeAndCompany(data.internalCode, data.company);
     if (internalCodeTaken) throw new DuplicateInternalCodeError();
 
-    // RN-PRO-004: SKU único (cuando se proporciona).
+    // RN-PRO-004: SKU único (cuando se proporciona, dentro de la empresa).
     if (data.sku) {
-      const skuTaken = await this.productRepository.findBySku(data.sku);
+      const skuTaken = await this.productRepository.findBySkuAndCompany(data.sku, data.company);
       if (skuTaken) throw new DuplicateSkuError();
     }
 

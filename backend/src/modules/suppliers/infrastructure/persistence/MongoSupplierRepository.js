@@ -8,6 +8,7 @@ const toDomain = (doc) =>
     doc
         ? new Supplier({
               id: doc._id.toString(),
+              company: doc.company,
               code: doc.code,
               country: doc.country,
               name: doc.name,
@@ -30,7 +31,7 @@ const assertValidId = (id) => {
 const POPULATE = { path: 'country', select: 'name' };
 
 export class MongoSupplierRepository extends SupplierRepository {
-    async findAll({ search, country, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ search, company, country, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) {
@@ -42,6 +43,7 @@ export class MongoSupplierRepository extends SupplierRepository {
             ];
         }
 
+        if (company) filter.company = company;
         if (country) filter.country = country;
 
         if (isActive !== undefined && isActive !== '') {
@@ -58,19 +60,26 @@ export class MongoSupplierRepository extends SupplierRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await SupplierModel.findById(id).populate(POPULATE);
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await SupplierModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 
-    async findByCode(code) {
-        const doc = await SupplierModel.findOne({ code });
+    async findByCodeAndCompany(code, companyId) {
+        const doc = await SupplierModel.findOne({ code, company: companyId });
         return toDomain(doc);
+    }
+
+    async findIdsByCompany(companyId) {
+        const docs = await SupplierModel.find({ company: companyId }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(supplier) {
         const doc = await SupplierModel.create({
+            company: supplier.company,
             code: supplier.code,
             country: supplier.country,
             name: supplier.name,

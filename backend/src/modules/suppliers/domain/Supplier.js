@@ -1,6 +1,7 @@
 export class Supplier {
-  constructor({ id, code, country, name, address, phone, email, website, isActive = true, createdAt, updatedAt }) {
+  constructor({ id, company, code, country, name, address, phone, email, website, isActive = true, createdAt, updatedAt }) {
     this.id = id;
+    this.company = company; // id de Company, o subdocumento poblado
     this.code = code;
     this.country = country; // id de Country, o subdocumento poblado
     this.name = name;

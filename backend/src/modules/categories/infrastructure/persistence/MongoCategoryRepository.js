@@ -8,6 +8,7 @@ const toDomain = (doc) =>
     doc
         ? new Category({
               id: doc._id.toString(),
+              company: doc.company,
               name: doc.name,
               description: doc.description,
               isActive: doc.isActive,
@@ -23,12 +24,14 @@ const assertValidId = (id) => {
 };
 
 export class MongoCategoryRepository extends CategoryRepository {
-    async findAll({ search, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ search, company, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) {
             filter.name = { $regex: search, $options: 'i' };
         }
+
+        if (company) filter.company = company;
 
         if (isActive !== undefined && isActive !== '') {
             filter.isActive = isActive === true || isActive === 'true';
@@ -44,19 +47,26 @@ export class MongoCategoryRepository extends CategoryRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await CategoryModel.findById(id);
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await CategoryModel.findOne(filter);
         return toDomain(doc);
     }
 
-    async findByName(name) {
-        const doc = await CategoryModel.findOne({ name });
+    async findByNameAndCompany(name, companyId) {
+        const doc = await CategoryModel.findOne({ name, company: companyId });
         return toDomain(doc);
+    }
+
+    async findIdsByCompany(companyId) {
+        const docs = await CategoryModel.find({ company: companyId }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(category) {
         const doc = await CategoryModel.create({
+            company: category.company,
             name: category.name,
             description: category.description,
         });

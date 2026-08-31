@@ -28,9 +28,21 @@ const controller = new UnitController({
 
 const router = Router();
 
+// El handler de historial es genérico y no filtra por tenant; ownership se
+// valida acá, igual que en branches.routes.js / categories.routes.js.
+const requireOwnCompanyUnit = async (req, res, next) => {
+    try {
+        const doc = await UnitModel.findOne({ _id: req.params.id, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Unidad no encontrada' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
+
 const unitAudit = {
     entityModel: UnitModel,
-    snapshot: { fields: ['name', 'type', 'isActive'] },
+    snapshot: { fields: ['company', 'name', 'type', 'isActive'] },
     compareFields: ['name', 'type', 'isActive']
 };
 
@@ -61,7 +73,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la unidad',
         handler: createEntityHistoryHandler(UnitModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyUnit]
     },
     {
         method: 'POST',

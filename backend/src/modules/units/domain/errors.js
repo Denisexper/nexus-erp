@@ -19,6 +19,6 @@ export class InvalidUnitIdError extends DomainError {
 
 export class DuplicateUnitNameError extends DomainError {
   constructor() {
-    super('Ya existe una unidad con ese nombre');
+    super('Ya existe una unidad con ese nombre en esta empresa');
   }
 }

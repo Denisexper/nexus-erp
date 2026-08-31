@@ -26,7 +26,7 @@ export class RegisterTransferUseCase {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
     if (data.fromLocation === data.toLocation) throw new SameLocationTransferError();
 
-    const product = await this.productRepository.findById(data.product);
+    const product = await this.productRepository.findById(data.product, companyId);
     if (!product) throw new ProductNotFoundForKardexError();
 
     const warehouseIds = await resolveWarehouseIdsForCompany(companyId, this.branchRepository, this.warehouseRepository);

@@ -3,12 +3,16 @@ export class SubCategoryRepository {
     throw new Error('SubCategoryRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _categoryIds) {
     throw new Error('SubCategoryRepository.findById no implementado');
   }
 
   async findByNameAndCategory(_name, _categoryId) {
     throw new Error('SubCategoryRepository.findByNameAndCategory no implementado');
+  }
+
+  async findIdsByCategories(_categoryIds) {
+    throw new Error('SubCategoryRepository.findIdsByCategories no implementado');
   }
 
   async create(_subCategory) {

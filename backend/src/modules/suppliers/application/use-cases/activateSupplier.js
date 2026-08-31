@@ -5,8 +5,8 @@ export class ActivateSupplierUseCase {
     this.supplierRepository = supplierRepository;
   }
 
-  async execute(id) {
-    const supplier = await this.supplierRepository.findById(id);
+  async execute(id, companyId) {
+    const supplier = await this.supplierRepository.findById(id, companyId);
     if (!supplier) throw new SupplierNotFoundError();
 
     return this.supplierRepository.update(id, { isActive: true });

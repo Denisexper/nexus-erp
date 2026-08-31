@@ -19,6 +19,6 @@ export class InvalidCategoryIdError extends DomainError {
 
 export class DuplicateCategoryNameError extends DomainError {
   constructor() {
-    super('Ya existe una categoría con ese nombre');
+    super('Ya existe una categoría con ese nombre en esta empresa');
   }
 }

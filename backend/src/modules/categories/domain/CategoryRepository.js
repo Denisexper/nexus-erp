@@ -3,12 +3,16 @@ export class CategoryRepository {
     throw new Error('CategoryRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('CategoryRepository.findById no implementado');
   }
 
-  async findByName(_name) {
-    throw new Error('CategoryRepository.findByName no implementado');
+  async findByNameAndCompany(_name, _companyId) {
+    throw new Error('CategoryRepository.findByNameAndCompany no implementado');
+  }
+
+  async findIdsByCompany(_companyId) {
+    throw new Error('CategoryRepository.findIdsByCompany no implementado');
   }
 
   async create(_category) {

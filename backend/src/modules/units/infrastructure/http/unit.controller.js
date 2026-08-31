@@ -7,6 +7,7 @@ import {
 const toUnitDTO = (unit) => ({
   _id: unit.id,
   id: unit.id,
+  company: unit.company,
   name: unit.name,
   type: unit.type,
   isActive: unit.isActive,
@@ -42,7 +43,13 @@ export class UnitController {
   getAll = async (req, res) => {
     try {
       const { search, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listUnitsUseCase.execute({ search, isActive, page, limit });
+      const result = await this.listUnitsUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de unidades vacia' : 'Unidades obtenidas correctamente',
@@ -64,7 +71,7 @@ export class UnitController {
 
   getOne = async (req, res) => {
     try {
-      const unit = await this.getUnitByIdUseCase.execute(req.params.id);
+      const unit = await this.getUnitByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Unidad encontrada', data: toUnitDTO(unit) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo unidad');
@@ -74,7 +81,7 @@ export class UnitController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, FIELDS);
-      const unit = await this.createUnitUseCase.execute(data);
+      const unit = await this.createUnitUseCase.execute({ ...data, company: req.user.companyId });
       res.status(201).json({ msj: 'Unidad creada exitosamente', newUnit: toUnitDTO(unit) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando unidad');
@@ -84,7 +91,7 @@ export class UnitController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, FIELDS);
-      const unit = await this.updateUnitUseCase.execute(req.params.id, changes);
+      const unit = await this.updateUnitUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Unidad actualizada correctamente', unit: toUnitDTO(unit) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando unidad');
@@ -93,7 +100,7 @@ export class UnitController {
 
   activate = async (req, res) => {
     try {
-      const unit = await this.activateUnitUseCase.execute(req.params.id);
+      const unit = await this.activateUnitUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Unidad activada correctamente', unit: toUnitDTO(unit) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la unidad');
@@ -102,7 +109,7 @@ export class UnitController {
 
   deactivate = async (req, res) => {
     try {
-      const unit = await this.deactivateUnitUseCase.execute(req.params.id);
+      const unit = await this.deactivateUnitUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Unidad desactivada correctamente', unit: toUnitDTO(unit) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la unidad');

@@ -47,7 +47,14 @@ export class SubCategoryController {
   getAll = async (req, res) => {
     try {
       const { search, category, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listSubCategoriesUseCase.execute({ search, category, isActive, page, limit });
+      const result = await this.listSubCategoriesUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        category,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de sub-categorías vacia' : 'Sub-categorías obtenidas correctamente',
@@ -69,7 +76,7 @@ export class SubCategoryController {
 
   getOne = async (req, res) => {
     try {
-      const subCategory = await this.getSubCategoryByIdUseCase.execute(req.params.id);
+      const subCategory = await this.getSubCategoryByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sub-categoría encontrada', data: toSubCategoryDTO(subCategory) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo sub-categoría');
@@ -79,7 +86,7 @@ export class SubCategoryController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, CREATE_FIELDS);
-      const subCategory = await this.createSubCategoryUseCase.execute(data);
+      const subCategory = await this.createSubCategoryUseCase.execute(data, req.user.companyId);
       res.status(201).json({ msj: 'Sub-categoría creada exitosamente', newSubCategory: toSubCategoryDTO(subCategory) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando sub-categoría');
@@ -89,7 +96,7 @@ export class SubCategoryController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, UPDATE_FIELDS);
-      const subCategory = await this.updateSubCategoryUseCase.execute(req.params.id, changes);
+      const subCategory = await this.updateSubCategoryUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Sub-categoría actualizada correctamente', subCategory: toSubCategoryDTO(subCategory) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando sub-categoría');
@@ -98,7 +105,7 @@ export class SubCategoryController {
 
   activate = async (req, res) => {
     try {
-      const subCategory = await this.activateSubCategoryUseCase.execute(req.params.id);
+      const subCategory = await this.activateSubCategoryUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sub-categoría activada correctamente', subCategory: toSubCategoryDTO(subCategory) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la sub-categoría');
@@ -107,7 +114,7 @@ export class SubCategoryController {
 
   deactivate = async (req, res) => {
     try {
-      const subCategory = await this.deactivateSubCategoryUseCase.execute(req.params.id);
+      const subCategory = await this.deactivateSubCategoryUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Sub-categoría desactivada correctamente', subCategory: toSubCategoryDTO(subCategory) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la sub-categoría');
