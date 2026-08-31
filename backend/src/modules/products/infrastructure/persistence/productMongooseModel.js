@@ -1,6 +1,11 @@
 import { Schema, model } from 'mongoose';
 
 const productSchema = new Schema({
+    company: {
+        type: Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'La empresa es obligatoria']
+    },
     subCategory: {
         type: Schema.Types.ObjectId,
         ref: 'SubCategory',
@@ -29,7 +34,6 @@ const productSchema = new Schema({
     internalCode: {
         type: String,
         required: [true, 'El código interno del producto es obligatorio'],
-        unique: true,
         trim: true
     },
     originalCode: {
@@ -38,9 +42,7 @@ const productSchema = new Schema({
     },
     sku: {
         type: String,
-        trim: true,
-        unique: true,
-        sparse: true
+        trim: true
     },
     name: {
         type: String,
@@ -70,5 +72,21 @@ const productSchema = new Schema({
 }, {
     timestamps: true
 });
+
+// RN-PRO-005/004: código interno y SKU únicos dentro de la misma empresa,
+// no global (igual que branches/categories). `sparse` no sirve acá: en un
+// índice compuesto solo excluye el documento si TODOS los campos del índice
+// faltan, y `company` siempre está presente. Se usa partialFilterExpression
+// en su lugar, que sí excluye por campo puntual — necesario para el SKU
+// (RN-PRO-004 solo aplica "cuando se proporciona") y como red de seguridad
+// en internalCode por si algún documento legado quedó sin el campo.
+productSchema.index(
+    { company: 1, internalCode: 1 },
+    { unique: true, partialFilterExpression: { internalCode: { $exists: true } } },
+);
+productSchema.index(
+    { company: 1, sku: 1 },
+    { unique: true, partialFilterExpression: { sku: { $exists: true } } },
+);
 
 export const ProductModel = model('Product', productSchema);

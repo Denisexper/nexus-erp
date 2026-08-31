@@ -1,6 +1,7 @@
 export class Product {
   constructor({
     id,
+    company,
     subCategory,
     category,
     purchaseUnit,
@@ -19,6 +20,7 @@ export class Product {
     updatedAt,
   }) {
     this.id = id;
+    this.company = company; // id de Company, o subdocumento poblado
     this.subCategory = subCategory; // id de SubCategory, o subdocumento poblado
     this.category = category; // id de Category, denormalizado desde subCategory.category (ERS v0.6)
     this.purchaseUnit = purchaseUnit; // id de Unit con type=purchase, o subdocumento poblado

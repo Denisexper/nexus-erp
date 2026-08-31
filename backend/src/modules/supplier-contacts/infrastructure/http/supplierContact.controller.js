@@ -46,7 +46,14 @@ export class SupplierContactController {
   getAll = async (req, res) => {
     try {
       const { search, supplier, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listSupplierContactsUseCase.execute({ search, supplier, isActive, page, limit });
+      const result = await this.listSupplierContactsUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        supplier,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de contactos de proveedor vacia' : 'Contactos de proveedor obtenidos correctamente',
@@ -68,7 +75,7 @@ export class SupplierContactController {
 
   getOne = async (req, res) => {
     try {
-      const supplierContact = await this.getSupplierContactByIdUseCase.execute(req.params.id);
+      const supplierContact = await this.getSupplierContactByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Contacto de proveedor encontrado', data: toSupplierContactDTO(supplierContact) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo contacto de proveedor');
@@ -78,7 +85,7 @@ export class SupplierContactController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, CREATE_FIELDS);
-      const supplierContact = await this.createSupplierContactUseCase.execute(data);
+      const supplierContact = await this.createSupplierContactUseCase.execute(data, req.user.companyId);
       res.status(201).json({ msj: 'Contacto de proveedor creado exitosamente', newSupplierContact: toSupplierContactDTO(supplierContact) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando contacto de proveedor');
@@ -88,7 +95,7 @@ export class SupplierContactController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, UPDATE_FIELDS);
-      const supplierContact = await this.updateSupplierContactUseCase.execute(req.params.id, changes);
+      const supplierContact = await this.updateSupplierContactUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Contacto de proveedor actualizado correctamente', supplierContact: toSupplierContactDTO(supplierContact) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando contacto de proveedor');
@@ -97,7 +104,7 @@ export class SupplierContactController {
 
   activate = async (req, res) => {
     try {
-      const supplierContact = await this.activateSupplierContactUseCase.execute(req.params.id);
+      const supplierContact = await this.activateSupplierContactUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Contacto de proveedor activado correctamente', supplierContact: toSupplierContactDTO(supplierContact) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar el contacto de proveedor');
@@ -106,7 +113,7 @@ export class SupplierContactController {
 
   deactivate = async (req, res) => {
     try {
-      const supplierContact = await this.deactivateSupplierContactUseCase.execute(req.params.id);
+      const supplierContact = await this.deactivateSupplierContactUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Contacto de proveedor desactivado correctamente', supplierContact: toSupplierContactDTO(supplierContact) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar el contacto de proveedor');

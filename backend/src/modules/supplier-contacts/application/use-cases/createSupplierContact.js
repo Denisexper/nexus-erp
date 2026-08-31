@@ -7,8 +7,8 @@ export class CreateSupplierContactUseCase {
     this.supplierRepository = supplierRepository;
   }
 
-  async execute(data) {
-    const supplier = await this.supplierRepository.findById(data.supplier);
+  async execute(data, companyId) {
+    const supplier = await this.supplierRepository.findById(data.supplier, companyId);
     if (!supplier) throw new SupplierNotFoundForSupplierContactError();
 
     const supplierContact = new SupplierContact(data);

@@ -11,8 +11,8 @@ export class CreateSupplierUseCase {
     const country = await this.countryRepository.findById(data.country);
     if (!country) throw new CountryNotFoundForSupplierError();
 
-    // RN-SUP-002: el código interno del proveedor debe ser único.
-    const codeTaken = await this.supplierRepository.findByCode(data.code);
+    // RN-SUP-002: el código interno del proveedor debe ser único (dentro de la empresa).
+    const codeTaken = await this.supplierRepository.findByCodeAndCompany(data.code, data.company);
     if (codeTaken) throw new DuplicateSupplierCodeError();
 
     const supplier = new Supplier(data);

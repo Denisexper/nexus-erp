@@ -30,11 +30,23 @@ const controller = new SupplierController({
 
 const router = Router();
 
+// El handler de historial es genérico y no filtra por tenant; ownership se
+// valida acá, igual que en branches.routes.js.
+const requireOwnCompanySupplier = async (req, res, next) => {
+    try {
+        const doc = await SupplierModel.findOne({ _id: req.params.id, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Proveedor no encontrado' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
+
 const SUPPLIER_AUDIT_FIELDS = ['code', 'country', 'name', 'address', 'phone', 'email', 'website', 'isActive'];
 
 const supplierAudit = {
     entityModel: SupplierModel,
-    snapshot: { fields: SUPPLIER_AUDIT_FIELDS, populate: 'country' },
+    snapshot: { fields: ['company', ...SUPPLIER_AUDIT_FIELDS], populate: ['country'] },
     compareFields: SUPPLIER_AUDIT_FIELDS
 };
 
@@ -71,7 +83,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios del proveedor',
         handler: createEntityHistoryHandler(SupplierModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanySupplier]
     },
     {
         method: 'POST',

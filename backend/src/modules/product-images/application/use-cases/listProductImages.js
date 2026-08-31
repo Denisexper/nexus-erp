@@ -6,8 +6,8 @@ export class ListProductImagesUseCase {
     this.productRepository = productRepository;
   }
 
-  async execute(productId, { isActive } = {}) {
-    const product = await this.productRepository.findById(productId);
+  async execute(productId, { isActive, companyId } = {}) {
+    const product = await this.productRepository.findById(productId, companyId);
     if (!product) throw new ProductNotFoundForImageError();
 
     // RN-PRO-017: por defecto la galería solo muestra imágenes activas.

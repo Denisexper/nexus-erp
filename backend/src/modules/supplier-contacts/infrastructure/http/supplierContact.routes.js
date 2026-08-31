@@ -20,15 +20,29 @@ const supplierContactRepository = new MongoSupplierContactRepository();
 const supplierRepository = new MongoSupplierRepository();
 
 const controller = new SupplierContactController({
-    listSupplierContacts: new ListSupplierContactsUseCase(supplierContactRepository),
-    getSupplierContactById: new GetSupplierContactByIdUseCase(supplierContactRepository),
+    listSupplierContacts: new ListSupplierContactsUseCase(supplierContactRepository, supplierRepository),
+    getSupplierContactById: new GetSupplierContactByIdUseCase(supplierContactRepository, supplierRepository),
     createSupplierContact: new CreateSupplierContactUseCase(supplierContactRepository, supplierRepository),
-    updateSupplierContact: new UpdateSupplierContactUseCase(supplierContactRepository),
-    activateSupplierContact: new ActivateSupplierContactUseCase(supplierContactRepository),
-    deactivateSupplierContact: new DeactivateSupplierContactUseCase(supplierContactRepository),
+    updateSupplierContact: new UpdateSupplierContactUseCase(supplierContactRepository, supplierRepository),
+    activateSupplierContact: new ActivateSupplierContactUseCase(supplierContactRepository, supplierRepository),
+    deactivateSupplierContact: new DeactivateSupplierContactUseCase(supplierContactRepository, supplierRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico y no filtra por tenant; ownership se
+// valida acá recorriendo supplierContact -> supplier -> company.
+const requireOwnCompanySupplierContact = async (req, res, next) => {
+    try {
+        const doc = await SupplierContactModel.findById(req.params.id).select('supplier').populate({ path: 'supplier', select: 'company' });
+        if (!doc || String(doc.supplier?.company) !== String(req.user.companyId)) {
+            return res.status(404).json({ msj: 'Contacto de proveedor no encontrado' });
+        }
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 const supplierContactAudit = {
     entityModel: SupplierContactModel,
@@ -64,7 +78,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios del contacto de proveedor',
         handler: createEntityHistoryHandler(SupplierContactModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanySupplierContact]
     },
     {
         method: 'POST',

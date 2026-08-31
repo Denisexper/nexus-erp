@@ -10,8 +10,8 @@ export class CreateSubCategoryUseCase {
     this.categoryRepository = categoryRepository;
   }
 
-  async execute(data) {
-    const category = await this.categoryRepository.findById(data.category);
+  async execute(data, companyId) {
+    const category = await this.categoryRepository.findById(data.category, companyId);
     if (!category) throw new CategoryNotFoundForSubCategoryError();
 
     const nameTaken = await this.subCategoryRepository.findByNameAndCategory(data.name, data.category);

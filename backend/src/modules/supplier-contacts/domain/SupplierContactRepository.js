@@ -3,7 +3,7 @@ export class SupplierContactRepository {
     throw new Error('SupplierContactRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _supplierIds) {
     throw new Error('SupplierContactRepository.findById no implementado');
   }
 

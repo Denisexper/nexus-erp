@@ -8,6 +8,7 @@ const toDomain = (doc) =>
     doc
         ? new Unit({
               id: doc._id.toString(),
+              company: doc.company,
               name: doc.name,
               type: doc.type,
               isActive: doc.isActive,
@@ -23,12 +24,14 @@ const assertValidId = (id) => {
 };
 
 export class MongoUnitRepository extends UnitRepository {
-    async findAll({ search, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ search, company, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) {
             filter.name = { $regex: search, $options: 'i' };
         }
+
+        if (company) filter.company = company;
 
         if (isActive !== undefined && isActive !== '') {
             filter.isActive = isActive === true || isActive === 'true';
@@ -44,19 +47,26 @@ export class MongoUnitRepository extends UnitRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await UnitModel.findById(id);
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await UnitModel.findOne(filter);
         return toDomain(doc);
     }
 
-    async findByName(name) {
-        const doc = await UnitModel.findOne({ name });
+    async findByNameAndCompany(name, companyId) {
+        const doc = await UnitModel.findOne({ name, company: companyId });
         return toDomain(doc);
+    }
+
+    async findIdsByCompany(companyId) {
+        const docs = await UnitModel.find({ company: companyId }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(unit) {
         const doc = await UnitModel.create({
+            company: unit.company,
             name: unit.name,
             type: unit.type,
         });

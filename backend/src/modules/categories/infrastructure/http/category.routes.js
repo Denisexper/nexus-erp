@@ -28,9 +28,22 @@ const controller = new CategoryController({
 
 const router = Router();
 
+// El handler de historial es genérico (compartido por todos los módulos) y no
+// filtra por tenant, así que la ownership check se hace acá, igual que en
+// branches.routes.js.
+const requireOwnCompanyCategory = async (req, res, next) => {
+    try {
+        const doc = await CategoryModel.findOne({ _id: req.params.id, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Categoría no encontrada' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
+
 const categoryAudit = {
     entityModel: CategoryModel,
-    snapshot: { fields: ['name', 'description', 'isActive'] },
+    snapshot: { fields: ['company', 'name', 'description', 'isActive'] },
     compareFields: ['name', 'description', 'isActive']
 };
 
@@ -61,7 +74,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la categoría',
         handler: createEntityHistoryHandler(CategoryModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyCategory]
     },
     {
         method: 'POST',

@@ -5,6 +5,7 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoSubCategoryRepository } from '#modules/sub-categories/infrastructure/persistence/MongoSubCategoryRepository.js';
 import { MongoUnitRepository } from '#modules/units/infrastructure/persistence/MongoUnitRepository.js';
+import { MongoCategoryRepository } from '#modules/categories/infrastructure/persistence/MongoCategoryRepository.js';
 
 import { ProductModel } from '../persistence/productMongooseModel.js';
 import { MongoProductRepository } from '../persistence/MongoProductRepository.js';
@@ -20,17 +21,30 @@ import { ProductController } from './product.controller.js';
 const productRepository = new MongoProductRepository();
 const subCategoryRepository = new MongoSubCategoryRepository();
 const unitRepository = new MongoUnitRepository();
+const categoryRepository = new MongoCategoryRepository();
 
 const controller = new ProductController({
     listProducts: new ListProductsUseCase(productRepository),
     getProductById: new GetProductByIdUseCase(productRepository),
-    createProduct: new CreateProductUseCase(productRepository, subCategoryRepository, unitRepository),
-    updateProduct: new UpdateProductUseCase(productRepository, subCategoryRepository, unitRepository),
+    createProduct: new CreateProductUseCase(productRepository, subCategoryRepository, unitRepository, categoryRepository),
+    updateProduct: new UpdateProductUseCase(productRepository, subCategoryRepository, unitRepository, categoryRepository),
     activateProduct: new ActivateProductUseCase(productRepository),
     deactivateProduct: new DeactivateProductUseCase(productRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico y no filtra por tenant; ownership se
+// valida acá, igual que en branches.routes.js.
+const requireOwnCompanyProduct = async (req, res, next) => {
+    try {
+        const doc = await ProductModel.findOne({ _id: req.params.id, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Producto no encontrado' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 const PRODUCT_AUDIT_FIELDS = [
     'subCategory', 'category', 'purchaseUnit', 'saleUnit', 'internalCode', 'originalCode', 'sku',
@@ -39,7 +53,7 @@ const PRODUCT_AUDIT_FIELDS = [
 
 const productAudit = {
     entityModel: ProductModel,
-    snapshot: { fields: PRODUCT_AUDIT_FIELDS, populate: ['subCategory', 'category', 'purchaseUnit', 'saleUnit'] },
+    snapshot: { fields: ['company', ...PRODUCT_AUDIT_FIELDS], populate: ['subCategory', 'category', 'purchaseUnit', 'saleUnit'] },
     compareFields: PRODUCT_AUDIT_FIELDS
 };
 
@@ -75,7 +89,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios del producto',
         handler: createEntityHistoryHandler(ProductModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyProduct]
     },
     {
         method: 'POST',

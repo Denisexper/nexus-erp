@@ -23,7 +23,7 @@ export class RegisterMovementUseCase {
   async execute(data, companyId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
 
-    const product = await this.productRepository.findById(data.product);
+    const product = await this.productRepository.findById(data.product, companyId);
     if (!product) throw new ProductNotFoundForKardexError();
 
     // La ubicación tiene que ser de la company del usuario (si no, cualquiera

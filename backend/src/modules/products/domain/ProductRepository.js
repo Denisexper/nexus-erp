@@ -3,16 +3,20 @@ export class ProductRepository {
     throw new Error('ProductRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('ProductRepository.findById no implementado');
   }
 
-  async findByInternalCode(_internalCode) {
-    throw new Error('ProductRepository.findByInternalCode no implementado');
+  async findByInternalCodeAndCompany(_internalCode, _companyId) {
+    throw new Error('ProductRepository.findByInternalCodeAndCompany no implementado');
   }
 
-  async findBySku(_sku) {
-    throw new Error('ProductRepository.findBySku no implementado');
+  async findBySkuAndCompany(_sku, _companyId) {
+    throw new Error('ProductRepository.findBySkuAndCompany no implementado');
+  }
+
+  async findIdsByCompany(_companyId) {
+    throw new Error('ProductRepository.findIdsByCompany no implementado');
   }
 
   async create(_product) {

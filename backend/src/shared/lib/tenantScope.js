@@ -27,3 +27,18 @@ export async function resolveLocationIdsForCompany(companyId, branchRepository, 
   const warehouseIds = await resolveWarehouseIdsForCompany(companyId, branchRepository, warehouseRepository);
   return locationRepository.findIdsByWarehouses(warehouseIds);
 }
+
+// Category/Supplier sí tienen `company` propio (como Branch). SubCategory y
+// SupplierContact no: llegan a la company por cadena (subCategory -> category
+// -> company, supplierContact -> supplier -> company), igual que
+// warehouse/location con branch.
+
+export async function resolveCategoryIdsForCompany(companyId, categoryRepository) {
+  if (!companyId) return undefined;
+  return categoryRepository.findIdsByCompany(companyId);
+}
+
+export async function resolveSupplierIdsForCompany(companyId, supplierRepository) {
+  if (!companyId) return undefined;
+  return supplierRepository.findIdsByCompany(companyId);
+}

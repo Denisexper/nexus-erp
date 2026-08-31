@@ -20,15 +20,30 @@ const subCategoryRepository = new MongoSubCategoryRepository();
 const categoryRepository = new MongoCategoryRepository();
 
 const controller = new SubCategoryController({
-    listSubCategories: new ListSubCategoriesUseCase(subCategoryRepository),
-    getSubCategoryById: new GetSubCategoryByIdUseCase(subCategoryRepository),
+    listSubCategories: new ListSubCategoriesUseCase(subCategoryRepository, categoryRepository),
+    getSubCategoryById: new GetSubCategoryByIdUseCase(subCategoryRepository, categoryRepository),
     createSubCategory: new CreateSubCategoryUseCase(subCategoryRepository, categoryRepository),
-    updateSubCategory: new UpdateSubCategoryUseCase(subCategoryRepository),
-    activateSubCategory: new ActivateSubCategoryUseCase(subCategoryRepository),
-    deactivateSubCategory: new DeactivateSubCategoryUseCase(subCategoryRepository),
+    updateSubCategory: new UpdateSubCategoryUseCase(subCategoryRepository, categoryRepository),
+    activateSubCategory: new ActivateSubCategoryUseCase(subCategoryRepository, categoryRepository),
+    deactivateSubCategory: new DeactivateSubCategoryUseCase(subCategoryRepository, categoryRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico y no filtra por tenant; ownership se
+// valida acá recorriendo subCategory -> category -> company (igual que
+// warehouses.routes.js con branch -> company).
+const requireOwnCompanySubCategory = async (req, res, next) => {
+    try {
+        const doc = await SubCategoryModel.findById(req.params.id).select('category').populate({ path: 'category', select: 'company' });
+        if (!doc || String(doc.category?.company) !== String(req.user.companyId)) {
+            return res.status(404).json({ msj: 'Sub-categoría no encontrada' });
+        }
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 const subCategoryAudit = {
     entityModel: SubCategoryModel,
@@ -64,7 +79,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la sub-categoría',
         handler: createEntityHistoryHandler(SubCategoryModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanySubCategory]
     },
     {
         method: 'POST',
