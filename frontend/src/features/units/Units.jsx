@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import UnitFormModal from "./UnitFormModal";
 import UnitHistoryModal from "./UnitHistoryModal";
+import UnitDetailModal from "./UnitDetailModal";
 
 function Units() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ function Units() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedUnit, setSelectedUnit] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailUnit, setDetailUnit] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -85,6 +89,11 @@ function Units() {
   const openHistory = (unit) => {
     setSelectedUnit(unit);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (unit) => {
+    setDetailUnit(unit);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -198,14 +207,7 @@ function Units() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("units.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -232,6 +234,13 @@ function Units() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(unit)}
+                              title="Ver detalle"
+                              class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              👁️
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(unit)}
@@ -298,6 +307,13 @@ function Units() {
           <UnitHistoryModal
             unit={selectedUnit()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <UnitDetailModal
+            unit={detailUnit()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>

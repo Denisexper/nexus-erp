@@ -54,9 +54,10 @@ export class MongoSupplierContactRepository extends SupplierContactRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, supplierIds) {
         assertValidId(id);
-        const doc = await SupplierContactModel.findById(id).populate(POPULATE);
+        const filter = supplierIds ? { _id: id, supplier: { $in: supplierIds } } : { _id: id };
+        const doc = await SupplierContactModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 

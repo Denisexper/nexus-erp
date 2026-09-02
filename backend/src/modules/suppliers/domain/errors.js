@@ -25,6 +25,6 @@ export class CountryNotFoundForSupplierError extends DomainError {
 
 export class DuplicateSupplierCodeError extends DomainError {
   constructor() {
-    super('Ya existe un proveedor con ese código');
+    super('Ya existe un proveedor con ese código en esta empresa');
   }
 }

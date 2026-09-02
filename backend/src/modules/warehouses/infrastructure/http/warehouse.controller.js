@@ -50,7 +50,15 @@ export class WarehouseController {
   getAll = async (req, res) => {
     try {
       const { search, branch, warehouseCategory, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listWarehousesUseCase.execute({ search, branch, warehouseCategory, isActive, page, limit });
+      const result = await this.listWarehousesUseCase.execute({
+        companyId: req.user.companyId,
+        search,
+        branch,
+        warehouseCategory,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de almacenes vacia' : 'Almacenes obtenidos correctamente',
@@ -72,7 +80,7 @@ export class WarehouseController {
 
   getOne = async (req, res) => {
     try {
-      const warehouse = await this.getWarehouseByIdUseCase.execute(req.params.id);
+      const warehouse = await this.getWarehouseByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Almacén encontrado', data: toWarehouseDTO(warehouse) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo almacén');
@@ -82,7 +90,7 @@ export class WarehouseController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, CREATE_FIELDS);
-      const warehouse = await this.createWarehouseUseCase.execute(data);
+      const warehouse = await this.createWarehouseUseCase.execute(data, req.user.companyId);
       res.status(201).json({ msj: 'Almacén creado exitosamente', newWarehouse: toWarehouseDTO(warehouse) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando almacén');
@@ -92,7 +100,7 @@ export class WarehouseController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, UPDATE_FIELDS);
-      const warehouse = await this.updateWarehouseUseCase.execute(req.params.id, changes);
+      const warehouse = await this.updateWarehouseUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Almacén actualizado correctamente', warehouse: toWarehouseDTO(warehouse) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando almacén');
@@ -101,7 +109,7 @@ export class WarehouseController {
 
   activate = async (req, res) => {
     try {
-      const warehouse = await this.activateWarehouseUseCase.execute(req.params.id);
+      const warehouse = await this.activateWarehouseUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Almacén activado correctamente', warehouse: toWarehouseDTO(warehouse) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar el almacén');
@@ -110,7 +118,7 @@ export class WarehouseController {
 
   deactivate = async (req, res) => {
     try {
-      const warehouse = await this.deactivateWarehouseUseCase.execute(req.params.id);
+      const warehouse = await this.deactivateWarehouseUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Almacén desactivado correctamente', warehouse: toWarehouseDTO(warehouse) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar el almacén');

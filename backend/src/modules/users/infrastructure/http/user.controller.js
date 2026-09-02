@@ -53,7 +53,14 @@ export class UserController {
   getAll = async (req, res) => {
     try {
       const { search, role, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listUsersUseCase.execute({ search, role, isActive, page, limit });
+      const result = await this.listUsersUseCase.execute({
+        companyId: req.user.companyId,
+        search,
+        role,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de usuarios vacia' : 'usuarios obtenidos correctamente',
@@ -75,7 +82,7 @@ export class UserController {
 
   getOne = async (req, res) => {
     try {
-      const user = await this.getUserByIdUseCase.execute(req.params.id);
+      const user = await this.getUserByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'user encontrado', data: toUserDTO(user) });
     } catch (error) {
       this.#handleError(res, error, 'error del servidor');
@@ -85,7 +92,13 @@ export class UserController {
   create = async (req, res) => {
     try {
       const { name, email, password, role } = req.body;
-      const { user, role: roleDoc } = await this.createUserUseCase.execute({ name, email, password, role });
+      const { user, role: roleDoc } = await this.createUserUseCase.execute({
+        name,
+        email,
+        password,
+        role,
+        companyId: req.user.companyId,
+      });
 
       res.status(201).json({
         msj: 'user creado exitosamente',
@@ -102,7 +115,7 @@ export class UserController {
       const user = await this.updateUserUseCase.execute(
         req.params.id,
         { name, email, password, role },
-        { actingUserRole: req.user.role },
+        { actingUserRole: req.user.role, companyId: req.user.companyId },
       );
       res.status(200).json({ msj: 'usuario actualizado correctamente', user: toUserDTO(user) });
     } catch (error) {
@@ -115,6 +128,7 @@ export class UserController {
       const deleted = await this.deleteUserUseCase.execute(req.params.id, {
         actingUserId: req.user.id,
         actingUserRole: req.user.role,
+        companyId: req.user.companyId,
       });
       res.status(200).json({ msj: 'usuario eliminado correctamente', deleteUser: toUserDTO(deleted) });
     } catch (error) {
@@ -124,7 +138,7 @@ export class UserController {
 
   toggleUserStatus = async (req, res) => {
     try {
-      const user = await this.toggleUserStatusUseCase.execute(req.params.id);
+      const user = await this.toggleUserStatusUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({
         msj: `Usuario ${user.isActive ? 'activado' : 'desactivado'} correctamente`,
         user: toUserDTO(user),
@@ -136,7 +150,7 @@ export class UserController {
 
   unlockUser = async (req, res) => {
     try {
-      const user = await this.unlockUserUseCase.execute(req.params.id);
+      const user = await this.unlockUserUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Usuario desbloqueado correctamente', user: toUserDTO(user) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desbloquear usuario');

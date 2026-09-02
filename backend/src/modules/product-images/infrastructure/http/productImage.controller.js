@@ -44,7 +44,10 @@ export class ProductImageController {
   getAll = async (req, res) => {
     try {
       const { isActive } = req.query;
-      const images = await this.listProductImagesUseCase.execute(req.params.productId, { isActive });
+      const images = await this.listProductImagesUseCase.execute(req.params.productId, {
+        isActive,
+        companyId: req.user.companyId,
+      });
 
       res.status(200).json({
         msj: images.length === 0 ? 'lista de imágenes vacia' : 'Imágenes obtenidas correctamente',
@@ -62,6 +65,7 @@ export class ProductImageController {
       const image = await this.uploadProductImageUseCase.execute({
         productId: req.params.productId,
         relativePath,
+        companyId: req.user.companyId,
       });
       res.status(201).json({ msj: 'Imagen cargada exitosamente', newProductImage: toProductImageDTO(image) });
     } catch (error) {
@@ -76,7 +80,7 @@ export class ProductImageController {
         .map((id) => id.trim())
         .filter(Boolean);
 
-      const covers = await this.listProductImageCoversUseCase.execute(productIds);
+      const covers = await this.listProductImageCoversUseCase.execute(productIds, req.user.companyId);
       const data = covers.reduce((acc, c) => {
         acc[c.productId] = c.path;
         return acc;
@@ -90,7 +94,7 @@ export class ProductImageController {
 
   activate = async (req, res) => {
     try {
-      const image = await this.activateProductImageUseCase.execute(req.params.id);
+      const image = await this.activateProductImageUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Imagen activada correctamente', productImage: toProductImageDTO(image) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la imagen');
@@ -99,7 +103,7 @@ export class ProductImageController {
 
   deactivate = async (req, res) => {
     try {
-      const image = await this.deactivateProductImageUseCase.execute(req.params.id);
+      const image = await this.deactivateProductImageUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Imagen desactivada correctamente', productImage: toProductImageDTO(image) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la imagen');

@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoGeoRepository } from '#modules/geo/infrastructure/persistence/MongoGeoRepository.js';
+import { seedRolesForCompany } from '#modules/roles/infrastructure/seed/seedRoles.js';
 
 import { CompanyModel } from '../persistence/companyMongooseModel.js';
 import { MongoCompanyRepository } from '../persistence/MongoCompanyRepository.js';
@@ -24,7 +25,7 @@ const geoRepository = new MongoGeoRepository();
 const controller = new CompanyController({
     listCompanies: new ListCompaniesUseCase(companyRepository),
     getCompanyById: new GetCompanyByIdUseCase(companyRepository),
-    createCompany: new CreateCompanyUseCase(companyRepository, geoRepository),
+    createCompany: new CreateCompanyUseCase(companyRepository, geoRepository, seedRolesForCompany),
     updateCompany: new UpdateCompanyUseCase(companyRepository, geoRepository),
     activateCompany: new ActivateCompanyUseCase(companyRepository),
     deactivateCompany: new DeactivateCompanyUseCase(companyRepository),
@@ -32,9 +33,19 @@ const controller = new CompanyController({
 
 const router = Router();
 
+// El handler de historial es genérico (compartido por todos los módulos) y no
+// filtra por tenant, así que la ownership check se hace acá antes de llegar
+// a él en vez de tocar el handler compartido.
+const requireOwnCompany = (req, res, next) => {
+    if (req.params.id !== req.user.companyId) {
+        return res.status(404).json({ msj: 'Empresa no encontrada' });
+    }
+    next();
+};
+
 // Config de auditoría compartida por las rutas de empresas
 const COMPANY_AUDIT_FIELDS = [
-    'name', 'commercialName', 'nit', 'nrc',
+    'name', 'commercialName', 'slug', 'nit', 'nrc',
     'commercialLine1', 'commercialLine2', 'commercialLine3',
     'address', 'department', 'municipality', 'district',
     'phone', 'email', 'webSite', 'logo', 'isActive'
@@ -73,7 +84,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la empresa',
         handler: createEntityHistoryHandler(CompanyModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompany]
     },
     {
         method: 'POST',

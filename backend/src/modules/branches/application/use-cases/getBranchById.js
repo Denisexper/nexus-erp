@@ -5,8 +5,8 @@ export class GetBranchByIdUseCase {
     this.branchRepository = branchRepository;
   }
 
-  async execute(id) {
-    const branch = await this.branchRepository.findById(id);
+  async execute(id, companyId) {
+    const branch = await this.branchRepository.findById(id, companyId);
     if (!branch) throw new BranchNotFoundError();
     return branch;
   }

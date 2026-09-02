@@ -1,6 +1,8 @@
 import {
   InvalidCompanyIdError,
   CompanyNotFoundError,
+  DuplicateSlugError,
+  InvalidSlugError,
   DuplicateNitError,
   DuplicateNrcError,
   InvalidLocationError,
@@ -14,6 +16,7 @@ const toCompanyDTO = (company) => ({
   id: company.id,
   name: company.name,
   commercialName: company.commercialName,
+  slug: company.slug,
   nit: company.nit,
   nrc: company.nrc,
   commercialLine1: company.commercialLine1,
@@ -41,6 +44,7 @@ const pickDefinedFields = (body, keys) =>
 const COMPANY_FIELDS = [
   'name',
   'commercialName',
+  'slug',
   'nit',
   'nrc',
   'commercialLine1',
@@ -70,6 +74,8 @@ export class CompanyController {
   #handleError(res, error, fallbackMsj) {
     if (error instanceof InvalidCompanyIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof CompanyNotFoundError) return res.status(404).json({ msj: error.message });
+    if (error instanceof DuplicateSlugError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InvalidSlugError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateNitError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateNrcError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidLocationError) return res.status(400).json({ msj: error.message });
@@ -79,7 +85,13 @@ export class CompanyController {
   getAll = async (req, res) => {
     try {
       const { search, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listCompaniesUseCase.execute({ search, isActive, page, limit });
+      const result = await this.listCompaniesUseCase.execute({
+        companyId: req.user.companyId,
+        search,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de empresas vacia' : 'Empresas obtenidas correctamente',
@@ -101,7 +113,7 @@ export class CompanyController {
 
   getOne = async (req, res) => {
     try {
-      const company = await this.getCompanyByIdUseCase.execute(req.params.id);
+      const company = await this.getCompanyByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Empresa encontrada', data: toCompanyDTO(company) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo empresa');
@@ -121,7 +133,7 @@ export class CompanyController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, [...COMPANY_FIELDS, 'isActive']);
-      const company = await this.updateCompanyUseCase.execute(req.params.id, changes);
+      const company = await this.updateCompanyUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Empresa actualizada correctamente', company: toCompanyDTO(company) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando empresa');
@@ -130,7 +142,7 @@ export class CompanyController {
 
   activate = async (req, res) => {
     try {
-      const company = await this.activateCompanyUseCase.execute(req.params.id);
+      const company = await this.activateCompanyUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Empresa activada correctamente', company: toCompanyDTO(company) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la empresa');
@@ -139,7 +151,7 @@ export class CompanyController {
 
   deactivate = async (req, res) => {
     try {
-      const company = await this.deactivateCompanyUseCase.execute(req.params.id);
+      const company = await this.deactivateCompanyUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Empresa desactivada correctamente', company: toCompanyDTO(company) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la empresa');

@@ -13,15 +13,15 @@ export class CreateUserUseCase {
     this.roleRepository = roleRepository;
   }
 
-  async execute({ name, email, password, role }) {
-    const existing = await this.userRepository.findByEmail(email);
+  async execute({ name, email, password, role, companyId }) {
+    const existing = await this.userRepository.findByEmailAndCompany(email, companyId);
     if (existing) throw new DuplicateEmailError();
 
-    const roleDoc = await this.roleRepository.findByIdOrName(role || 'user');
+    const roleDoc = await this.roleRepository.findByIdOrName(role || 'user', companyId);
     if (!roleDoc) throw new InvalidRoleError();
 
     const passwordHash = await hashPassword(password);
-    const user = new User({ name, email, password: passwordHash, role: roleDoc.id });
+    const user = new User({ name, email, password: passwordHash, role: roleDoc.id, company: companyId });
     const created = await this.userRepository.create(user);
 
     return { user: created, role: roleDoc };

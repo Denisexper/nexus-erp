@@ -8,6 +8,7 @@ const toDomain = (doc) =>
     doc
         ? new Product({
               id: doc._id.toString(),
+              company: doc.company,
               subCategory: doc.subCategory,
               category: doc.category,
               purchaseUnit: doc.purchaseUnit,
@@ -41,7 +42,7 @@ const POPULATE = [
 ];
 
 export class MongoProductRepository extends ProductRepository {
-    async findAll({ search, subCategory, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ search, company, subCategory, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) {
@@ -53,6 +54,7 @@ export class MongoProductRepository extends ProductRepository {
             ];
         }
 
+        if (company) filter.company = company;
         if (subCategory) filter.subCategory = subCategory;
 
         if (isActive !== undefined && isActive !== '') {
@@ -69,24 +71,31 @@ export class MongoProductRepository extends ProductRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await ProductModel.findById(id).populate(POPULATE);
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await ProductModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 
-    async findByInternalCode(internalCode) {
-        const doc = await ProductModel.findOne({ internalCode });
+    async findByInternalCodeAndCompany(internalCode, companyId) {
+        const doc = await ProductModel.findOne({ internalCode, company: companyId });
         return toDomain(doc);
     }
 
-    async findBySku(sku) {
-        const doc = await ProductModel.findOne({ sku });
+    async findBySkuAndCompany(sku, companyId) {
+        const doc = await ProductModel.findOne({ sku, company: companyId });
         return toDomain(doc);
+    }
+
+    async findIdsByCompany(companyId) {
+        const docs = await ProductModel.find({ company: companyId }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(product) {
         const doc = await ProductModel.create({
+            company: product.company,
             subCategory: product.subCategory,
             category: product.category,
             purchaseUnit: product.purchaseUnit,

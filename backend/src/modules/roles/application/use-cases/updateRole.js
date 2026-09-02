@@ -5,8 +5,8 @@ export class UpdateRoleUseCase {
     this.roleRepository = roleRepository;
   }
 
-  async execute(id, changes) {
-    const role = await this.roleRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const role = await this.roleRepository.findById(id, companyId);
     if (!role) throw new RoleNotFoundError();
 
     // No se permite renombrar roles del sistema (admin, moderator, user).

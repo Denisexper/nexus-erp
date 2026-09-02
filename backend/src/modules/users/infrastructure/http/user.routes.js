@@ -23,12 +23,25 @@ const controller = new UserController({
     listUsers: new ListUsersUseCase(userRepository),
     getUserById: new GetUserByIdUseCase(userRepository),
     createUser: new CreateUserUseCase(userRepository, roleRepository),
-    updateUser: new UpdateUserUseCase(userRepository),
+    updateUser: new UpdateUserUseCase(userRepository, roleRepository),
     toggleUserStatus: new ToggleUserStatusUseCase(userRepository),
     unlockUser: new UnlockUserUseCase(userRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico (compartido por todos los módulos) y no
+// filtra por tenant, así que la ownership check se hace acá antes de llegar
+// a él, igual que en companies.routes.js.
+const requireSameTenantUser = async (req, res, next) => {
+    try {
+        const doc = await UserModel.findOne({ _id: req.params.userId, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Usuario no encontrado' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 // Config de auditoría compartida por las rutas de usuarios
 const userAudit = {
@@ -101,7 +114,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios del usuario',
         handler: createEntityHistoryHandler(UserModel.modelName, 'userId'),
-        middlewares: []
+        middlewares: [requireSameTenantUser]
     }
 ];
 

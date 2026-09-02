@@ -1,6 +1,7 @@
 export class Role {
   constructor({
     id,
+    company,
     name,
     displayName,
     description,
@@ -11,6 +12,7 @@ export class Role {
     updatedAt,
   }) {
     this.id = id;
+    this.company = company;
     this.name = name?.toLowerCase();
     this.displayName = displayName;
     this.description = description;

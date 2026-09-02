@@ -6,12 +6,12 @@ export class UpdateSupplierUseCase {
     this.countryRepository = countryRepository;
   }
 
-  async execute(id, changes) {
-    const supplier = await this.supplierRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const supplier = await this.supplierRepository.findById(id, companyId);
     if (!supplier) throw new SupplierNotFoundError();
 
     if (changes.code && changes.code !== supplier.code) {
-      const codeTaken = await this.supplierRepository.findByCode(changes.code);
+      const codeTaken = await this.supplierRepository.findByCodeAndCompany(changes.code, companyId);
       if (codeTaken) throw new DuplicateSupplierCodeError();
     }
 

@@ -43,7 +43,7 @@ export class RoleController {
   getAll = async (req, res) => {
     try {
       const { page = 1, limit = 10 } = req.query;
-      const result = await this.listRolesUseCase.execute({ page, limit });
+      const result = await this.listRolesUseCase.execute({ company: req.user.companyId, page, limit });
 
       res.status(200).json({
         msj: 'Roles obtenidos correctamente',
@@ -65,7 +65,7 @@ export class RoleController {
 
   getOne = async (req, res) => {
     try {
-      const role = await this.getRoleByIdUseCase.execute(req.params.id);
+      const role = await this.getRoleByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Rol encontrado', data: toRoleDTO(role) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo rol');
@@ -76,6 +76,7 @@ export class RoleController {
     try {
       const { name, displayName, description, permissions } = req.body;
       const role = await this.createRoleUseCase.execute({
+        company: req.user.companyId,
         name,
         displayName,
         description,
@@ -96,7 +97,7 @@ export class RoleController {
         description,
         permissions,
         isActive,
-      });
+      }, req.user.companyId);
       res.status(200).json({ msj: 'Rol actualizado correctamente', data: toRoleDTO(role) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando rol');
@@ -105,7 +106,7 @@ export class RoleController {
 
   delete = async (req, res) => {
     try {
-      await this.deleteRoleUseCase.execute(req.params.id);
+      await this.deleteRoleUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Rol eliminado correctamente' });
     } catch (error) {
       this.#handleError(res, error, 'Error eliminando rol');

@@ -10,6 +10,7 @@ const toDomain = (doc) =>
               id: doc._id.toString(),
               name: doc.name,
               commercialName: doc.commercialName,
+              slug: doc.slug,
               nit: doc.nit,
               nrc: doc.nrc,
               commercialLine1: doc.commercialLine1,
@@ -47,8 +48,12 @@ const GEO_POPULATE = [
  * ObjectId). El dominio y los casos de uso no saben que esta clase existe.
  */
 export class MongoCompanyRepository extends CompanyRepository {
-    async findAll({ search, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ companyId, search, isActive, page = 1, limit = 10 } = {}) {
         const filter = {};
+
+        if (companyId) {
+            filter._id = companyId;
+        }
 
         if (search) {
             filter.$or = [
@@ -78,10 +83,45 @@ export class MongoCompanyRepository extends CompanyRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    // Company es la raíz del tenant: no tiene un campo `company` propio para
+    // filtrar como Role/Branch, así que el "ownership check" es comparar el id
+    // pedido contra el companyId del JWT antes de tocar la base de datos.
+    async findById(id, companyId) {
         assertValidId(id);
+        if (companyId && id !== companyId) return null;
         const doc = await CompanyModel.findById(id).populate(GEO_POPULATE);
         return toDomain(doc);
+    }
+
+    async findBySlug(slug) {
+        const doc = await CompanyModel.findOne({ slug });
+        return toDomain(doc);
+    }
+
+    // Nunca traen a memoria nit/nrc/email/phone/address: el .select() limita
+    // lo que Mongo devuelve, no es solo un filtro aplicado después.
+    async searchPublic({ search, limit = 10 } = {}) {
+        const filter = { isActive: true };
+
+        if (search) {
+            filter.$or = [
+                { commercialName: { $regex: search, $options: 'i' } },
+                { slug: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const cappedLimit = Math.min(Number(limit) || 10, 10);
+
+        const docs = await CompanyModel.find(filter)
+            .select('slug commercialName logo')
+            .limit(cappedLimit);
+
+        return docs.map((doc) => ({ slug: doc.slug, commercialName: doc.commercialName, logo: doc.logo }));
+    }
+
+    async findPublicBySlug(slug) {
+        const doc = await CompanyModel.findOne({ slug, isActive: true }).select('slug commercialName logo');
+        return doc ? { slug: doc.slug, commercialName: doc.commercialName, logo: doc.logo } : null;
     }
 
     async findByNit(nit) {
@@ -98,6 +138,7 @@ export class MongoCompanyRepository extends CompanyRepository {
         const doc = await CompanyModel.create({
             name: company.name,
             commercialName: company.commercialName,
+            slug: company.slug,
             nit: company.nit,
             nrc: company.nrc,
             commercialLine1: company.commercialLine1,

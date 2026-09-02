@@ -11,6 +11,18 @@ export class CompanyNotFoundError extends DomainError {
   }
 }
 
+export class DuplicateSlugError extends DomainError {
+  constructor() {
+    super('Ya existe una empresa con ese slug');
+  }
+}
+
+export class InvalidSlugError extends DomainError {
+  constructor() {
+    super('Slug no válido');
+  }
+}
+
 export class DuplicateNitError extends DomainError {
   constructor() {
     super('Ya existe una empresa con ese NIT');

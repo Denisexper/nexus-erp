@@ -1,8 +1,9 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { showToast } from "../utils/toast";
 import { useDocumentTitle } from "../utils/useDocumentTitle";
+import { tenantsApi } from "../services/tenants.api";
 import ThemeToggle from "../components/ThemeToggle";
 import erpLogoWhite from "../assets/erp-logo-white-512.png";
 import erpLogoDark from "../assets/erp-logo-dark-1024.png";
@@ -10,21 +11,36 @@ import erpLogoDark from "../assets/erp-logo-dark-1024.png";
 function Login() {
   useDocumentTitle("Iniciar sesión");
 
+  const params = useParams();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
+  const [company, setCompany] = createSignal(null);
+  const [resolving, setResolving] = createSignal(true);
 
   const auth = useAuth();
   const navigate = useNavigate();
+
+  onMount(async () => {
+    try {
+      const res = await tenantsApi.getBySlug(params.slug);
+      setCompany(res.data);
+    } catch {
+      showToast.error("No encontramos esa empresa.");
+      navigate("/");
+    } finally {
+      setResolving(false);
+    }
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const result = await auth.login(email(), password());
+    const result = await auth.login(params.slug, email(), password());
 
     if (result.success) {
       navigate("/dashboard");
@@ -38,14 +54,28 @@ function Login() {
   };
 
   return (
+    <Show when={!resolving()}>
     <div class="auth-bg">
       <div class="auth-brand">
-        <img
-          src={erpLogoWhite}
-          alt="Nexus ERP"
-          class="relative w-20 h-20 mb-6 object-contain"
-        />
-        <h2 class="relative text-3xl font-bold text-white mb-3">Nexus ERP</h2>
+        <Show
+          when={company()?.logo}
+          fallback={
+            <img
+              src={erpLogoWhite}
+              alt={company()?.commercialName || "Nexus ERP"}
+              class="relative w-20 h-20 mb-6 object-contain"
+            />
+          }
+        >
+          <img
+            src={company().logo}
+            alt={company().commercialName}
+            class="relative w-20 h-20 mb-6 object-contain"
+          />
+        </Show>
+        <h2 class="relative text-3xl font-bold text-white mb-3">
+          {company()?.commercialName || "Nexus ERP"}
+        </h2>
         <p class="relative text-white/60 max-w-xs">
           Gestiona inventario, proveedores y operaciones desde un solo lugar.
         </p>
@@ -69,7 +99,7 @@ function Login() {
               class="w-14 h-14 mb-4 object-contain lg:hidden hidden dark:block"
             />
             <h1 class="text-3xl font-bold mb-1 text-[#2b2f42] dark:text-white">Bienvenido de nuevo</h1>
-            <p class="text-muted">Inicia sesión en Nexus ERP</p>
+            <p class="text-muted">Inicia sesión en {company()?.commercialName || "Nexus ERP"}</p>
           </div>
 
           <form onSubmit={handleSubmit} class="space-y-4">
@@ -159,6 +189,7 @@ function Login() {
         </div>
       </div>
     </div>
+    </Show>
   );
 }
 

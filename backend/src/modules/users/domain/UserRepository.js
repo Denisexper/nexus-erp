@@ -8,12 +8,12 @@ export class UserRepository {
     throw new Error('UserRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('UserRepository.findById no implementado');
   }
 
-  async findByEmail(_email) {
-    throw new Error('UserRepository.findByEmail no implementado');
+  async findByEmailAndCompany(_email, _companyId) {
+    throw new Error('UserRepository.findByEmailAndCompany no implementado');
   }
 
   async create(_user) {
@@ -24,7 +24,7 @@ export class UserRepository {
     throw new Error('UserRepository.update no implementado');
   }
 
-  async remove(_id) {
+  async remove(_id, _companyId) {
     throw new Error('UserRepository.remove no implementado');
   }
 

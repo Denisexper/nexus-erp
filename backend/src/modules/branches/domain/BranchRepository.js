@@ -8,12 +8,19 @@ export class BranchRepository {
     throw new Error('BranchRepository.findAll no implementado');
   }
 
-  async findById(_id) {
+  async findById(_id, _companyId) {
     throw new Error('BranchRepository.findById no implementado');
   }
 
   async findByNameAndCompany(_name, _companyId) {
     throw new Error('BranchRepository.findByNameAndCompany no implementado');
+  }
+
+  // Usado por módulos que se conectan a la company por cadena (branch ->
+  // company), como warehouses/locations/kardex, para resolver "qué branches
+  // son míos" antes de filtrar.
+  async findIdsByCompany(_companyId) {
+    throw new Error('BranchRepository.findIdsByCompany no implementado');
   }
 
   async create(_branch) {

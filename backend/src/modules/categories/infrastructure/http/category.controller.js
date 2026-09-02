@@ -7,6 +7,7 @@ import {
 const toCategoryDTO = (category) => ({
   _id: category.id,
   id: category.id,
+  company: category.company,
   name: category.name,
   description: category.description,
   isActive: category.isActive,
@@ -20,6 +21,8 @@ const pickDefinedFields = (body, keys) =>
     return changes;
   }, {});
 
+// `company` no viene del body: siempre se fuerza desde req.user.companyId
+// (ver create() más abajo), nunca se confía en lo que mande el cliente.
 const FIELDS = ['name', 'description'];
 
 export class CategoryController {
@@ -42,7 +45,13 @@ export class CategoryController {
   getAll = async (req, res) => {
     try {
       const { search, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listCategoriesUseCase.execute({ search, isActive, page, limit });
+      const result = await this.listCategoriesUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de categorías vacia' : 'Categorías obtenidas correctamente',
@@ -64,7 +73,7 @@ export class CategoryController {
 
   getOne = async (req, res) => {
     try {
-      const category = await this.getCategoryByIdUseCase.execute(req.params.id);
+      const category = await this.getCategoryByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Categoría encontrada', data: toCategoryDTO(category) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo categoría');
@@ -74,7 +83,7 @@ export class CategoryController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, FIELDS);
-      const category = await this.createCategoryUseCase.execute(data);
+      const category = await this.createCategoryUseCase.execute({ ...data, company: req.user.companyId });
       res.status(201).json({ msj: 'Categoría creada exitosamente', newCategory: toCategoryDTO(category) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando categoría');
@@ -84,7 +93,7 @@ export class CategoryController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, FIELDS);
-      const category = await this.updateCategoryUseCase.execute(req.params.id, changes);
+      const category = await this.updateCategoryUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Categoría actualizada correctamente', category: toCategoryDTO(category) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando categoría');
@@ -93,7 +102,7 @@ export class CategoryController {
 
   activate = async (req, res) => {
     try {
-      const category = await this.activateCategoryUseCase.execute(req.params.id);
+      const category = await this.activateCategoryUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Categoría activada correctamente', category: toCategoryDTO(category) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar la categoría');
@@ -102,7 +111,7 @@ export class CategoryController {
 
   deactivate = async (req, res) => {
     try {
-      const category = await this.deactivateCategoryUseCase.execute(req.params.id);
+      const category = await this.deactivateCategoryUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Categoría desactivada correctamente', category: toCategoryDTO(category) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar la categoría');

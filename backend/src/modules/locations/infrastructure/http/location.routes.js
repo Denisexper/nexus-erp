@@ -5,6 +5,8 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
 import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
+import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 
 import { LocationModel } from '../persistence/locationMongooseModel.js';
 import { MongoLocationRepository } from '../persistence/MongoLocationRepository.js';
@@ -21,18 +23,32 @@ import { LocationController } from './location.controller.js';
 const locationRepository = new MongoLocationRepository();
 const warehouseRepository = new MongoWarehouseRepository();
 const kardexRepository = new MongoKardexRepository();
+const branchRepository = new MongoBranchRepository();
 
 const controller = new LocationController({
-    listLocations: new ListLocationsUseCase(locationRepository),
-    getLocationById: new GetLocationByIdUseCase(locationRepository),
-    createLocation: new CreateLocationUseCase(locationRepository, warehouseRepository),
-    createLocationsBatch: new CreateLocationsBatchUseCase(locationRepository, warehouseRepository),
-    updateLocation: new UpdateLocationUseCase(locationRepository),
-    activateLocation: new ActivateLocationUseCase(locationRepository),
-    deactivateLocation: new DeactivateLocationUseCase(locationRepository, kardexRepository),
+    listLocations: new ListLocationsUseCase(locationRepository, branchRepository, warehouseRepository),
+    getLocationById: new GetLocationByIdUseCase(locationRepository, branchRepository, warehouseRepository),
+    createLocation: new CreateLocationUseCase(locationRepository, warehouseRepository, branchRepository),
+    createLocationsBatch: new CreateLocationsBatchUseCase(locationRepository, warehouseRepository, branchRepository),
+    updateLocation: new UpdateLocationUseCase(locationRepository, branchRepository, warehouseRepository),
+    activateLocation: new ActivateLocationUseCase(locationRepository, branchRepository, warehouseRepository),
+    deactivateLocation: new DeactivateLocationUseCase(locationRepository, kardexRepository, branchRepository, warehouseRepository),
 });
 
 const router = Router();
+
+// El handler de historial es genérico y no filtra por tenant; la ownership
+// check pasa por la misma cadena location -> warehouse -> branch -> company.
+const requireOwnCompanyLocation = async (req, res, next) => {
+    try {
+        const warehouseIds = await resolveWarehouseIdsForCompany(req.user.companyId, branchRepository, warehouseRepository);
+        const doc = await LocationModel.findOne({ _id: req.params.id, warehouse: { $in: warehouseIds } }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Ubicación no encontrada' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
 
 const locationAudit = {
     entityModel: LocationModel,
@@ -68,7 +84,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la ubicación',
         handler: createEntityHistoryHandler(LocationModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyLocation]
     },
     {
         method: 'POST',

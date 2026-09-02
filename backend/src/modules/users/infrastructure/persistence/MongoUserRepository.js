@@ -12,6 +12,7 @@ const toDomain = (doc) =>
               email: doc.email,
               password: doc.password,
               role: doc.role,
+              company: doc.company,
               isActive: doc.isActive,
               lastLogin: doc.lastLogin,
               failedLoginAttempts: doc.failedLoginAttempts,
@@ -32,8 +33,10 @@ const assertValidId = (id) => {
  * del módulo que conoce sintaxis de Mongo (ObjectId, $regex, populate).
  */
 export class MongoUserRepository extends UserRepository {
-    async findAll({ search, role, isActive, skip = 0, limit = 10 } = {}) {
+    async findAll({ companyId, search, role, isActive, skip = 0, limit = 10 } = {}) {
         const filter = {};
+
+        if (companyId) filter.company = companyId;
 
         if (search) {
             filter.$or = [
@@ -61,14 +64,15 @@ export class MongoUserRepository extends UserRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await UserModel.findById(id).populate('role');
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await UserModel.findOne(filter).populate('role');
         return toDomain(doc);
     }
 
-    async findByEmail(email) {
-        const doc = await UserModel.findOne({ email }).populate('role');
+    async findByEmailAndCompany(email, companyId) {
+        const doc = await UserModel.findOne({ email, company: companyId }).populate('role');
         return toDomain(doc);
     }
 
@@ -78,6 +82,7 @@ export class MongoUserRepository extends UserRepository {
             email: user.email,
             password: user.password,
             role: user.role,
+            company: user.company,
         });
         const populated = await doc.populate('role');
         return toDomain(populated);
@@ -92,9 +97,10 @@ export class MongoUserRepository extends UserRepository {
         return toDomain(doc);
     }
 
-    async remove(id) {
+    async remove(id, companyId) {
         assertValidId(id);
-        const doc = await UserModel.findByIdAndDelete(id);
+        const filter = companyId ? { _id: id, company: companyId } : { _id: id };
+        const doc = await UserModel.findOneAndDelete(filter);
         return toDomain(doc);
     }
 

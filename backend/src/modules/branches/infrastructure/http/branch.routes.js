@@ -32,6 +32,19 @@ const controller = new BranchController({
 
 const router = Router();
 
+// El handler de historial es genérico (compartido por todos los módulos) y no
+// filtra por tenant, así que la ownership check se hace acá, igual que en
+// companies.routes.js / user.routes.js.
+const requireOwnCompanyBranch = async (req, res, next) => {
+    try {
+        const doc = await BranchModel.findOne({ _id: req.params.id, company: req.user.companyId }).select('_id');
+        if (!doc) return res.status(404).json({ msj: 'Sucursal no encontrada' });
+        next();
+    } catch (error) {
+        res.status(400).json({ msj: 'Id no válido' });
+    }
+};
+
 const BRANCH_AUDIT_FIELDS = ['name', 'address', 'department', 'municipality', 'district', 'phone', 'email', 'isActive'];
 
 const branchAudit = {
@@ -44,8 +57,8 @@ const branchAudit = {
 // activate/deactivate como permisos separados (ERS 6.4.7), sin delete físico
 // (RN-BRA-003 sobre "no eliminar sucursal con almacenes" queda sin efecto
 // práctico porque no hay endpoint de borrado).
-// "Consultar sucursales por empresa" (CU-033) se resuelve con
-// GET /branches?company=<id> en vez de una ruta anidada.
+// "Consultar sucursales por empresa" (CU-033) ya no acepta un `company` en
+// la query: siempre se resuelve con la company del JWT (req.user.companyId).
 const routes = [
     {
         method: 'GET',
@@ -69,7 +82,7 @@ const routes = [
         permission: 'logs.read',
         description: 'Ver historial de cambios de la sucursal',
         handler: createEntityHistoryHandler(BranchModel.modelName, 'id'),
-        middlewares: []
+        middlewares: [requireOwnCompanyBranch]
     },
     {
         method: 'POST',

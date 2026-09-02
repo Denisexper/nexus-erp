@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import CompanyFormModal from "./CompanyFormModal";
 import CompanyHistoryModal from "./CompanyHistoryModal";
+import CompanyDetailModal from "./CompanyDetailModal";
 
 function Companies() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ function Companies() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedCompany, setSelectedCompany] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailCompany, setDetailCompany] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -85,6 +89,11 @@ function Companies() {
   const openHistory = (company) => {
     setSelectedCompany(company);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (company) => {
+    setDetailCompany(company);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -130,7 +139,12 @@ function Companies() {
               </p>
             </div>
             <Show when={auth.hasPermission("companies.create")}>
-              <button onClick={openCreate} class="btn-primary">
+              <button
+                onClick={openCreate}
+                disabled
+                title="Disponible próximamente desde el panel de super administración"
+                class="btn-primary opacity-50 cursor-not-allowed"
+              >
                 + Nueva empresa
               </button>
             </Show>
@@ -202,14 +216,7 @@ function Companies() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("companies.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,6 +280,13 @@ function Companies() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(company)}
+                              title="Ver detalle"
+                              class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              👁️
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(company)}
@@ -299,10 +313,12 @@ function Companies() {
                             >
                               <button
                                 onClick={() => toggleStatus(company)}
-                                class={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                                disabled
+                                title="Disponible próximamente desde el panel de super administración"
+                                class={`text-xs px-3 py-1.5 rounded-md border opacity-50 cursor-not-allowed ${
                                   company.isActive
-                                    ? "border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10"
-                                    : "border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10"
+                                    ? "border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400"
+                                    : "border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400"
                                 }`}
                               >
                                 {company.isActive
@@ -341,6 +357,13 @@ function Companies() {
           <CompanyHistoryModal
             company={selectedCompany()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <CompanyDetailModal
+            company={detailCompany()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>

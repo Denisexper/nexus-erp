@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { KardexMovement } from '../../domain/KardexMovement.js';
+import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
@@ -13,23 +14,27 @@ import {
 // un tipo 'transfer' aparte: así el cálculo de stock (suma de in/out) no
 // necesita saber nada de transferencias.
 export class RegisterTransferUseCase {
-  constructor(kardexRepository, productRepository, locationRepository) {
+  constructor(kardexRepository, productRepository, locationRepository, branchRepository, warehouseRepository) {
     this.kardexRepository = kardexRepository;
     this.productRepository = productRepository;
     this.locationRepository = locationRepository;
+    this.branchRepository = branchRepository;
+    this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(data) {
+  async execute(data, companyId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
     if (data.fromLocation === data.toLocation) throw new SameLocationTransferError();
 
-    const product = await this.productRepository.findById(data.product);
+    const product = await this.productRepository.findById(data.product, companyId);
     if (!product) throw new ProductNotFoundForKardexError();
 
-    const fromLocation = await this.locationRepository.findById(data.fromLocation);
+    const warehouseIds = await resolveWarehouseIdsForCompany(companyId, this.branchRepository, this.warehouseRepository);
+
+    const fromLocation = await this.locationRepository.findById(data.fromLocation, warehouseIds);
     if (!fromLocation) throw new LocationNotFoundForKardexError();
 
-    const toLocation = await this.locationRepository.findById(data.toLocation);
+    const toLocation = await this.locationRepository.findById(data.toLocation, warehouseIds);
     if (!toLocation) throw new LocationNotFoundForKardexError();
 
     const currentStock = await this.kardexRepository.getStockByProductAndLocation(data.product, data.fromLocation);

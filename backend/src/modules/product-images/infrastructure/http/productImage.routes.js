@@ -21,9 +21,9 @@ const productRepository = new MongoProductRepository();
 const controller = new ProductImageController({
     uploadProductImage: new UploadProductImageUseCase(productImageRepository, productRepository),
     listProductImages: new ListProductImagesUseCase(productImageRepository, productRepository),
-    activateProductImage: new ActivateProductImageUseCase(productImageRepository),
-    deactivateProductImage: new DeactivateProductImageUseCase(productImageRepository),
-    listProductImageCovers: new ListProductImageCoversUseCase(productImageRepository),
+    activateProductImage: new ActivateProductImageUseCase(productImageRepository, productRepository),
+    deactivateProductImage: new DeactivateProductImageUseCase(productImageRepository, productRepository),
+    listProductImageCovers: new ListProductImageCoversUseCase(productImageRepository, productRepository),
 });
 
 const router = Router();

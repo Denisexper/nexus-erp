@@ -8,6 +8,7 @@ const toDomain = (doc) =>
     doc
         ? new Role({
               id: doc._id.toString(),
+              company: doc.company,
               name: doc.name,
               displayName: doc.displayName,
               description: doc.description,
@@ -30,44 +31,46 @@ const assertValidId = (id) => {
  * del módulo que conoce sintaxis de Mongo (ObjectId, sort, etc.).
  */
 export class MongoRoleRepository extends RoleRepository {
-    async findAll({ page = 1, limit = 10 } = {}) {
+    async findAll({ company, page = 1, limit = 10 } = {}) {
+        const filter = { company };
         const skip = (page - 1) * limit;
 
         const [docs, total] = await Promise.all([
-            RoleModel.find()
+            RoleModel.find(filter)
                 .select('-__v')
                 .sort({ isSystem: -1, name: 1 })
                 .skip(skip)
                 .limit(limit),
-            RoleModel.countDocuments(),
+            RoleModel.countDocuments(filter),
         ]);
 
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, companyId) {
         assertValidId(id);
-        const doc = await RoleModel.findById(id);
+        const doc = await RoleModel.findOne({ _id: id, company: companyId });
         return toDomain(doc);
     }
 
-    async findByName(name) {
-        const doc = await RoleModel.findOne({ name });
+    async findByName(name, companyId) {
+        const doc = await RoleModel.findOne({ name, company: companyId });
         return toDomain(doc);
     }
 
-    async findByIdOrName(value) {
+    async findByIdOrName(value, companyId) {
         if (mongoose.Types.ObjectId.isValid(value)) {
-            const doc = await RoleModel.findById(value);
+            const doc = await RoleModel.findOne({ _id: value, company: companyId });
             if (doc) return toDomain(doc);
         }
 
-        const doc = await RoleModel.findOne({ name: value?.toLowerCase() || 'user' });
+        const doc = await RoleModel.findOne({ name: value?.toLowerCase() || 'user', company: companyId });
         return toDomain(doc);
     }
 
     async create(role) {
         const doc = await RoleModel.create({
+            company: role.company,
             name: role.name,
             displayName: role.displayName,
             description: role.description,

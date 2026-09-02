@@ -6,11 +6,11 @@ export class CreateUnitUseCase {
     this.unitRepository = unitRepository;
   }
 
-  async execute({ name, type }) {
-    const existing = await this.unitRepository.findByName(name);
+  async execute({ name, type, company }) {
+    const existing = await this.unitRepository.findByNameAndCompany(name, company);
     if (existing) throw new DuplicateUnitNameError();
 
-    const unit = new Unit({ name, type });
+    const unit = new Unit({ name, type, company });
     return this.unitRepository.create(unit);
   }
 }

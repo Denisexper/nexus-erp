@@ -39,6 +39,7 @@ export const authMiddleware = async (req, res, next) => {
             id: decode.id,
             email: decode.email,
             roleId: decode.roleId,
+            companyId: decode.companyId, // tenant al que pertenece la sesión
             role: userRole.name, // Nombre del rol (admin, user, etc.)
             permissions: userRole.permissions // Array de permisos
         };

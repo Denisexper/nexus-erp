@@ -5,8 +5,8 @@ export class GetUnitByIdUseCase {
     this.unitRepository = unitRepository;
   }
 
-  async execute(id) {
-    const unit = await this.unitRepository.findById(id);
+  async execute(id, companyId) {
+    const unit = await this.unitRepository.findById(id, companyId);
     if (!unit) throw new UnitNotFoundError();
     return unit;
   }

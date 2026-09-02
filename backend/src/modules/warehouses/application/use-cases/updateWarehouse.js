@@ -6,13 +6,15 @@ import {
 } from '../../domain/errors.js';
 
 export class UpdateWarehouseUseCase {
-  constructor(warehouseRepository, warehouseCategoryRepository) {
+  constructor(warehouseRepository, warehouseCategoryRepository, branchRepository) {
     this.warehouseRepository = warehouseRepository;
     this.warehouseCategoryRepository = warehouseCategoryRepository;
+    this.branchRepository = branchRepository;
   }
 
-  async execute(id, changes) {
-    const warehouse = await this.warehouseRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const branchIds = companyId ? await this.branchRepository.findIdsByCompany(companyId) : undefined;
+    const warehouse = await this.warehouseRepository.findById(id, branchIds);
     if (!warehouse) throw new WarehouseNotFoundError();
 
     if (changes.name && changes.name !== warehouse.name) {

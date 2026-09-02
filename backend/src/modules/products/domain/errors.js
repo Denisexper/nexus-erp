@@ -43,12 +43,12 @@ export class InvalidSaleUnitTypeError extends DomainError {
 
 export class DuplicateInternalCodeError extends DomainError {
   constructor() {
-    super('Ya existe un producto con ese código interno');
+    super('Ya existe un producto con ese código interno en esta empresa');
   }
 }
 
 export class DuplicateSkuError extends DomainError {
   constructor() {
-    super('Ya existe un producto con ese SKU');
+    super('Ya existe un producto con ese SKU en esta empresa');
   }
 }

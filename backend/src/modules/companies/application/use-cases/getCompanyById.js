@@ -5,8 +5,8 @@ export class GetCompanyByIdUseCase {
     this.companyRepository = companyRepository;
   }
 
-  async execute(id) {
-    const company = await this.companyRepository.findById(id);
+  async execute(id, companyId) {
+    const company = await this.companyRepository.findById(id, companyId);
     if (!company) throw new CompanyNotFoundError();
     return company;
   }

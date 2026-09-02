@@ -5,8 +5,8 @@ export class GetCategoryByIdUseCase {
     this.categoryRepository = categoryRepository;
   }
 
-  async execute(id) {
-    const category = await this.categoryRepository.findById(id);
+  async execute(id, companyId) {
+    const category = await this.categoryRepository.findById(id, companyId);
     if (!category) throw new CategoryNotFoundError();
     return category;
   }

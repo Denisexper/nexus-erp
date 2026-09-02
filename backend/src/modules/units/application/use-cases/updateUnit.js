@@ -5,12 +5,12 @@ export class UpdateUnitUseCase {
     this.unitRepository = unitRepository;
   }
 
-  async execute(id, changes) {
-    const unit = await this.unitRepository.findById(id);
+  async execute(id, changes, companyId) {
+    const unit = await this.unitRepository.findById(id, companyId);
     if (!unit) throw new UnitNotFoundError();
 
     if (changes.name && changes.name !== unit.name) {
-      const nameTaken = await this.unitRepository.findByName(changes.name);
+      const nameTaken = await this.unitRepository.findByNameAndCompany(changes.name, companyId);
       if (nameTaken) throw new DuplicateUnitNameError();
     }
 

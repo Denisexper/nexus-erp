@@ -7,8 +7,8 @@ export class UnlockUserUseCase {
     this.userRepository = userRepository;
   }
 
-  async execute(id) {
-    const user = await this.userRepository.findById(id);
+  async execute(id, companyId) {
+    const user = await this.userRepository.findById(id, companyId);
     if (!user) throw new UserNotFoundError();
 
     return this.userRepository.update(id, { failedLoginAttempts: 0, lockedUntil: null });

@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import WarehouseFormModal from "./WarehouseFormModal";
 import WarehouseHistoryModal from "./WarehouseHistoryModal";
+import WarehouseDetailModal from "./WarehouseDetailModal";
 
 function Warehouses() {
   const auth = useAuth();
@@ -53,6 +54,9 @@ function Warehouses() {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [selectedWarehouse, setSelectedWarehouse] = createSignal(null);
 
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailWarehouse, setDetailWarehouse] = createSignal(null);
+
   const applyFilters = () => {
     setAppliedFilters({
       search: searchInput(),
@@ -85,6 +89,11 @@ function Warehouses() {
   const openHistory = (warehouse) => {
     setSelectedWarehouse(warehouse);
     setShowHistoryModal(true);
+  };
+
+  const openDetail = (warehouse) => {
+    setDetailWarehouse(warehouse);
+    setShowDetailModal(true);
   };
 
   const handleSaved = () => {
@@ -201,14 +210,7 @@ function Warehouses() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Estado
                     </th>
-                    <Show
-                      when={
-                        auth.hasPermission("warehouses.update") ||
-                        auth.hasPermission("logs.read")
-                      }
-                    >
-                      <th class="px-6 py-3"></th>
-                    </Show>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -241,6 +243,13 @@ function Warehouses() {
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-2 justify-end">
+                            <button
+                              onClick={() => openDetail(warehouse)}
+                              title="Ver detalle"
+                              class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                            >
+                              👁️
+                            </button>
                             <Show when={auth.hasPermission("logs.read")}>
                               <button
                                 onClick={() => openHistory(warehouse)}
@@ -309,6 +318,13 @@ function Warehouses() {
           <WarehouseHistoryModal
             warehouse={selectedWarehouse()}
             onClose={() => setShowHistoryModal(false)}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <WarehouseDetailModal
+            warehouse={detailWarehouse()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>

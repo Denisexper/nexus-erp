@@ -12,6 +12,7 @@ import {
 const toProductDTO = (product) => ({
   _id: product.id,
   id: product.id,
+  company: product.company,
   subCategory: product.subCategory,
   category: product.category,
   purchaseUnit: product.purchaseUnit,
@@ -75,7 +76,14 @@ export class ProductController {
   getAll = async (req, res) => {
     try {
       const { search, subCategory, isActive, page = 1, limit = 10 } = req.query;
-      const result = await this.listProductsUseCase.execute({ search, subCategory, isActive, page, limit });
+      const result = await this.listProductsUseCase.execute({
+        search,
+        companyId: req.user.companyId,
+        subCategory,
+        isActive,
+        page,
+        limit,
+      });
 
       res.status(200).json({
         msj: result.items.length === 0 ? 'lista de productos vacia' : 'Productos obtenidos correctamente',
@@ -97,7 +105,7 @@ export class ProductController {
 
   getOne = async (req, res) => {
     try {
-      const product = await this.getProductByIdUseCase.execute(req.params.id);
+      const product = await this.getProductByIdUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Producto encontrado', data: toProductDTO(product) });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo producto');
@@ -107,7 +115,7 @@ export class ProductController {
   create = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, PRODUCT_FIELDS);
-      const product = await this.createProductUseCase.execute(data);
+      const product = await this.createProductUseCase.execute({ ...data, company: req.user.companyId });
       res.status(201).json({ msj: 'Producto creado exitosamente', newProduct: toProductDTO(product) });
     } catch (error) {
       this.#handleError(res, error, 'Error creando producto');
@@ -117,7 +125,7 @@ export class ProductController {
   update = async (req, res) => {
     try {
       const changes = pickDefinedFields(req.body, PRODUCT_FIELDS);
-      const product = await this.updateProductUseCase.execute(req.params.id, changes);
+      const product = await this.updateProductUseCase.execute(req.params.id, changes, req.user.companyId);
       res.status(200).json({ msj: 'Producto actualizado correctamente', product: toProductDTO(product) });
     } catch (error) {
       this.#handleError(res, error, 'Error actualizando producto');
@@ -126,7 +134,7 @@ export class ProductController {
 
   activate = async (req, res) => {
     try {
-      const product = await this.activateProductUseCase.execute(req.params.id);
+      const product = await this.activateProductUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Producto activado correctamente', product: toProductDTO(product) });
     } catch (error) {
       this.#handleError(res, error, 'Error al activar el producto');
@@ -135,7 +143,7 @@ export class ProductController {
 
   deactivate = async (req, res) => {
     try {
-      const product = await this.deactivateProductUseCase.execute(req.params.id);
+      const product = await this.deactivateProductUseCase.execute(req.params.id, req.user.companyId);
       res.status(200).json({ msj: 'Producto desactivado correctamente', product: toProductDTO(product) });
     } catch (error) {
       this.#handleError(res, error, 'Error al desactivar el producto');

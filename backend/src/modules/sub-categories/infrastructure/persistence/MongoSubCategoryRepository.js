@@ -49,15 +49,21 @@ export class MongoSubCategoryRepository extends SubCategoryRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findById(id) {
+    async findById(id, categoryIds) {
         assertValidId(id);
-        const doc = await SubCategoryModel.findById(id).populate(POPULATE);
+        const filter = categoryIds ? { _id: id, category: { $in: categoryIds } } : { _id: id };
+        const doc = await SubCategoryModel.findOne(filter).populate(POPULATE);
         return toDomain(doc);
     }
 
     async findByNameAndCategory(name, categoryId) {
         const doc = await SubCategoryModel.findOne({ name, category: categoryId });
         return toDomain(doc);
+    }
+
+    async findIdsByCategories(categoryIds) {
+        const docs = await SubCategoryModel.find({ category: { $in: categoryIds } }).select('_id');
+        return docs.map((doc) => doc._id.toString());
     }
 
     async create(subCategory) {

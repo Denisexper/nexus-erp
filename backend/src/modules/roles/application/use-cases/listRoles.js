@@ -3,11 +3,11 @@ export class ListRolesUseCase {
     this.roleRepository = roleRepository;
   }
 
-  async execute({ page = 1, limit = 10 } = {}) {
+  async execute({ company, page = 1, limit = 10 } = {}) {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
 
-    const { items, total } = await this.roleRepository.findAll({ page: pageNum, limit: limitNum });
+    const { items, total } = await this.roleRepository.findAll({ company, page: pageNum, limit: limitNum });
 
     return {
       items,
