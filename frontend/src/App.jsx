@@ -29,6 +29,9 @@ const SupplierContacts = lazy(() =>
 );
 const Products = lazy(() => import("./features/products/Products"));
 const Kardex = lazy(() => import("./features/kardex/Kardex"));
+const ExpenseTypes = lazy(() =>
+  import("./features/expense-types/ExpenseTypes"),
+);
 
 function App() {
   return (
@@ -58,6 +61,7 @@ function App() {
           <Route path="/suppliers" component={Suppliers} />
           <Route path="/supplier-contacts" component={SupplierContacts} />
           <Route path="/products" component={Products} />
+          <Route path="/expense-types" component={ExpenseTypes} />
           <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>

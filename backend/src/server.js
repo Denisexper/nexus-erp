@@ -28,6 +28,7 @@ import supplierContactsRoutes, { supplierContactRoutes as supplierContactRoutesM
 import productsRoutes, { productRoutes as productRoutesMetadata } from "#modules/products/infrastructure/http/product.routes.js";
 import productImagesRoutes, { productImageRoutes as productImageRoutesMetadata } from "#modules/product-images/infrastructure/http/productImage.routes.js";
 import kardexRoutes, { kardexRoutes as kardexRoutesMetadata } from "#modules/kardex/infrastructure/http/kardex.routes.js";
+import expenseTypesRoutes, { expenseTypeRoutes as expenseTypeRoutesMetadata } from "#modules/expense-types/infrastructure/http/expenseType.routes.js";
 
 // bootstrap: sincronizar el catálogo de permisos y los roles del sistema
 import { MongoPermissionRepository } from "#modules/permissions/infrastructure/persistence/MongoPermissionRepository.js";
@@ -70,7 +71,7 @@ mongoConnect().then(async () => {
 
   await seedGeo();
 
-  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, kardexRoutesMetadata];
+  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, kardexRoutesMetadata, expenseTypeRoutesMetadata];
 
   // Auto-descubrir y sincronizar permisos desde la metadata de las rutas
   const syncDiscoveredPermissions = new SyncDiscoveredPermissionsUseCase(new MongoPermissionRepository());
@@ -107,3 +108,4 @@ server.use("/api/supplier-contacts", supplierContactsRoutes);
 server.use("/api/products", productsRoutes);
 server.use("/api/product-images", productImagesRoutes);
 server.use("/api/kardex", kardexRoutes);
+server.use("/api/expense-types", expenseTypesRoutes);
