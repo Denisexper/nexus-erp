@@ -32,6 +32,9 @@ const Kardex = lazy(() => import("./features/kardex/Kardex"));
 const ExpenseTypes = lazy(() =>
   import("./features/expense-types/ExpenseTypes"),
 );
+const PurchaseRequests = lazy(() =>
+  import("./features/purchase-requests/PurchaseRequests"),
+);
 
 function App() {
   return (
@@ -62,6 +65,7 @@ function App() {
           <Route path="/supplier-contacts" component={SupplierContacts} />
           <Route path="/products" component={Products} />
           <Route path="/expense-types" component={ExpenseTypes} />
+          <Route path="/purchase-requests" component={PurchaseRequests} />
           <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>
