@@ -35,6 +35,9 @@ const ExpenseTypes = lazy(() =>
 const PurchaseRequests = lazy(() =>
   import("./features/purchase-requests/PurchaseRequests"),
 );
+const PurchaseQuotations = lazy(() =>
+  import("./features/purchase-quotations/PurchaseQuotations"),
+);
 
 function App() {
   return (
@@ -66,6 +69,7 @@ function App() {
           <Route path="/products" component={Products} />
           <Route path="/expense-types" component={ExpenseTypes} />
           <Route path="/purchase-requests" component={PurchaseRequests} />
+          <Route path="/purchase-quotations" component={PurchaseQuotations} />
           <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>

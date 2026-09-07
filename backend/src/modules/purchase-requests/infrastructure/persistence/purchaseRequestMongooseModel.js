@@ -24,7 +24,9 @@ const purchaseRequestSchema = new Schema({
     },
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        // Nombre de modelo real es 'userModel', no 'User' (ver comentario en
+        // userMongooseModel.js) — companies.owner y logs.user ya lo usan así.
+        ref: 'userModel',
         required: [true, 'El usuario es obligatorio']
     },
     requestDate: {
