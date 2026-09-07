@@ -184,22 +184,34 @@ function Sidebar() {
           </A>
         </Show>
 
-        {/* Compras - ERS 6.8. Por ahora solo el catálogo de gastos; Solicitudes,
-            Cotizaciones y Órdenes se suman a este grupo en próximas sesiones. */}
-        <Show when={auth.hasPermission('expense_types.view')}>
+        {/* Compras - ERS 6.8. Cotizaciones y Órdenes se suman a este grupo
+            en próximas sesiones. */}
+        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view')}>
           <div class="pt-4 pb-1">
             <p class="px-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
               Compras
             </p>
           </div>
 
-          <A href="/expense-types" class={navLinkClass('/expense-types')}>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 7h6m0 10v-3m-3 3v-6m-3 6v-1m-4 4h14a2 2 0 002-2V7a2 2 0 00-2-2h-3.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0011.586 3H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            Tipos de gasto
-          </A>
+          <Show when={auth.hasPermission('purchase_requests.view')}>
+            <A href="/purchase-requests" class={navLinkClass('/purchase-requests')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Solicitudes de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('expense_types.view')}>
+            <A href="/expense-types" class={navLinkClass('/expense-types')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 7h6m0 10v-3m-3 3v-6m-3 6v-1m-4 4h14a2 2 0 002-2V7a2 2 0 00-2-2h-3.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0011.586 3H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Tipos de gasto
+            </A>
+          </Show>
         </Show>
 
         {/* Mostrar según PERMISOS, no por rol */}
