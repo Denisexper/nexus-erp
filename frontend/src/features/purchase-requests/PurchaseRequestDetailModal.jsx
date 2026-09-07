@@ -11,6 +11,11 @@ import {
 } from "../../components/DetailModal";
 import { statusLabel, statusBadgeClass } from "./statusMeta";
 import PurchaseRequestLineFormModal from "./PurchaseRequestLineFormModal";
+import PurchaseQuotationComparisonModal from "../purchase-quotations/PurchaseQuotationComparisonModal";
+
+// Estados en los que ya existe al menos una cotización registrada contra
+// esta solicitud (ver createPurchaseQuotation.js en el backend).
+const QUOTED_STATUSES = ["partially_quoted", "quoted", "partially_ordered", "completed"];
 
 function PurchaseRequestDetailModal(props) {
   const auth = useAuth();
@@ -29,6 +34,7 @@ function PurchaseRequestDetailModal(props) {
   const [showLineModal, setShowLineModal] = createSignal(false);
   const [editingLine, setEditingLine] = createSignal(null);
   const [actionLoading, setActionLoading] = createSignal(false);
+  const [showComparisonModal, setShowComparisonModal] = createSignal(false);
 
   const isDraft = () => purchaseRequest()?.status === "draft";
 
@@ -186,9 +192,15 @@ function PurchaseRequestDetailModal(props) {
                 Cancelar solicitud
               </button>
             </Show>
+            <Show when={QUOTED_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_quotations.view")}>
+              <button onClick={() => setShowComparisonModal(true)} class="text-xs px-3 py-1.5 rounded-md border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
+                Ver cotizaciones
+              </button>
+            </Show>
             <Show
               when={
-                !["draft", "submitted", "approved"].includes(purchaseRequest()?.status)
+                !["draft", "submitted", "approved"].includes(purchaseRequest()?.status) &&
+                !(QUOTED_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_quotations.view"))
               }
             >
               <p class="text-xs text-gray-500 dark:text-night-400">
@@ -279,6 +291,14 @@ function PurchaseRequestDetailModal(props) {
           line={editingLine()}
           onClose={() => setShowLineModal(false)}
           onSaved={handleLineSaved}
+        />
+      </Show>
+
+      <Show when={showComparisonModal()}>
+        <PurchaseQuotationComparisonModal
+          purchaseRequestId={purchaseRequest()?._id}
+          requestCode={purchaseRequest()?.code}
+          onClose={() => setShowComparisonModal(false)}
         />
       </Show>
     </>
