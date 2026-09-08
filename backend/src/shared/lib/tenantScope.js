@@ -42,3 +42,12 @@ export async function resolveSupplierIdsForCompany(companyId, supplierRepository
   if (!companyId) return undefined;
   return supplierRepository.findIdsByCompany(companyId);
 }
+
+// PurchaseRequest también tiene `company` propio. PurchaseRequestDetail no:
+// llega a la company por cadena (purchaseRequestDetail -> purchaseRequest ->
+// company), igual que subCategory/supplierContact con category/supplier.
+
+export async function resolvePurchaseRequestIdsForCompany(companyId, purchaseRequestRepository) {
+  if (!companyId) return undefined;
+  return purchaseRequestRepository.findIdsByCompany(companyId);
+}

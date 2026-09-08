@@ -184,6 +184,56 @@ function Sidebar() {
           </A>
         </Show>
 
+        {/* Compras - ERS 6.8 */}
+        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view') || auth.hasPermission('purchase_quotations.view') || auth.hasPermission('purchase_orders.view')}>
+          <div class="pt-4 pb-1">
+            <p class="px-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
+              Compras
+            </p>
+          </div>
+
+          <Show when={auth.hasPermission('purchase_requests.view')}>
+            <A href="/purchase-requests" class={navLinkClass('/purchase-requests')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Solicitudes de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('purchase_quotations.view')}>
+            <A href="/purchase-quotations" class={navLinkClass('/purchase-quotations')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+              Cotizaciones de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('purchase_orders.view')}>
+            <A href="/purchase-orders" class={navLinkClass('/purchase-orders')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l1.5 1.5L14 10" />
+              </svg>
+              Órdenes de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('expense_types.view')}>
+            <A href="/expense-types" class={navLinkClass('/expense-types')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 7h6m0 10v-3m-3 3v-6m-3 6v-1m-4 4h14a2 2 0 002-2V7a2 2 0 00-2-2h-3.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0011.586 3H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Tipos de gasto
+            </A>
+          </Show>
+        </Show>
+
         {/* Mostrar según PERMISOS, no por rol */}
         <Show when={auth.hasPermission('users.read') || auth.hasPermission('users.create') || auth.hasPermission('users.update')}>
           <div class="pt-4 pb-1">

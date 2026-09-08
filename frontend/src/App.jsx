@@ -29,6 +29,18 @@ const SupplierContacts = lazy(() =>
 );
 const Products = lazy(() => import("./features/products/Products"));
 const Kardex = lazy(() => import("./features/kardex/Kardex"));
+const ExpenseTypes = lazy(() =>
+  import("./features/expense-types/ExpenseTypes"),
+);
+const PurchaseRequests = lazy(() =>
+  import("./features/purchase-requests/PurchaseRequests"),
+);
+const PurchaseQuotations = lazy(() =>
+  import("./features/purchase-quotations/PurchaseQuotations"),
+);
+const PurchaseOrders = lazy(() =>
+  import("./features/purchase-orders/PurchaseOrders"),
+);
 
 function App() {
   return (
@@ -58,6 +70,10 @@ function App() {
           <Route path="/suppliers" component={Suppliers} />
           <Route path="/supplier-contacts" component={SupplierContacts} />
           <Route path="/products" component={Products} />
+          <Route path="/expense-types" component={ExpenseTypes} />
+          <Route path="/purchase-requests" component={PurchaseRequests} />
+          <Route path="/purchase-quotations" component={PurchaseQuotations} />
+          <Route path="/purchase-orders" component={PurchaseOrders} />
           <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>
