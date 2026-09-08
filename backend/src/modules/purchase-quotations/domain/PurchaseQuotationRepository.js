@@ -42,4 +42,19 @@ export class PurchaseQuotationRepository {
   async findComparisonForRequestDetailIds(_purchaseRequestDetailIds, _companyId) {
     throw new Error('PurchaseQuotationRepository.findComparisonForRequestDetailIds no implementado');
   }
+
+  // ids de PurchaseRequest vinculados a esta cotización vía la tabla puente
+  // purchase_quotation_requests. Usado por purchase-orders para saber a qué
+  // solicitudes avanzar el status al generar una orden desde esta cotización.
+  async findRequestIdsForQuotation(_quotationId) {
+    throw new Error('PurchaseQuotationRepository.findRequestIdsForQuotation no implementado');
+  }
+
+  // De las líneas de solicitud dadas, cuáles ya quedaron "compradas": tienen
+  // trazabilidad hacia una línea de cotización cuya cotización está en
+  // status 'selected' (o sea, ya se generó una orden a partir de ella). Usado
+  // por purchase-orders para avanzar la solicitud a partially_ordered/completed.
+  async findOrderedRequestDetailIds(_purchaseRequestDetailIds) {
+    throw new Error('PurchaseQuotationRepository.findOrderedRequestDetailIds no implementado');
+  }
 }

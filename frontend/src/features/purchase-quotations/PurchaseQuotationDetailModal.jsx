@@ -9,9 +9,12 @@ import {
   DetailAvatar,
 } from "../../components/DetailModal";
 import { statusLabel, statusBadgeClass, formatMoney } from "./statusMeta";
+import PurchaseOrderCreateModal from "../purchase-orders/PurchaseOrderCreateModal";
 
 function PurchaseQuotationDetailModal(props) {
   const auth = useAuth();
+
+  const [showOrderModal, setShowOrderModal] = createSignal(false);
 
   const [detail, { refetch }] = createResource(
     () => props.purchaseQuotation?._id,
@@ -54,7 +57,13 @@ function PurchaseQuotationDetailModal(props) {
       "¿Cancelar esta cotización? Esta acción no se puede deshacer.",
     );
 
+  const handleOrderSaved = () => {
+    setShowOrderModal(false);
+    notifyChanged();
+  };
+
   return (
+    <>
     <DetailModal
       onClose={props.onClose}
       loading={detail.loading}
@@ -97,6 +106,11 @@ function PurchaseQuotationDetailModal(props) {
 
       <DetailSection title="Acciones" cols={1} divider>
         <div class="flex flex-wrap gap-2">
+          <Show when={quotation()?.status === "received" && auth.hasPermission("purchase_orders.create")}>
+            <button onClick={() => setShowOrderModal(true)} class="text-xs px-3 py-1.5 rounded-md border border-mint-600/30 text-mint-700 dark:text-mint hover:bg-mint-600/10 transition-colors">
+              Generar orden de compra
+            </button>
+          </Show>
           <Show when={quotation()?.status === "received" && auth.hasPermission("purchase_quotations.reject")}>
             <button disabled={actionLoading()} onClick={reject} class="text-xs px-3 py-1.5 rounded-md border border-coral-200 dark:border-coral/30 text-coral-600 dark:text-coral hover:bg-coral-50 dark:hover:bg-coral/10 transition-colors disabled:opacity-50">
               Rechazar
@@ -195,6 +209,15 @@ function PurchaseQuotationDetailModal(props) {
         </div>
       </DetailSection>
     </DetailModal>
+
+    <Show when={showOrderModal()}>
+      <PurchaseOrderCreateModal
+        presetQuotation={quotation()}
+        onClose={() => setShowOrderModal(false)}
+        onSaved={handleOrderSaved}
+      />
+    </Show>
+    </>
   );
 }
 

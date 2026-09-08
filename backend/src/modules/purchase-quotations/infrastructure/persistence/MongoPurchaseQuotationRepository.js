@@ -277,4 +277,45 @@ export class MongoPurchaseQuotationRepository extends PurchaseQuotationRepositor
             }))
             .filter((entry) => entry.lines.length > 0);
     }
+
+    async findRequestIdsForQuotation(quotationId) {
+        const docs = await PurchaseQuotationRequestModel.find({ purchaseQuotation: quotationId }).select('purchaseRequest');
+        return docs.map((doc) => doc.purchaseRequest.toString());
+    }
+
+    async findOrderedRequestDetailIds(purchaseRequestDetailIds) {
+        if (!purchaseRequestDetailIds || purchaseRequestDetailIds.length === 0) return [];
+
+        const sourceDocs = await PurchaseQuotationRequestDetailModel.find({
+            purchaseRequestDetail: { $in: purchaseRequestDetailIds },
+        }).select('purchaseRequestDetail purchaseQuotationDetail');
+        if (sourceDocs.length === 0) return [];
+
+        const quotationDetailIds = [...new Set(sourceDocs.map((s) => s.purchaseQuotationDetail.toString()))];
+        const quotationDetailDocs = await PurchaseQuotationDetailModel.find({
+            _id: { $in: quotationDetailIds },
+        }).select('purchaseQuotation');
+
+        const quotationIds = [...new Set(quotationDetailDocs.map((d) => d.purchaseQuotation.toString()))];
+        const selectedQuotationIds = await PurchaseQuotationModel.find({
+            _id: { $in: quotationIds },
+            status: 'selected',
+        }).distinct('_id');
+        const selectedSet = new Set(selectedQuotationIds.map(String));
+
+        const selectedDetailIds = new Set(
+            quotationDetailDocs
+                .filter((d) => selectedSet.has(d.purchaseQuotation.toString()))
+                .map((d) => d._id.toString()),
+        );
+
+        const orderedRequestDetailIds = new Set();
+        for (const source of sourceDocs) {
+            if (selectedDetailIds.has(source.purchaseQuotationDetail.toString())) {
+                orderedRequestDetailIds.add(source.purchaseRequestDetail.toString());
+            }
+        }
+
+        return [...orderedRequestDetailIds];
+    }
 }
