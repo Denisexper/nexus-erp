@@ -138,7 +138,7 @@ function Companies() {
                 empresas
               </p>
             </div>
-            <Show when={auth.hasPermission("companies.create")}>
+            <Show when={false}>
               <button
                 onClick={openCreate}
                 disabled
