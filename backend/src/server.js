@@ -33,6 +33,7 @@ import purchaseRequestsRoutes, { purchaseRequestRoutes as purchaseRequestRoutesM
 import purchaseRequestDetailsRoutes, { purchaseRequestDetailRoutes as purchaseRequestDetailRoutesMetadata } from "#modules/purchase-request-details/infrastructure/http/purchaseRequestDetail.routes.js";
 import purchaseQuotationsRoutes, { purchaseQuotationRoutes as purchaseQuotationRoutesMetadata } from "#modules/purchase-quotations/infrastructure/http/purchaseQuotation.routes.js";
 import purchaseOrdersRoutes, { purchaseOrderRoutes as purchaseOrderRoutesMetadata } from "#modules/purchase-orders/infrastructure/http/purchaseOrder.routes.js";
+import retaceosRoutes, { retaceoRoutes as retaceoRoutesMetadata } from "#modules/retaceos/infrastructure/http/retaceo.routes.js";
 
 // bootstrap: sincronizar el catálogo de permisos y los roles del sistema
 import { MongoPermissionRepository } from "#modules/permissions/infrastructure/persistence/MongoPermissionRepository.js";
@@ -75,7 +76,7 @@ mongoConnect().then(async () => {
 
   await seedGeo();
 
-  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, kardexRoutesMetadata, expenseTypeRoutesMetadata, purchaseRequestRoutesMetadata, purchaseRequestDetailRoutesMetadata, purchaseQuotationRoutesMetadata, purchaseOrderRoutesMetadata];
+  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, kardexRoutesMetadata, expenseTypeRoutesMetadata, purchaseRequestRoutesMetadata, purchaseRequestDetailRoutesMetadata, purchaseQuotationRoutesMetadata, purchaseOrderRoutesMetadata, retaceoRoutesMetadata];
 
   // Auto-descubrir y sincronizar permisos desde la metadata de las rutas
   const syncDiscoveredPermissions = new SyncDiscoveredPermissionsUseCase(new MongoPermissionRepository());
@@ -117,3 +118,4 @@ server.use("/api/purchase-requests", purchaseRequestsRoutes);
 server.use("/api/purchase-request-details", purchaseRequestDetailsRoutes);
 server.use("/api/purchase-quotations", purchaseQuotationsRoutes);
 server.use("/api/purchase-orders", purchaseOrdersRoutes);
+server.use("/api/retaceos", retaceosRoutes);
