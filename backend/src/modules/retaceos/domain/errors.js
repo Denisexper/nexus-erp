@@ -41,6 +41,12 @@ export class InvalidDaiAmountError extends DomainError {
   }
 }
 
+export class InvalidFreightAmountError extends DomainError {
+  constructor() {
+    super('El monto de flete debe ser mayor o igual a cero');
+  }
+}
+
 export class InvalidRetaceoStatusTransitionError extends DomainError {
   constructor(from, to) {
     super(`No se puede pasar el retaceo de "${from}" a "${to}"`);
