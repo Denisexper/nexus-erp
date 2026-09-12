@@ -185,7 +185,7 @@ function Sidebar() {
         </Show>
 
         {/* Compras - ERS 6.8 */}
-        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view') || auth.hasPermission('purchase_quotations.view') || auth.hasPermission('purchase_orders.view')}>
+        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view') || auth.hasPermission('purchase_quotations.view') || auth.hasPermission('purchase_orders.view') || auth.hasPermission('retaceos.view')}>
           <div class="pt-4 pb-1">
             <p class="px-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
               Compras
@@ -220,6 +220,16 @@ function Sidebar() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l1.5 1.5L14 10" />
               </svg>
               Órdenes de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('retaceos.view')}>
+            <A href="/retaceos" class={navLinkClass('/retaceos')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 7h6m-6 4h6m-6 4h4m5-13H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2z" />
+              </svg>
+              Retaceos
             </A>
           </Show>
 
