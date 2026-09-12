@@ -41,6 +41,7 @@ const PurchaseQuotations = lazy(() =>
 const PurchaseOrders = lazy(() =>
   import("./features/purchase-orders/PurchaseOrders"),
 );
+const Retaceos = lazy(() => import("./features/retaceos/Retaceos"));
 
 function App() {
   return (
@@ -74,6 +75,7 @@ function App() {
           <Route path="/purchase-requests" component={PurchaseRequests} />
           <Route path="/purchase-quotations" component={PurchaseQuotations} />
           <Route path="/purchase-orders" component={PurchaseOrders} />
+          <Route path="/retaceos" component={Retaceos} />
           <Route path="/" component={CompanySearch} />
         </SolidRouter>
       </AuthProvider>
