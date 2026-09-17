@@ -19,6 +19,10 @@ const purchaseOrderExpenseSchema = new Schema({
         type: Number,
         required: [true, 'El monto es obligatorio'],
         min: [0, 'El monto no puede ser negativo']
+    },
+    isCostable: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true

@@ -13,7 +13,7 @@ const assertValidId = (id) => {
 };
 
 const HEADER_POPULATE = [
-    { path: 'purchaseOrder', select: 'code' },
+    { path: 'purchase', select: 'code' },
     { path: 'supplier', select: 'name code' },
     { path: 'user', select: 'name email' },
 ];
@@ -26,6 +26,7 @@ const toDetailDomain = (doc) =>
     new RetaceoDetail({
         id: doc._id.toString(),
         retaceo: doc.retaceo,
+        purchaseDetail: doc.purchaseDetail,
         product: doc.product,
         quantity: doc.quantity,
         costFob: doc.costFob,
@@ -44,7 +45,7 @@ const toDomain = (doc, details = []) =>
               id: doc._id.toString(),
               company: doc.company,
               code: doc.code,
-              purchaseOrder: doc.purchaseOrder,
+              purchase: doc.purchase,
               supplier: doc.supplier,
               retaceoDate: doc.retaceoDate,
               originCountry: doc.originCountry,
@@ -67,14 +68,14 @@ const toDomain = (doc, details = []) =>
         : null;
 
 export class MongoRetaceoRepository extends RetaceoRepository {
-    async findAll({ search, company, status, supplier, purchaseOrder, page = 1, limit = 10 } = {}) {
+    async findAll({ search, company, status, supplier, purchase, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) filter.code = { $regex: search, $options: 'i' };
         if (company) filter.company = company;
         if (status) filter.status = status;
         if (supplier) filter.supplier = supplier;
-        if (purchaseOrder) filter.purchaseOrder = purchaseOrder;
+        if (purchase) filter.purchase = purchase;
 
         const skip = (page - 1) * limit;
 
@@ -101,8 +102,8 @@ export class MongoRetaceoRepository extends RetaceoRepository {
         return this.#loadAggregate(doc);
     }
 
-    async findByPurchaseOrder(purchaseOrderId, companyId) {
-        const filter = companyId ? { purchaseOrder: purchaseOrderId, company: companyId } : { purchaseOrder: purchaseOrderId };
+    async findByPurchase(purchaseId, companyId) {
+        const filter = companyId ? { purchase: purchaseId, company: companyId } : { purchase: purchaseId };
         const doc = await RetaceoModel.findOne(filter).populate(HEADER_POPULATE);
         return this.#loadAggregate(doc);
     }
@@ -117,7 +118,7 @@ export class MongoRetaceoRepository extends RetaceoRepository {
         const retaceoDoc = await RetaceoModel.create({
             company: retaceo.company,
             code: retaceo.code,
-            purchaseOrder: retaceo.purchaseOrder,
+            purchase: retaceo.purchase,
             supplier: retaceo.supplier,
             retaceoDate: retaceo.retaceoDate,
             originCountry: retaceo.originCountry,
@@ -138,6 +139,7 @@ export class MongoRetaceoRepository extends RetaceoRepository {
         for (const detail of details) {
             await RetaceoDetailModel.create({
                 retaceo: retaceoDoc._id,
+                purchaseDetail: detail.purchaseDetail,
                 product: detail.product,
                 quantity: detail.quantity,
                 costFob: detail.costFob,

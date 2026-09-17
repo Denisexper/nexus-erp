@@ -9,7 +9,7 @@ export class Retaceo {
     id,
     company,
     code,
-    purchaseOrder,
+    purchase,
     supplier,
     retaceoDate,
     originCountry,
@@ -32,7 +32,7 @@ export class Retaceo {
     this.id = id;
     this.company = company; // id de Company
     this.code = code; // ej: RTC-00001, único por company
-    this.purchaseOrder = purchaseOrder; // id de PurchaseOrder de origen (debe estar 'approved')
+    this.purchase = purchase; // id de Purchase de origen (debe estar 'received')
     this.supplier = supplier; // id de Supplier, denormalizado de la orden de origen
     this.retaceoDate = retaceoDate;
     this.originCountry = originCountry;

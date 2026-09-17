@@ -1,26 +1,27 @@
 import {
   InvalidRetaceoIdError,
   RetaceoNotFoundError,
-  PurchaseOrderNotFoundForRetaceoError,
-  PurchaseOrderNotRetaceableError,
-  PurchaseOrderAlreadyRetaceadoError,
+  PurchaseNotFoundForRetaceoError,
+  PurchaseNotRetaceableError,
+  PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
 } from '../../domain/errors.js';
 
 const BAD_REQUEST_ERRORS = [
   InvalidRetaceoIdError,
-  PurchaseOrderNotRetaceableError,
-  PurchaseOrderAlreadyRetaceadoError,
+  PurchaseNotRetaceableError,
+  PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
 ];
 
-const NOT_FOUND_ERRORS = [RetaceoNotFoundError, PurchaseOrderNotFoundForRetaceoError];
+const NOT_FOUND_ERRORS = [RetaceoNotFoundError, PurchaseNotFoundForRetaceoError];
 
 const toDetailDTO = (detail) => ({
   _id: detail.id,
   id: detail.id,
+  purchaseDetail: detail.purchaseDetail,
   product: detail.product,
   quantity: detail.quantity,
   costFob: detail.costFob,
@@ -36,7 +37,7 @@ const toRetaceoDTO = (retaceo) => ({
   id: retaceo.id,
   company: retaceo.company,
   code: retaceo.code,
-  purchaseOrder: retaceo.purchaseOrder,
+  purchase: retaceo.purchase,
   supplier: retaceo.supplier,
   retaceoDate: retaceo.retaceoDate,
   originCountry: retaceo.originCountry,
@@ -64,7 +65,7 @@ const pickDefinedFields = (body, keys) =>
   }, {});
 
 const CREATE_FIELDS = [
-  'purchaseOrder',
+  'purchase',
   'retaceoDate',
   'originCountry',
   'importInvoiceNumber',
@@ -95,13 +96,13 @@ export class RetaceoController {
 
   getAll = async (req, res) => {
     try {
-      const { search, status, supplier, purchaseOrder, page = 1, limit = 10 } = req.query;
+      const { search, status, supplier, purchase, page = 1, limit = 10 } = req.query;
       const result = await this.listRetaceosUseCase.execute({
         search,
         companyId: req.user.companyId,
         status,
         supplier,
-        purchaseOrder,
+        purchase,
         page,
         limit,
       });
