@@ -105,9 +105,9 @@ Los retaceos ya creados en la BD de desarrollo/QA apuntan a `purchaseOrder`, cam
 - [x] Backend: `shared/lib/upload.js` refactorizado (factory) + export `uploadPurchaseOrderExpenseDocument`
 - [x] Backend: `PurchaseOrderRepository.findExpenseById` (nuevo método, usado por el módulo de documentos para validar tenencia)
 - [x] Backend: `purchaseRoutes` y `purchaseOrderExpenseDocumentRoutes` registradas en `backend/src/server.js`
-- [ ] **Siguiente paso**: Backend: `isCostable` en `purchase-orders` (campo nuevo en `purchaseOrderExpenseMongooseModel.js` + `addPurchaseOrderExpense.js` + controller)
-- [ ] Backend: rewire `retaceos` → `purchases` (⚠️ cambio incompatible con los retaceos de prueba existentes — coordinar con Denis antes de aplicar, ver sección "Datos existentes")
-- [ ] Frontend: `purchases` (lista + modales)
+- [x] Backend: `isCostable` en `purchase-orders` (`purchaseOrderExpenseMongooseModel.js` default `true`, `addPurchaseOrderExpense.js`, repositorio, DTOs de expense)
+- [x] Backend: rewire `retaceos` → `purchases` (dominio, schema+índice único, repositorio, `createRetaceo.js` con FOB/cantidades desde `purchase.details` y gastos filtrados por `isCostable`, `purchaseDetail` FK en el detalle, errores renombrados). BD ya estaba limpia (0 retaceos de prueba), no hizo falta borrar nada.
+- [ ] **Siguiente paso**: Frontend, en una rama nueva — `purchases` (lista + modales)
 - [ ] Frontend: documentos de gasto en `PurchaseOrderDetailModal`
 - [ ] Frontend: `isCostable` checkbox
 - [ ] Frontend: `RetaceoCreateModal`/`RetaceoDetailModal` apuntando a `purchase`

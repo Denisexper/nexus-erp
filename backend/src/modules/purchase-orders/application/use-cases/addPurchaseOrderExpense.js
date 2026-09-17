@@ -18,7 +18,7 @@ export class AddPurchaseOrderExpenseUseCase {
     this.expenseTypeRepository = expenseTypeRepository;
   }
 
-  async execute(id, { expenseType, description, amount }, companyId) {
+  async execute(id, { expenseType, description, amount, isCostable = true }, companyId) {
     const purchaseOrder = await this.purchaseOrderRepository.findById(id, companyId);
     if (!purchaseOrder) throw new PurchaseOrderNotFoundError();
 
@@ -33,6 +33,7 @@ export class AddPurchaseOrderExpenseUseCase {
       expenseType,
       description,
       amount: round2(Number(amount) || 0),
+      isCostable,
     });
   }
 }

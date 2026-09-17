@@ -31,6 +31,7 @@ const toExpenseDomain = (doc) => ({
     expenseType: doc.expenseType,
     description: doc.description,
     amount: doc.amount,
+    isCostable: doc.isCostable,
 });
 
 const toDetailDomain = (doc) =>
@@ -190,6 +191,7 @@ export class MongoPurchaseOrderRepository extends PurchaseOrderRepository {
             expenseType: expense.expenseType,
             description: expense.description,
             amount: expense.amount,
+            isCostable: expense.isCostable,
         });
 
         // additionalExpenses/total del header se recalculan sobre la suma real
@@ -226,6 +228,7 @@ export class MongoPurchaseOrderRepository extends PurchaseOrderRepository {
             expenseType: expenseDoc.expenseType,
             description: expenseDoc.description,
             amount: expenseDoc.amount,
+            isCostable: expenseDoc.isCostable,
         };
     }
 }

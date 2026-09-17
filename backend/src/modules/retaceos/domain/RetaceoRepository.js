@@ -7,8 +7,8 @@ export class RetaceoRepository {
     throw new Error('RetaceoRepository.findById no implementado');
   }
 
-  async findByPurchaseOrder(_purchaseOrderId, _companyId) {
-    throw new Error('RetaceoRepository.findByPurchaseOrder no implementado');
+  async findByPurchase(_purchaseId, _companyId) {
+    throw new Error('RetaceoRepository.findByPurchase no implementado');
   }
 
   async getNextCode(_companyId) {

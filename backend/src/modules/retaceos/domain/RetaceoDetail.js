@@ -2,6 +2,7 @@ export class RetaceoDetail {
   constructor({
     id,
     retaceo,
+    purchaseDetail,
     product,
     quantity,
     costFob,
@@ -15,9 +16,10 @@ export class RetaceoDetail {
   }) {
     this.id = id;
     this.retaceo = retaceo; // id de Retaceo
+    this.purchaseDetail = purchaseDetail; // id de PurchaseDetail (trazabilidad a la línea de recepción exacta)
     this.product = product; // id de Product, o subdocumento poblado
-    this.quantity = quantity; // copiada de purchase_order_details
-    this.costFob = costFob; // copiado de purchase_order_details (subtotal en FOB)
+    this.quantity = quantity; // copiada de purchase_details.quantityReceived
+    this.costFob = costFob; // copiado de purchase_details (subtotal en FOB)
     this.freightAmount = freightAmount; // (costFob / totalFob) * retaceo.totalFreight
     this.expenseAmount = expenseAmount; // (costFob / totalFob) * retaceo.totalExpenses
     this.daiAmount = daiAmount; // (costFob / totalFob) * retaceo.totalDai
