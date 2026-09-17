@@ -185,7 +185,7 @@ function Sidebar() {
         </Show>
 
         {/* Compras - ERS 6.8 */}
-        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view') || auth.hasPermission('purchase_quotations.view') || auth.hasPermission('purchase_orders.view') || auth.hasPermission('retaceos.view')}>
+        <Show when={auth.hasPermission('expense_types.view') || auth.hasPermission('purchase_requests.view') || auth.hasPermission('purchase_quotations.view') || auth.hasPermission('purchase_orders.view') || auth.hasPermission('purchases.view') || auth.hasPermission('retaceos.view')}>
           <div class="pt-4 pb-1">
             <p class="px-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
               Compras
@@ -220,6 +220,16 @@ function Sidebar() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l1.5 1.5L14 10" />
               </svg>
               Órdenes de compra
+            </A>
+          </Show>
+
+          <Show when={auth.hasPermission('purchases.view')}>
+            <A href="/purchases" class={navLinkClass('/purchases')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Recepción de compras
             </A>
           </Show>
 

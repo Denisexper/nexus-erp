@@ -1,5 +1,6 @@
 import { createSignal, createResource, createMemo, Show, For } from "solid-js";
 import { retaceosApi } from "../../services/retaceos.api";
+import { purchasesApi } from "../../services/purchases.api";
 import { purchaseOrdersApi } from "../../services/purchaseOrders.api";
 import { showToast } from "../../utils/toast";
 import { formatMoney } from "./statusMeta";
@@ -9,17 +10,20 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 // Simulación del mismo prorrateo que hace el backend (createRetaceo.js):
 // puramente informativa, para que el usuario vea el costo real antes de
 // enviar. El backend recalcula todo de nuevo, esto no se envía tal cual.
-const buildPreview = (order, totalFreight, totalDai) => {
-  if (!order) return null;
+// El FOB y las cantidades salen de purchase.details (lo realmente recibido),
+// no de la orden (ERS v0.9, 6.8.26); los gastos a distribuir son los de la
+// orden de origen filtrados por isCostable.
+const buildPreview = (purchase, totalFreight, totalDai, costableExpenses) => {
+  if (!purchase) return null;
 
-  const totalFob = order.subtotal;
+  const totalFob = purchase.subtotal;
   const freight = round2(totalFreight);
   const dai = round2(totalDai);
-  const expenses = round2(order.additionalExpenses);
+  const expenses = round2(costableExpenses || 0);
 
-  const lines = order.details.map((detail) => ({
+  const lines = purchase.details.map((detail) => ({
     product: detail.product,
-    quantity: detail.quantity,
+    quantity: detail.quantityReceived,
     costFob: detail.subtotal,
     ratio: totalFob ? detail.subtotal / totalFob : 0,
   }));
@@ -56,7 +60,7 @@ const buildPreview = (order, totalFreight, totalDai) => {
 };
 
 function RetaceoCreateModal(props) {
-  const [selectedOrderId, setSelectedOrderId] = createSignal(props.presetPurchaseOrder?._id || "");
+  const [selectedPurchaseId, setSelectedPurchaseId] = createSignal(props.presetPurchase?._id || "");
   const [retaceoDate, setRetaceoDate] = createSignal("");
   const [originCountry, setOriginCountry] = createSignal("");
   const [importInvoiceNumber, setImportInvoiceNumber] = createSignal("");
@@ -70,35 +74,48 @@ function RetaceoCreateModal(props) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  const isPreset = () => !!props.presetPurchaseOrder;
+  const isPreset = () => !!props.presetPurchase;
 
-  // Solo se listan órdenes 'approved': es el único estado desde el que el
-  // backend permite registrar un retaceo (RN-011/RN-012).
-  const [orderOptions] = createResource(() =>
-    isPreset() ? null : purchaseOrdersApi.getAll({ status: "approved", limit: 1000 }),
+  // Solo se listan compras 'received': es el único estado desde el que el
+  // backend permite registrar un retaceo (RN-011/RN-012, ERS v0.9 6.8.26).
+  const [purchaseOptions] = createResource(() =>
+    isPreset() ? null : purchasesApi.getAll({ status: "received", limit: 1000 }),
   );
 
+  const [purchaseDetail] = createResource(
+    () => selectedPurchaseId() || undefined,
+    (id) => purchasesApi.getById(id),
+  );
+  const purchase = () => purchaseDetail()?.data;
+
+  // Los gastos a distribuir vienen de la orden de origen, filtrados por
+  // isCostable (un gasto no costeable no entra al prorrateo).
   const [orderDetail] = createResource(
-    () => selectedOrderId() || undefined,
+    () => purchase()?.purchaseOrder?._id || undefined,
     (id) => purchaseOrdersApi.getById(id),
   );
   const order = () => orderDetail()?.data;
+  const costableExpenses = createMemo(() =>
+    round2((order()?.expenses || []).filter((e) => e.isCostable).reduce((sum, e) => sum + e.amount, 0)),
+  );
 
-  const preview = createMemo(() => buildPreview(order(), totalFreight() || 0, totalDai() || 0));
+  const preview = createMemo(() =>
+    buildPreview(purchase(), totalFreight() || 0, totalDai() || 0, costableExpenses()),
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!selectedOrderId()) {
-      setError("Selecciona una orden de compra aprobada.");
+    if (!selectedPurchaseId()) {
+      setError("Selecciona una compra recibida.");
       return;
     }
 
     setLoading(true);
 
     const payload = {
-      purchaseOrder: selectedOrderId(),
+      purchase: selectedPurchaseId(),
       retaceoDate: retaceoDate(),
       originCountry: originCountry(),
       importInvoiceNumber: importInvoiceNumber(),
@@ -139,54 +156,54 @@ function RetaceoCreateModal(props) {
             when={!isPreset()}
             fallback={
               <div class="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
-                <p class="text-xs text-gray-500 dark:text-gray-400">Orden de compra de origen</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Compra de origen</p>
                 <p class="text-sm font-medium text-gray-900 dark:text-white">
-                  {props.presetPurchaseOrder?.code} — {props.presetPurchaseOrder?.supplier?.name}
+                  {props.presetPurchase?.code} — {props.presetPurchase?.supplier?.name}
                 </p>
               </div>
             }
           >
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Orden de compra aprobada *
+                Compra recibida *
               </label>
               <select
                 required
                 class="input-field w-full"
-                value={selectedOrderId()}
-                onChange={(e) => setSelectedOrderId(e.target.value)}
+                value={selectedPurchaseId()}
+                onChange={(e) => setSelectedPurchaseId(e.target.value)}
               >
                 <option value="">Seleccionar...</option>
-                <For each={orderOptions()?.data}>
-                  {(o) => (
-                    <option value={o._id}>
-                      {o.code} — {o.supplier?.name} ({formatMoney(o.subtotal, o.currency)} FOB)
+                <For each={purchaseOptions()?.data}>
+                  {(p) => (
+                    <option value={p._id}>
+                      {p.code} — {p.supplier?.name} ({formatMoney(p.subtotal, p.currency)} FOB)
                     </option>
                   )}
                 </For>
               </select>
-              <Show when={orderOptions() && orderOptions().data.length === 0}>
+              <Show when={purchaseOptions() && purchaseOptions().data.length === 0}>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  No hay órdenes de compra aprobadas disponibles para retacear.
+                  No hay compras recibidas disponibles para retacear.
                 </p>
               </Show>
             </div>
           </Show>
 
-          <Show when={order()}>
+          <Show when={purchase()}>
             <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-3 space-y-2">
               <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                FOB total: {formatMoney(order().subtotal, order().currency)} · Gastos ya registrados:{" "}
-                {formatMoney(order().additionalExpenses, order().currency)}
+                FOB total: {formatMoney(purchase().subtotal, purchase().currency)} · Gastos costeables de la orden:{" "}
+                {formatMoney(costableExpenses(), purchase().currency)}
               </p>
               <div class="space-y-1">
-                <For each={order().details}>
+                <For each={purchase().details}>
                   {(line) => (
                     <div class="flex justify-between text-sm">
                       <span class="text-gray-600 dark:text-gray-300">
-                        {line.product?.name} ({line.quantity})
+                        {line.product?.name} ({line.quantityReceived})
                       </span>
-                      <span class="font-medium">{formatMoney(line.subtotal, order().currency)}</span>
+                      <span class="font-medium">{formatMoney(line.subtotal, purchase().currency)}</span>
                     </div>
                   )}
                 </For>
@@ -336,11 +353,11 @@ function RetaceoCreateModal(props) {
                           <td class="px-1 py-1.5 text-[#29343E] dark:text-white font-medium">
                             {line.product?.name || "-"}
                           </td>
-                          <td class="px-1 py-1.5">{formatMoney(line.costFob, order()?.currency)}</td>
-                          <td class="px-1 py-1.5">{formatMoney(line.freightAmount, order()?.currency)}</td>
-                          <td class="px-1 py-1.5">{formatMoney(line.expenseAmount, order()?.currency)}</td>
-                          <td class="px-1 py-1.5">{formatMoney(line.daiAmount, order()?.currency)}</td>
-                          <td class="px-1 py-1.5 font-medium">{formatMoney(line.unitCost, order()?.currency)}</td>
+                          <td class="px-1 py-1.5">{formatMoney(line.costFob, purchase()?.currency)}</td>
+                          <td class="px-1 py-1.5">{formatMoney(line.freightAmount, purchase()?.currency)}</td>
+                          <td class="px-1 py-1.5">{formatMoney(line.expenseAmount, purchase()?.currency)}</td>
+                          <td class="px-1 py-1.5">{formatMoney(line.daiAmount, purchase()?.currency)}</td>
+                          <td class="px-1 py-1.5 font-medium">{formatMoney(line.unitCost, purchase()?.currency)}</td>
                         </tr>
                       )}
                     </For>
@@ -349,7 +366,7 @@ function RetaceoCreateModal(props) {
               </div>
               <div class="pt-2 border-t border-gray-100 dark:border-white/5 flex justify-between font-semibold text-[#29343E] dark:text-white">
                 <span>Costo total</span>
-                <span>{formatMoney(preview().totalCost, order()?.currency)}</span>
+                <span>{formatMoney(preview().totalCost, purchase()?.currency)}</span>
               </div>
             </div>
           </Show>

@@ -1,6 +1,8 @@
 import { createSignal, createResource, Show, For } from "solid-js";
 import { purchaseOrdersApi } from "../../services/purchaseOrders.api";
 import { expenseTypesApi } from "../../services/expenseTypes.api";
+import { purchaseOrderExpenseDocumentsApi } from "../../services/purchaseOrderExpenseDocuments.api";
+import { SERVER_URL } from "../../services/http";
 import { useAuth } from "../../context/AuthContext";
 import { showToast } from "../../utils/toast";
 import {
@@ -10,10 +12,104 @@ import {
   DetailAvatar,
 } from "../../components/DetailModal";
 import { statusLabel, statusBadgeClass, formatMoney } from "./statusMeta";
+import PurchaseCreateModal from "../purchases/PurchaseCreateModal";
 
 // Estados desde los que todavía tiene sentido registrar un gasto (CU-086):
 // una orden ya cancelada o cerrada no admite más movimientos.
 const EXPENSE_ADDABLE_STATUSES = ["draft", "approved", "sent", "partially_received", "received"];
+
+// Mismo criterio que createPurchase.js: una orden todavía admite recepciones
+// mientras no esté cerrada/cancelada y no se haya completado ya.
+const RECEIVABLE_STATUSES = ["approved", "partially_received"];
+
+// Evidencias de un gasto (ERS v0.9, 6.8.20). Componente aparte porque cada
+// gasto maneja su propia lista/carga de documentos de forma independiente.
+function ExpenseDocuments(props) {
+  const auth = useAuth();
+  const [uploading, setUploading] = createSignal(false);
+  let fileInput;
+
+  const [documents, { refetch }] = createResource(
+    () => props.expenseId,
+    (expenseId) => purchaseOrderExpenseDocumentsApi.getByExpense(expenseId),
+  );
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      await purchaseOrderExpenseDocumentsApi.upload(props.expenseId, file);
+      showToast.success("Documento cargado correctamente");
+      refetch();
+    } catch (error) {
+      showToast.error(error.message);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeDocument = (id) => {
+    showToast.confirm("¿Eliminar este documento?", async () => {
+      try {
+        await purchaseOrderExpenseDocumentsApi.remove(id);
+        showToast.success("Documento eliminado correctamente");
+        refetch();
+      } catch (error) {
+        showToast.error(error.message);
+      }
+    });
+  };
+
+  return (
+    <div class="mt-1.5 space-y-1.5">
+      <div class="flex flex-wrap items-center gap-2">
+        <For each={documents()?.data}>
+          {(doc) => (
+            <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 dark:bg-white/5 rounded-md px-2 py-1">
+              <a
+                href={`${SERVER_URL}/uploads/${doc.filePath}`}
+                target="_blank"
+                rel="noreferrer"
+                class="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                📎 {doc.fileName}
+              </a>
+              <Show when={auth.hasPermission("purchase_order_expense_documents.delete")}>
+                <button
+                  type="button"
+                  onClick={() => removeDocument(doc._id)}
+                  class="text-gray-400 hover:text-coral-600 dark:hover:text-coral"
+                >
+                  ✕
+                </button>
+              </Show>
+            </span>
+          )}
+        </For>
+      </div>
+      <Show when={auth.hasPermission("purchase_order_expense_documents.upload")}>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          class="hidden"
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          onClick={() => fileInput.click()}
+          disabled={uploading()}
+          class="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+        >
+          {uploading() ? "Cargando..." : "+ Adjuntar documento"}
+        </button>
+      </Show>
+    </div>
+  );
+}
 
 function PurchaseOrderDetailModal(props) {
   const auth = useAuth();
@@ -64,6 +160,7 @@ function PurchaseOrderDetailModal(props) {
   const [expenseType, setExpenseType] = createSignal("");
   const [expenseDescription, setExpenseDescription] = createSignal("");
   const [expenseAmount, setExpenseAmount] = createSignal("");
+  const [expenseIsCostable, setExpenseIsCostable] = createSignal(true);
   const [expenseError, setExpenseError] = createSignal("");
   const [expenseSaving, setExpenseSaving] = createSignal(false);
 
@@ -78,11 +175,13 @@ function PurchaseOrderDetailModal(props) {
         expenseType: expenseType(),
         description: expenseDescription(),
         amount: Number(expenseAmount()) || 0,
+        isCostable: expenseIsCostable(),
       });
       showToast.success("Gasto registrado correctamente");
       setExpenseType("");
       setExpenseDescription("");
       setExpenseAmount("");
+      setExpenseIsCostable(true);
       setShowExpenseForm(false);
       notifyChanged();
     } catch (error) {
@@ -99,7 +198,16 @@ function PurchaseOrderDetailModal(props) {
     (id) => purchaseOrdersApi.getTraceability(id),
   );
 
+  // --- Registrar recepción (ERS v0.9, 6.8.21) ---
+  const [showReceiveModal, setShowReceiveModal] = createSignal(false);
+
+  const handleReceived = () => {
+    setShowReceiveModal(false);
+    notifyChanged();
+  };
+
   return (
+    <>
     <DetailModal
       onClose={props.onClose}
       loading={detail.loading}
@@ -150,6 +258,11 @@ function PurchaseOrderDetailModal(props) {
               + Registrar gasto
             </button>
           </Show>
+          <Show when={RECEIVABLE_STATUSES.includes(order()?.status) && auth.hasPermission("purchases.create")}>
+            <button onClick={() => setShowReceiveModal(true)} class="text-xs px-3 py-1.5 rounded-md border border-mint-600/30 text-mint-700 dark:text-mint hover:bg-mint-600/10 transition-colors">
+              📦 Registrar recepción
+            </button>
+          </Show>
           <button onClick={() => setShowTraceability((v) => !v)} class="text-xs px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 transition-colors">
             {showTraceability() ? "Ocultar trazabilidad" : "Ver trazabilidad"}
           </button>
@@ -164,18 +277,26 @@ function PurchaseOrderDetailModal(props) {
         </div>
 
         <Show when={showExpenseForm()}>
-          <form onSubmit={submitExpense} class="mt-3 grid grid-cols-1 md:grid-cols-4 gap-2 items-start bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+          <form onSubmit={submitExpense} class="mt-3 grid grid-cols-1 md:grid-cols-5 gap-2 items-start bg-gray-50 dark:bg-white/5 rounded-lg p-3">
             <select required class="input-field text-sm" value={expenseType()} onChange={(e) => setExpenseType(e.target.value)}>
               <option value="">Tipo de gasto...</option>
               <For each={expenseTypes()?.data}>{(et) => <option value={et._id}>{et.name}</option>}</For>
             </select>
             <input type="text" class="input-field text-sm" placeholder="Descripción" value={expenseDescription()} onInput={(e) => setExpenseDescription(e.target.value)} />
             <input type="number" required min="0" step="0.01" class="input-field text-sm" placeholder="Monto" value={expenseAmount()} onInput={(e) => setExpenseAmount(e.target.value)} />
+            <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 h-full px-1">
+              <input
+                type="checkbox"
+                checked={expenseIsCostable()}
+                onChange={(e) => setExpenseIsCostable(e.target.checked)}
+              />
+              Aplica al retaceo
+            </label>
             <button type="submit" disabled={expenseSaving()} class="btn-primary text-sm disabled:opacity-50">
               {expenseSaving() ? "Guardando..." : "Guardar"}
             </button>
             <Show when={expenseError()}>
-              <p class="text-xs text-coral-600 dark:text-coral md:col-span-4">{expenseError()}</p>
+              <p class="text-xs text-coral-600 dark:text-coral md:col-span-5">{expenseError()}</p>
             </Show>
           </form>
         </Show>
@@ -252,17 +373,25 @@ function PurchaseOrderDetailModal(props) {
             <p class="text-xs font-semibold text-gray-500 dark:text-night-400 uppercase tracking-wider mb-2">
               Gastos adicionales
             </p>
-            <div class="space-y-1">
+            <div class="space-y-2">
               <For each={order()?.expenses}>
                 {(expense) => (
-                  <div class="flex justify-between text-sm">
-                    <span class="text-gray-600 dark:text-night-300">
-                      {expense.expenseType?.name || "-"}
-                      <Show when={expense.description}> — {expense.description}</Show>
-                    </span>
-                    <span class="font-medium text-[#29343E] dark:text-white">
-                      {formatMoney(expense.amount, order()?.currency)}
-                    </span>
+                  <div class="text-sm border-b border-gray-100 dark:border-white/5 last:border-0 pb-2 last:pb-0">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600 dark:text-night-300">
+                        {expense.expenseType?.name || "-"}
+                        <Show when={expense.description}> — {expense.description}</Show>
+                        <Show when={expense.isCostable === false}>
+                          <span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-night-400">
+                            No aplica a retaceo
+                          </span>
+                        </Show>
+                      </span>
+                      <span class="font-medium text-[#29343E] dark:text-white">
+                        {formatMoney(expense.amount, order()?.currency)}
+                      </span>
+                    </div>
+                    <ExpenseDocuments expenseId={expense._id} />
                   </div>
                 )}
               </For>
@@ -290,6 +419,15 @@ function PurchaseOrderDetailModal(props) {
         </div>
       </DetailSection>
     </DetailModal>
+
+    <Show when={showReceiveModal()}>
+      <PurchaseCreateModal
+        presetPurchaseOrder={order()}
+        onClose={() => setShowReceiveModal(false)}
+        onSaved={handleReceived}
+      />
+    </Show>
+    </>
   );
 }
 
