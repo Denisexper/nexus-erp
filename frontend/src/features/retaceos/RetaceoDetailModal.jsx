@@ -25,7 +25,7 @@ function RetaceoDetailModal(props) {
       avatar={retaceo() && <DetailAvatar fallback="RT" />}
     >
       <DetailSection title="Información general" cols={2}>
-        <DetailField label="Orden de compra" value={retaceo()?.purchaseOrder?.code} />
+        <DetailField label="Compra" value={retaceo()?.purchase?.code} />
         <DetailField label="Proveedor" value={retaceo()?.supplier?.name} />
         <DetailField label="País de origen" value={retaceo()?.originCountry} />
         <DetailField

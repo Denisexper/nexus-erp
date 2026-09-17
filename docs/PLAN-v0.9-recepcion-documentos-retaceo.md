@@ -107,10 +107,11 @@ Los retaceos ya creados en la BD de desarrollo/QA apuntan a `purchaseOrder`, cam
 - [x] Backend: `purchaseRoutes` y `purchaseOrderExpenseDocumentRoutes` registradas en `backend/src/server.js`
 - [x] Backend: `isCostable` en `purchase-orders` (`purchaseOrderExpenseMongooseModel.js` default `true`, `addPurchaseOrderExpense.js`, repositorio, DTOs de expense)
 - [x] Backend: rewire `retaceos` → `purchases` (dominio, schema+índice único, repositorio, `createRetaceo.js` con FOB/cantidades desde `purchase.details` y gastos filtrados por `isCostable`, `purchaseDetail` FK en el detalle, errores renombrados). BD ya estaba limpia (0 retaceos de prueba), no hizo falta borrar nada.
-- [ ] **Siguiente paso**: Frontend, en una rama nueva — `purchases` (lista + modales)
-- [ ] Frontend: documentos de gasto en `PurchaseOrderDetailModal`
-- [ ] Frontend: `isCostable` checkbox
-- [ ] Frontend: `RetaceoCreateModal`/`RetaceoDetailModal` apuntando a `purchase`
-- [ ] Verificación end-to-end
+- [x] Frontend: `purchases` (lista + modales: crear recepción con cantidades pendientes por línea, detalle, historial)
+- [x] Frontend: documentos de gasto en `PurchaseOrderDetailModal` (componente `ExpenseDocuments`, subir/listar/borrar)
+- [x] Frontend: `isCostable` checkbox en el form de "Registrar gasto" + badge "No aplica a retaceo" en la lista
+- [x] Frontend: `RetaceoCreateModal`/`RetaceoDetailModal`/`Retaceos.jsx` apuntando a `purchase` en vez de `purchaseOrder`; preview del prorrateo ahora usa `purchase.details` + gastos de la orden filtrados por `isCostable`
+- [x] Frontend: botón "Registrar recepción" en `PurchaseOrderDetailModal` (abre `PurchaseCreateModal` preseteado), ruta `/purchases` y link en Sidebar
+- [ ] **Siguiente paso**: Verificación end-to-end manual en el navegador (Denis) contra el ejemplo del PDF (6.8.44, Prensadora = $63,940.48)
 
 **Nota de la sesión 2026-09-14**: se detuvo el trabajo acá a propósito, en un punto donde nada de lo existente se rompió (los módulos nuevos todavía no están registrados en `server.js`, y los únicos cambios a código existente — `upload.js` y `PurchaseOrderRepository` — son aditivos), para permitir un commit intermedio antes de seguir con el resto.
