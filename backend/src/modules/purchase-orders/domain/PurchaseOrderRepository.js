@@ -25,4 +25,12 @@ export class PurchaseOrderRepository {
   async addExpense(_id, _expense) {
     throw new Error('PurchaseOrderRepository.addExpense no implementado');
   }
+
+  // Busca un gasto por su id, validando que la orden a la que pertenece sea
+  // de la company indicada (o sin filtrar si companyId es undefined). Usado
+  // por purchase-order-expense-documents para validar tenencia antes de
+  // subir/listar/borrar evidencias, sin duplicar ese conocimiento ahí.
+  async findExpenseById(_expenseId, _companyId) {
+    throw new Error('PurchaseOrderRepository.findExpenseById no implementado');
+  }
 }

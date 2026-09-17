@@ -209,4 +209,23 @@ export class MongoPurchaseOrderRepository extends PurchaseOrderRepository {
         ).populate(HEADER_POPULATE);
         return this.#loadAggregate(doc);
     }
+
+    async findExpenseById(expenseId, companyId) {
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) return null;
+
+        const expenseDoc = await PurchaseOrderExpenseModel.findById(expenseId);
+        if (!expenseDoc) return null;
+
+        const orderFilter = companyId ? { _id: expenseDoc.purchaseOrder, company: companyId } : { _id: expenseDoc.purchaseOrder };
+        const orderDoc = await PurchaseOrderModel.findOne(orderFilter).select('_id');
+        if (!orderDoc) return null;
+
+        return {
+            id: expenseDoc._id.toString(),
+            purchaseOrder: orderDoc._id.toString(),
+            expenseType: expenseDoc.expenseType,
+            description: expenseDoc.description,
+            amount: expenseDoc.amount,
+        };
+    }
 }
