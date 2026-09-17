@@ -104,8 +104,8 @@ Los retaceos ya creados en la BD de desarrollo/QA apuntan a `purchaseOrder`, cam
 - [x] Backend: módulo `purchase-order-expense-documents` (domain, persistence, use-cases, http) — falta registrar rutas en `server.js`
 - [x] Backend: `shared/lib/upload.js` refactorizado (factory) + export `uploadPurchaseOrderExpenseDocument`
 - [x] Backend: `PurchaseOrderRepository.findExpenseById` (nuevo método, usado por el módulo de documentos para validar tenencia)
-- [ ] **Siguiente paso**: registrar `purchaseRoutes` y `purchaseOrderExpenseDocumentRoutes` en `backend/src/server.js` (imports + `routeModules[]` + `server.use(...)`, mismo patrón que los demás módulos)
-- [ ] Backend: `isCostable` en `purchase-orders` (campo nuevo en `purchaseOrderExpenseMongooseModel.js` + `addPurchaseOrderExpense.js` + controller)
+- [x] Backend: `purchaseRoutes` y `purchaseOrderExpenseDocumentRoutes` registradas en `backend/src/server.js`
+- [ ] **Siguiente paso**: Backend: `isCostable` en `purchase-orders` (campo nuevo en `purchaseOrderExpenseMongooseModel.js` + `addPurchaseOrderExpense.js` + controller)
 - [ ] Backend: rewire `retaceos` → `purchases` (⚠️ cambio incompatible con los retaceos de prueba existentes — coordinar con Denis antes de aplicar, ver sección "Datos existentes")
 - [ ] Frontend: `purchases` (lista + modales)
 - [ ] Frontend: documentos de gasto en `PurchaseOrderDetailModal`
