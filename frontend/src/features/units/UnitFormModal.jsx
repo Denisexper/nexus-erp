@@ -80,14 +80,18 @@ function UnitFormModal(props) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Tipo *
             </label>
-            <input
-              type="text"
+            <select
               required
-              placeholder="masa, volumen, longitud, unidad..."
               class="input-field w-full"
               value={type()}
-              onInput={(e) => setType(e.target.value)}
-            />
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="" disabled>
+                Seleccionar...
+              </option>
+              <option value="purchase">Compra</option>
+              <option value="sale">Venta</option>
+            </select>
           </div>
 
           <Show when={error()}>
