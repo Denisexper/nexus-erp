@@ -89,7 +89,17 @@ export class MongoPurchaseRepository extends PurchaseRepository {
             PurchaseModel.countDocuments(filter),
         ]);
 
-        return { items: docs.map((doc) => toDomain(doc)), total };
+        const detailDocs = await PurchaseDetailModel.find({ purchase: { $in: docs.map((doc) => doc._id) } })
+            .populate(DETAIL_POPULATE)
+            .sort({ createdAt: 1 });
+
+        const detailsByPurchase = detailDocs.reduce((acc, detail) => {
+            const key = detail.purchase.toString();
+            (acc[key] ||= []).push(toDetailDomain(detail));
+            return acc;
+        }, {});
+
+        return { items: docs.map((doc) => toDomain(doc, detailsByPurchase[doc._id.toString()] || [])), total };
     }
 
     async #loadAggregate(doc) {
