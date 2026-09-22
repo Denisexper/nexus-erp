@@ -10,6 +10,8 @@ import UnitFormModal from "./UnitFormModal";
 import UnitHistoryModal from "./UnitHistoryModal";
 import UnitDetailModal from "./UnitDetailModal";
 
+const TYPE_LABELS = { purchase: "Compra", sale: "Venta" };
+
 function Units() {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -219,8 +221,8 @@ function Units() {
                             {unit.name}
                           </p>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 capitalize">
-                          {unit.type}
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {TYPE_LABELS[unit.type] || unit.type}
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center gap-1.5">
