@@ -3,6 +3,7 @@ import {
   PurchaseNotFoundError,
   PurchaseOrderNotFoundForPurchaseError,
   PurchaseOrderNotReceivableError,
+  InactiveBranchForPurchaseError,
   PurchaseOrderDetailNotFoundError,
   QuantityReceivedExceedsOrderedError,
   InvalidQuantityReceivedError,
@@ -13,6 +14,7 @@ import {
 const BAD_REQUEST_ERRORS = [
   InvalidPurchaseIdError,
   PurchaseOrderNotReceivableError,
+  InactiveBranchForPurchaseError,
   PurchaseOrderDetailNotFoundError,
   QuantityReceivedExceedsOrderedError,
   InvalidQuantityReceivedError,

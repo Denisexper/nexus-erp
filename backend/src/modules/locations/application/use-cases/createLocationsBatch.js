@@ -2,6 +2,7 @@ import { Location } from '../../domain/Location.js';
 import { resolveBranchIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   WarehouseNotFoundForLocationError,
+  InactiveWarehouseForLocationError,
   InvalidCapacityError,
   InvalidBatchRangeError,
   BatchSizeExceededError,
@@ -45,6 +46,7 @@ export class CreateLocationsBatchUseCase {
     const branchIds = await resolveBranchIdsForCompany(companyId, this.branchRepository);
     const warehouse = await this.warehouseRepository.findById(data.warehouse, branchIds);
     if (!warehouse) throw new WarehouseNotFoundForLocationError();
+    if (!warehouse.isActive) throw new InactiveWarehouseForLocationError();
 
     if (!(Number(data.capacity) > 0)) throw new InvalidCapacityError();
 

@@ -3,6 +3,7 @@ import { PurchaseDetail } from '../../domain/PurchaseDetail.js';
 import {
   PurchaseOrderNotFoundForPurchaseError,
   PurchaseOrderNotReceivableError,
+  InactiveBranchForPurchaseError,
   PurchaseOrderDetailNotFoundError,
   QuantityReceivedExceedsOrderedError,
   InvalidQuantityReceivedError,
@@ -20,9 +21,10 @@ const RECEIVABLE_ORDER_STATUSES = ['approved', 'partially_received'];
 // compras. No se toca Kardex acá (6.8.46: la actualización de existencias es
 // responsabilidad del módulo de Inventario, que todavía no existe).
 export class CreatePurchaseUseCase {
-  constructor(purchaseRepository, purchaseOrderRepository) {
+  constructor(purchaseRepository, purchaseOrderRepository, branchRepository) {
     this.purchaseRepository = purchaseRepository;
     this.purchaseOrderRepository = purchaseOrderRepository;
+    this.branchRepository = branchRepository;
   }
 
   async execute(
@@ -34,6 +36,12 @@ export class CreatePurchaseUseCase {
     if (!order) throw new PurchaseOrderNotFoundForPurchaseError();
     if (!RECEIVABLE_ORDER_STATUSES.includes(order.status)) throw new PurchaseOrderNotReceivableError();
     if (!lines.length) throw new EmptyPurchaseError();
+
+    // order.branch viene poblado solo con 'name' (HEADER_POPULATE), así que
+    // se resuelve isActive con un fetch aparte en vez de asumirlo presente.
+    const branchId = order.branch?._id || order.branch;
+    const branchDoc = await this.branchRepository.findById(branchId, company);
+    if (branchDoc && !branchDoc.isActive) throw new InactiveBranchForPurchaseError();
 
     const receivedByDetail = await this.purchaseRepository.getReceivedQuantitiesByOrder(order.id);
 

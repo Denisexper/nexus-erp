@@ -23,6 +23,13 @@ export class CompanyNotFoundForBranchError extends DomainError {
   }
 }
 
+// RN-EMP-005: una empresa inactiva no puede generar transacciones nuevas.
+export class InactiveCompanyForBranchError extends DomainError {
+  constructor() {
+    super('No se puede crear una sucursal bajo una empresa inactiva');
+  }
+}
+
 export class DuplicateBranchNameError extends DomainError {
   constructor() {
     super('Ya existe una sucursal con ese nombre en esta empresa');

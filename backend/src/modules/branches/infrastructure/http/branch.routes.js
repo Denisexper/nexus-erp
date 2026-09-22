@@ -5,6 +5,11 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoGeoRepository } from '#modules/geo/infrastructure/persistence/MongoGeoRepository.js';
 import { MongoCompanyRepository } from '#modules/companies/infrastructure/persistence/MongoCompanyRepository.js';
+import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
+import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
+import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { DeactivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/deactivateWarehouse.js';
+import { ActivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/activateWarehouse.js';
 
 import { BranchModel } from '../persistence/branchMongooseModel.js';
 import { MongoBranchRepository } from '../persistence/MongoBranchRepository.js';
@@ -20,14 +25,23 @@ import { BranchController } from './branch.controller.js';
 const branchRepository = new MongoBranchRepository();
 const companyRepository = new MongoCompanyRepository();
 const geoRepository = new MongoGeoRepository();
+const warehouseRepository = new MongoWarehouseRepository();
+const locationRepository = new MongoLocationRepository();
+const kardexRepository = new MongoKardexRepository();
+
+// Misma cascada que expone /warehouses/:id/deactivate (branch -> warehouses
+// -> ubicaciones), reinstanciada acá para que desactivar/activar una
+// sucursal arrastre sus almacenes.
+const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, kardexRepository);
+const activateWarehouseUseCase = new ActivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository);
 
 const controller = new BranchController({
     listBranches: new ListBranchesUseCase(branchRepository),
     getBranchById: new GetBranchByIdUseCase(branchRepository),
     createBranch: new CreateBranchUseCase(branchRepository, companyRepository, geoRepository),
     updateBranch: new UpdateBranchUseCase(branchRepository, geoRepository),
-    activateBranch: new ActivateBranchUseCase(branchRepository),
-    deactivateBranch: new DeactivateBranchUseCase(branchRepository),
+    activateBranch: new ActivateBranchUseCase(branchRepository, warehouseRepository, activateWarehouseUseCase),
+    deactivateBranch: new DeactivateBranchUseCase(branchRepository, warehouseRepository, deactivateWarehouseUseCase),
 });
 
 const router = Router();

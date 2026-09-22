@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoPurchaseOrderRepository } from '#modules/purchase-orders/infrastructure/persistence/MongoPurchaseOrderRepository.js';
+import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 
 import { PurchaseModel } from '../persistence/purchaseMongooseModel.js';
 import { MongoPurchaseRepository } from '../persistence/MongoPurchaseRepository.js';
@@ -16,11 +17,12 @@ import { PurchaseController } from './purchase.controller.js';
 // --- Composition root ---
 const purchaseRepository = new MongoPurchaseRepository();
 const purchaseOrderRepository = new MongoPurchaseOrderRepository();
+const branchRepository = new MongoBranchRepository();
 
 const controller = new PurchaseController({
     listPurchases: new ListPurchasesUseCase(purchaseRepository),
     getPurchaseById: new GetPurchaseByIdUseCase(purchaseRepository),
-    createPurchase: new CreatePurchaseUseCase(purchaseRepository, purchaseOrderRepository),
+    createPurchase: new CreatePurchaseUseCase(purchaseRepository, purchaseOrderRepository, branchRepository),
     cancelPurchase: new CancelPurchaseUseCase(purchaseRepository, purchaseOrderRepository),
 });
 
