@@ -21,7 +21,7 @@ export class RegisterMovementUseCase {
     this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(data, companyId) {
+  async execute(data, companyId, userId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
 
     const product = await this.productRepository.findById(data.product, companyId);
@@ -46,6 +46,7 @@ export class RegisterMovementUseCase {
       reason: data.reason,
       quantity: Number(data.quantity),
       notes: data.notes,
+      user: userId,
     });
 
     return this.kardexRepository.create(movement);

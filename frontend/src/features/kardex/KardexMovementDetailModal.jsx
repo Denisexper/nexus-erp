@@ -58,6 +58,7 @@ function KardexMovementDetailModal(props) {
             new Date(movement().createdAt).toLocaleString("es-ES")
           }
         />
+        <DetailField label="Registrado por" value={movement()?.user?.name} />
       </DetailSection>
 
       <DetailSection title="Detalle" cols={1} divider>
