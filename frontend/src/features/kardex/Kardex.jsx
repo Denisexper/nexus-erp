@@ -10,6 +10,7 @@ import Pagination from "../../components/Pagination";
 import KardexMovementModal from "./KardexMovementModal";
 import KardexTransferModal from "./KardexTransferModal";
 import KardexStockPanel from "./KardexStockPanel";
+import KardexMovementDetailModal from "./KardexMovementDetailModal";
 
 const REASON_LABELS = {
   purchase: "Compra",
@@ -59,6 +60,14 @@ function Kardex() {
 
   const [showMovementModal, setShowMovementModal] = createSignal(false);
   const [showTransferModal, setShowTransferModal] = createSignal(false);
+
+  const [showDetailModal, setShowDetailModal] = createSignal(false);
+  const [detailMovement, setDetailMovement] = createSignal(null);
+
+  const openDetail = (movement) => {
+    setDetailMovement(movement);
+    setShowDetailModal(true);
+  };
 
   const applyFilters = () => {
     const filters = {};
@@ -247,6 +256,7 @@ function Kardex() {
                       <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Cantidad
                       </th>
+                      <th class="px-6 py-3"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,6 +294,17 @@ function Kardex() {
                           <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                             {movement.quantity}
                           </td>
+                          <td class="px-6 py-4">
+                            <div class="flex items-center justify-end">
+                              <button
+                                onClick={() => openDetail(movement)}
+                                title="Ver detalle"
+                                class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                              >
+                                👁️
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       )}
                     </For>
@@ -317,6 +338,13 @@ function Kardex() {
           <KardexTransferModal
             onClose={() => setShowTransferModal(false)}
             onSaved={handleTransferSaved}
+          />
+        </Show>
+
+        <Show when={showDetailModal()}>
+          <KardexMovementDetailModal
+            movement={detailMovement()}
+            onClose={() => setShowDetailModal(false)}
           />
         </Show>
       </Layout>
