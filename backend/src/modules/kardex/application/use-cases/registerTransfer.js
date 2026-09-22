@@ -23,7 +23,7 @@ export class RegisterTransferUseCase {
     this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(data, companyId) {
+  async execute(data, companyId, userId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
     if (data.fromLocation === data.toLocation) throw new SameLocationTransferError();
 
@@ -55,6 +55,7 @@ export class RegisterTransferUseCase {
         quantity,
         notes: data.notes,
         transferRef,
+        user: userId,
       }),
       new KardexMovement({
         product: data.product,
@@ -64,6 +65,7 @@ export class RegisterTransferUseCase {
         quantity,
         notes: data.notes,
         transferRef,
+        user: userId,
       }),
     ]);
 

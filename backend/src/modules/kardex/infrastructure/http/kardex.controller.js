@@ -26,6 +26,7 @@ const toMovementDTO = (movement) => ({
   quantity: movement.quantity,
   notes: movement.notes,
   transferRef: movement.transferRef,
+  user: movement.user,
   createdAt: movement.createdAt,
 });
 
@@ -110,7 +111,7 @@ export class KardexController {
   createMovement = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, MOVEMENT_FIELDS);
-      const movement = await this.registerMovementUseCase.execute(data, req.user.companyId);
+      const movement = await this.registerMovementUseCase.execute(data, req.user.companyId, req.user.id);
       res.status(201).json({ msj: 'Movimiento registrado exitosamente', newMovement: toMovementDTO(movement) });
     } catch (error) {
       this.#handleError(res, error, 'Error registrando movimiento');
@@ -120,7 +121,7 @@ export class KardexController {
   createTransfer = async (req, res) => {
     try {
       const data = pickDefinedFields(req.body, TRANSFER_FIELDS);
-      const result = await this.registerTransferUseCase.execute(data, req.user.companyId);
+      const result = await this.registerTransferUseCase.execute(data, req.user.companyId, req.user.id);
 
       if (req.user) {
         try {

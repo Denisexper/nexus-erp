@@ -8,6 +8,7 @@ export class KardexMovement {
     quantity,
     notes,
     transferRef,
+    user,
     createdAt,
   }) {
     this.id = id;
@@ -18,6 +19,7 @@ export class KardexMovement {
     this.quantity = quantity;
     this.notes = notes;
     this.transferRef = transferRef; // enlaza los dos movimientos (out+in) de una misma transferencia
+    this.user = user; // id de User, o subdocumento poblado — quién registró el movimiento
     this.createdAt = createdAt;
   }
 }

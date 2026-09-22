@@ -15,6 +15,7 @@ const toDomain = (doc) =>
               quantity: doc.quantity,
               notes: doc.notes,
               transferRef: doc.transferRef,
+              user: doc.user,
               createdAt: doc.createdAt,
           })
         : null;
@@ -28,6 +29,7 @@ const assertValidId = (id) => {
 const POPULATE = [
     { path: 'product', select: 'name sku internalCode' },
     { path: 'location', select: 'code warehouse' },
+    { path: 'user', select: 'name email' },
 ];
 
 // Suma firmada: 'in' cuenta positivo, 'out' cuenta negativo. Esta es la
@@ -72,6 +74,7 @@ export class MongoKardexRepository extends KardexRepository {
             quantity: movement.quantity,
             notes: movement.notes,
             transferRef: movement.transferRef,
+            user: movement.user,
         });
         const populated = await doc.populate(POPULATE);
         return toDomain(populated);
@@ -92,6 +95,7 @@ export class MongoKardexRepository extends KardexRepository {
                 quantity: movement.quantity,
                 notes: movement.notes,
                 transferRef: movement.transferRef,
+                user: movement.user,
             })),
         );
         const populated = await KardexMovementModel.populate(docs, POPULATE);
