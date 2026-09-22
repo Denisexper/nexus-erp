@@ -2,6 +2,7 @@ import { Location } from '../../domain/Location.js';
 import { resolveBranchIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   WarehouseNotFoundForLocationError,
+  InactiveWarehouseForLocationError,
   DuplicateLocationCodeError,
   InvalidCapacityError,
   DuplicateLocationCoordinatesError,
@@ -20,6 +21,7 @@ export class CreateLocationUseCase {
     const branchIds = await resolveBranchIdsForCompany(companyId, this.branchRepository);
     const warehouse = await this.warehouseRepository.findById(data.warehouse, branchIds);
     if (!warehouse) throw new WarehouseNotFoundForLocationError();
+    if (!warehouse.isActive) throw new InactiveWarehouseForLocationError();
 
     // RN-WHS-006: código único dentro del almacén.
     const codeTaken = await this.locationRepository.findByCodeAndWarehouse(data.code, data.warehouse);

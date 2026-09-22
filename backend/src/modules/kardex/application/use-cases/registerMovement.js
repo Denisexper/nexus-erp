@@ -3,6 +3,7 @@ import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
+  InactiveLocationForKardexError,
   InvalidQuantityError,
   InsufficientStockError,
 } from '../../domain/errors.js';
@@ -31,6 +32,7 @@ export class RegisterMovementUseCase {
     const warehouseIds = await resolveWarehouseIdsForCompany(companyId, this.branchRepository, this.warehouseRepository);
     const location = await this.locationRepository.findById(data.location, warehouseIds);
     if (!location) throw new LocationNotFoundForKardexError();
+    if (!location.isActive) throw new InactiveLocationForKardexError();
 
     if (data.type === 'out') {
       const currentStock = await this.kardexRepository.getStockByProductAndLocation(data.product, data.location);

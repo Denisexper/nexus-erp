@@ -1,6 +1,7 @@
 import { PurchaseRequest } from '../../domain/PurchaseRequest.js';
 import {
   BranchNotFoundForPurchaseRequestError,
+  InactiveBranchForPurchaseRequestError,
   WarehouseNotFoundForPurchaseRequestError,
 } from '../../domain/errors.js';
 
@@ -14,6 +15,7 @@ export class CreatePurchaseRequestUseCase {
   async execute({ branch, warehouse, requiredDate, justification, notes, company, user }) {
     const branchDoc = await this.branchRepository.findById(branch, company);
     if (!branchDoc) throw new BranchNotFoundForPurchaseRequestError();
+    if (!branchDoc.isActive) throw new InactiveBranchForPurchaseRequestError();
 
     // El almacén debe pertenecer justo a la sucursal elegida, no solo a la
     // empresa (misma validación que warehouse->branch en locations).

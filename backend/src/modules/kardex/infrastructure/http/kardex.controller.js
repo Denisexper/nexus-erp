@@ -3,6 +3,7 @@ import {
   MovementNotFoundError,
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
+  InactiveLocationForKardexError,
   InvalidQuantityError,
   InsufficientStockError,
   SameLocationTransferError,
@@ -59,6 +60,7 @@ export class KardexController {
     if (error instanceof MovementNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof ProductNotFoundForKardexError) return res.status(400).json({ msj: error.message });
     if (error instanceof LocationNotFoundForKardexError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveLocationForKardexError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidQuantityError) return res.status(400).json({ msj: error.message });
     if (error instanceof InsufficientStockError) return res.status(400).json({ msj: error.message });
     if (error instanceof SameLocationTransferError) return res.status(400).json({ msj: error.message });

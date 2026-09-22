@@ -2,6 +2,7 @@ import {
   InvalidBranchIdError,
   BranchNotFoundError,
   CompanyNotFoundForBranchError,
+  InactiveCompanyForBranchError,
   DuplicateBranchNameError,
   InvalidLocationError,
 } from '../../domain/errors.js';
@@ -48,6 +49,7 @@ export class BranchController {
     if (error instanceof InvalidBranchIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof BranchNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof CompanyNotFoundForBranchError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveCompanyForBranchError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateBranchNameError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidLocationError) return res.status(400).json({ msj: error.message });
     return res.status(500).json({ msj: fallbackMsj, error: error.message });

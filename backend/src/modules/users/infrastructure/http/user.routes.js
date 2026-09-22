@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoRoleRepository } from '#modules/roles/infrastructure/persistence/MongoRoleRepository.js';
+import { MongoCompanyRepository } from '#modules/companies/infrastructure/persistence/MongoCompanyRepository.js';
 
 import { MongoUserRepository } from '../persistence/MongoUserRepository.js';
 import { UserModel } from '../persistence/userMongooseModel.js';
@@ -18,11 +19,12 @@ import { UserController } from './user.controller.js';
 // --- Composition root: aquí, y solo aquí, se conectan las piezas concretas ---
 const userRepository = new MongoUserRepository();
 const roleRepository = new MongoRoleRepository();
+const companyRepository = new MongoCompanyRepository();
 
 const controller = new UserController({
     listUsers: new ListUsersUseCase(userRepository),
     getUserById: new GetUserByIdUseCase(userRepository),
-    createUser: new CreateUserUseCase(userRepository, roleRepository),
+    createUser: new CreateUserUseCase(userRepository, roleRepository, companyRepository),
     updateUser: new UpdateUserUseCase(userRepository, roleRepository),
     toggleUserStatus: new ToggleUserStatusUseCase(userRepository),
     unlockUser: new UnlockUserUseCase(userRepository),

@@ -5,6 +5,14 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoGeoRepository } from '#modules/geo/infrastructure/persistence/MongoGeoRepository.js';
 import { seedRolesForCompany } from '#modules/roles/infrastructure/seed/seedRoles.js';
+import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
+import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
+import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
+import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { DeactivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/deactivateWarehouse.js';
+import { DeactivateBranchUseCase } from '#modules/branches/application/use-cases/deactivateBranch.js';
+import { ActivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/activateWarehouse.js';
+import { ActivateBranchUseCase } from '#modules/branches/application/use-cases/activateBranch.js';
 
 import { CompanyModel } from '../persistence/companyMongooseModel.js';
 import { MongoCompanyRepository } from '../persistence/MongoCompanyRepository.js';
@@ -21,14 +29,26 @@ import { CompanyController } from './company.controller.js';
 // archivo sabe que el repositorio real es MongoCompanyRepository.
 const companyRepository = new MongoCompanyRepository();
 const geoRepository = new MongoGeoRepository();
+const branchRepository = new MongoBranchRepository();
+const warehouseRepository = new MongoWarehouseRepository();
+const locationRepository = new MongoLocationRepository();
+const kardexRepository = new MongoKardexRepository();
+
+// Cascada completa RN-EMP-005: empresa -> sucursales -> almacenes ->
+// ubicaciones, reusando los mismos casos de uso que branches/warehouses (en
+// ambos sentidos: desactivar y reactivar).
+const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, kardexRepository);
+const deactivateBranchUseCase = new DeactivateBranchUseCase(branchRepository, warehouseRepository, deactivateWarehouseUseCase);
+const activateWarehouseUseCase = new ActivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository);
+const activateBranchUseCase = new ActivateBranchUseCase(branchRepository, warehouseRepository, activateWarehouseUseCase);
 
 const controller = new CompanyController({
     listCompanies: new ListCompaniesUseCase(companyRepository),
     getCompanyById: new GetCompanyByIdUseCase(companyRepository),
     createCompany: new CreateCompanyUseCase(companyRepository, geoRepository, seedRolesForCompany),
     updateCompany: new UpdateCompanyUseCase(companyRepository, geoRepository),
-    activateCompany: new ActivateCompanyUseCase(companyRepository),
-    deactivateCompany: new DeactivateCompanyUseCase(companyRepository),
+    activateCompany: new ActivateCompanyUseCase(companyRepository, branchRepository, activateBranchUseCase),
+    deactivateCompany: new DeactivateCompanyUseCase(companyRepository, branchRepository, deactivateBranchUseCase),
 });
 
 const router = Router();

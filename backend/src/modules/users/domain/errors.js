@@ -17,6 +17,13 @@ export class DuplicateEmailError extends DomainError {
   }
 }
 
+// RN-EMP-005: una empresa inactiva no puede generar transacciones nuevas.
+export class InactiveCompanyForUserError extends DomainError {
+  constructor() {
+    super('No se puede crear un usuario bajo una empresa inactiva');
+  }
+}
+
 export class InvalidUserIdError extends DomainError {
   constructor() {
     super('Id no válido');

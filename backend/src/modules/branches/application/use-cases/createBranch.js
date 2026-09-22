@@ -1,6 +1,6 @@
 import { isValidGeoLocation } from '#shared/lib/geoValidation.js';
 import { Branch } from '../../domain/Branch.js';
-import { CompanyNotFoundForBranchError, DuplicateBranchNameError, InvalidLocationError } from '../../domain/errors.js';
+import { CompanyNotFoundForBranchError, InactiveCompanyForBranchError, DuplicateBranchNameError, InvalidLocationError } from '../../domain/errors.js';
 
 export class CreateBranchUseCase {
   constructor(branchRepository, companyRepository, geoRepository) {
@@ -13,6 +13,7 @@ export class CreateBranchUseCase {
     // RN-BRA-001: toda sucursal debe pertenecer a una empresa existente.
     const company = await this.companyRepository.findById(data.company);
     if (!company) throw new CompanyNotFoundForBranchError();
+    if (!company.isActive) throw new InactiveCompanyForBranchError();
 
     // RN-BRA-005: nombre único dentro de la misma empresa (no global).
     const nameTaken = await this.branchRepository.findByNameAndCompany(data.name, data.company);

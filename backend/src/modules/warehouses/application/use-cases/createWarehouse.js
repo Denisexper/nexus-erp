@@ -1,6 +1,7 @@
 import { Warehouse } from '../../domain/Warehouse.js';
 import {
   BranchNotFoundForWarehouseError,
+  InactiveBranchForWarehouseError,
   WarehouseCategoryNotFoundForWarehouseError,
   DuplicateWarehouseNameError,
 } from '../../domain/errors.js';
@@ -18,6 +19,7 @@ export class CreateWarehouseUseCase {
     // de crear almacenes podría colgarle uno a una sucursal ajena).
     const branch = await this.branchRepository.findById(data.branch, companyId);
     if (!branch) throw new BranchNotFoundForWarehouseError();
+    if (!branch.isActive) throw new InactiveBranchForWarehouseError();
 
     // RN-WHS-002: todo almacén debe tener una categoría asignada.
     const category = await this.warehouseCategoryRepository.findById(data.warehouseCategory);

@@ -29,6 +29,13 @@ export class PurchaseOrderNotReceivableError extends DomainError {
   }
 }
 
+// RN-BRA-004: una sucursal inactiva no puede generar transacciones nuevas.
+export class InactiveBranchForPurchaseError extends DomainError {
+  constructor() {
+    super('No se puede registrar una recepción bajo una sucursal inactiva');
+  }
+}
+
 export class PurchaseOrderDetailNotFoundError extends DomainError {
   constructor() {
     super('Una de las líneas indicadas no pertenece a la orden de compra');

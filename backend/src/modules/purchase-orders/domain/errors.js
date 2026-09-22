@@ -35,6 +35,13 @@ export class BranchNotFoundForPurchaseOrderError extends DomainError {
   }
 }
 
+// RN-BRA-004: una sucursal inactiva no puede generar transacciones nuevas.
+export class InactiveBranchForPurchaseOrderError extends DomainError {
+  constructor() {
+    super('No se puede generar una orden de compra bajo una sucursal inactiva');
+  }
+}
+
 export class WarehouseNotFoundForPurchaseOrderError extends DomainError {
   constructor() {
     super('El almacén indicado no existe o no pertenece a la sucursal seleccionada');

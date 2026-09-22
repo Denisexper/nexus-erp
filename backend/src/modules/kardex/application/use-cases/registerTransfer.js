@@ -4,6 +4,7 @@ import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
+  InactiveLocationForKardexError,
   InvalidQuantityError,
   InsufficientStockError,
   SameLocationTransferError,
@@ -33,9 +34,11 @@ export class RegisterTransferUseCase {
 
     const fromLocation = await this.locationRepository.findById(data.fromLocation, warehouseIds);
     if (!fromLocation) throw new LocationNotFoundForKardexError();
+    if (!fromLocation.isActive) throw new InactiveLocationForKardexError();
 
     const toLocation = await this.locationRepository.findById(data.toLocation, warehouseIds);
     if (!toLocation) throw new LocationNotFoundForKardexError();
+    if (!toLocation.isActive) throw new InactiveLocationForKardexError();
 
     const currentStock = await this.kardexRepository.getStockByProductAndLocation(data.product, data.fromLocation);
     if (currentStock < Number(data.quantity)) throw new InsufficientStockError();
