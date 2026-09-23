@@ -95,9 +95,20 @@ function RetaceoCreateModal(props) {
     (id) => purchaseOrdersApi.getById(id),
   );
   const order = () => orderDetail()?.data;
-  const costableExpenses = createMemo(() =>
+  const orderCostableExpenses = createMemo(() =>
     round2((order()?.expenses || []).filter((e) => e.isCostable).reduce((sum, e) => sum + e.amount, 0)),
   );
+
+  // Una orden puede recibirse (y retacearse) en varias recepciones
+  // parciales: esta recepción solo carga la porción de los gastos de orden
+  // que le corresponde según su participación en el FOB total de la orden,
+  // igual que el backend (createRetaceo.js) — si no, el gasto se duplica
+  // entre recepciones de la misma orden.
+  const expenseShare = createMemo(() => {
+    const orderFob = order()?.subtotal || purchase()?.subtotal || 0;
+    return orderFob > 0 ? (purchase()?.subtotal || 0) / orderFob : 1;
+  });
+  const costableExpenses = createMemo(() => round2(orderCostableExpenses() * expenseShare()));
 
   const preview = createMemo(() =>
     buildPreview(purchase(), totalFreight() || 0, totalDai() || 0, costableExpenses()),
@@ -193,8 +204,15 @@ function RetaceoCreateModal(props) {
           <Show when={purchase()}>
             <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-3 space-y-2">
               <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                FOB total: {formatMoney(purchase().subtotal, purchase().currency)} · Gastos costeables de la orden:{" "}
-                {formatMoney(costableExpenses(), purchase().currency)}
+                FOB total: {formatMoney(purchase().subtotal, purchase().currency)} · Gastos de la orden aplicados a
+                esta recepción: {formatMoney(costableExpenses(), purchase().currency)}
+                <Show when={orderCostableExpenses() !== costableExpenses()}>
+                  {" "}
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    (de {formatMoney(orderCostableExpenses(), purchase().currency)} totales de la orden, prorrateado
+                    por recepción)
+                  </span>
+                </Show>
               </p>
               <div class="space-y-1">
                 <For each={purchase().details}>
