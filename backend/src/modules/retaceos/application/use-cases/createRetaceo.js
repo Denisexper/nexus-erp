@@ -61,11 +61,23 @@ export class CreateRetaceoUseCase {
 
     const purchaseOrderId = purchase.purchaseOrder?._id || purchase.purchaseOrder;
     const order = await this.purchaseOrderRepository.findById(purchaseOrderId, company);
-    const costableExpenses = round2(
+    const orderCostableExpenses = round2(
       (order?.expenses || []).filter((expense) => expense.isCostable).reduce((sum, expense) => sum + expense.amount, 0),
     );
 
     const totalFob = purchase.subtotal;
+    const orderFob = order?.subtotal || totalFob;
+
+    // Una orden se puede recibir (y retacear) en varias recepciones
+    // parciales. Los gastos costeables viven en la orden, no en la
+    // recepción, así que cada retaceo solo debe cargar la porción de esos
+    // gastos que le corresponde a lo que él mismo recibió, según su
+    // participación en el FOB total de la orden — si no se prorratea, cada
+    // recepción retaceada carga el 100% del gasto y se duplica entre
+    // recepciones de la misma orden.
+    const expenseShare = orderFob > 0 ? totalFob / orderFob : 1;
+    const costableExpenses = round2(orderCostableExpenses * expenseShare);
+
     const freight = round2(totalFreight);
     const dai = round2(totalDai);
     const expenses = costableExpenses;
