@@ -5,8 +5,8 @@ export class ListLogsForExportUseCase {
     this.logRepository = logRepository;
   }
 
-  async execute({ user, action, resource, startDate, endDate, exportAll = 'true', page = 1, limit = 10 } = {}) {
-    const criteria = { user, action, resource, startDate, endDate };
+  async execute({ company, user, action, resource, startDate, endDate, exportAll = 'true', page = 1, limit = 10 } = {}) {
+    const criteria = { company, user, action, resource, startDate, endDate };
 
     if (exportAll === 'false' || exportAll === false) {
       const pageNum = Number(page) || 1;

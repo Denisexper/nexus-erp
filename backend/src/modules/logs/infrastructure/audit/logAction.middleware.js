@@ -46,6 +46,7 @@ export const logAction = ({
                 const entity = responseKey ? data?.[responseKey] : null;
 
                 const logData = {
+                    company: req.user.companyId,
                     user: req.user.id,
                     action,
                     resource,

@@ -2,6 +2,11 @@ import { Schema, model } from 'mongoose';
 
 //eschema para la bitacora (logs que se requiere)
 const logSchema = new Schema({
+    company: {
+        type: Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'La empresa es obligatoria']
+    },
     user: {
         type: Schema.Types.ObjectId,
         ref: 'userModel'
