@@ -392,7 +392,7 @@ function Logs() {
                 </div>
               </Show>
 
-              <Show when={import.meta.env.DEV && auth.hasPermission("logs.deleteAll")}>
+              <Show when={import.meta.env.DEV && auth.hasPermission("logs.deleteall")}>
                 <button
                   onClick={handlePurgeLogs}
                   disabled={purging()}
