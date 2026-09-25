@@ -51,7 +51,7 @@ const routes = [
     {
         method: 'DELETE',
         path: '/logs/dev/purge',
-        permission: 'logs.deleteAll',
+        permission: 'logs.deleteall',
         description: 'Eliminar todos los logs (solo desarrollo)',
         handler: controller.deleteAll,
         middlewares: [devOnlyMiddleware]
