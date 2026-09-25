@@ -3,9 +3,10 @@ export class LogoutUseCase {
     this.writeLogEntryUseCase = writeLogEntryUseCase;
   }
 
-  async execute({ userId, userName, ipAddress, userAgent }) {
+  async execute({ userId, userName, companyId, ipAddress, userAgent }) {
     try {
       await this.writeLogEntryUseCase.execute({
+        company: companyId,
         user: userId,
         action: 'logout',
         resource: 'auth',

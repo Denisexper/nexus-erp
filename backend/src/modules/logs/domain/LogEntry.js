@@ -1,6 +1,7 @@
 export class LogEntry {
   constructor({
     id,
+    company,
     user,
     action,
     resource,
@@ -17,6 +18,7 @@ export class LogEntry {
     createdAt,
   }) {
     this.id = id;
+    this.company = company;
     this.user = user;
     this.action = action;
     this.resource = resource;

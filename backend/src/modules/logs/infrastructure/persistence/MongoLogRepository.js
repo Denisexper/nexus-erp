@@ -6,6 +6,7 @@ const toDomain = (doc) =>
     doc
         ? new LogEntry({
               id: doc._id.toString(),
+              company: doc.company,
               user: doc.user,
               action: doc.action,
               resource: doc.resource,
@@ -23,8 +24,9 @@ const toDomain = (doc) =>
           })
         : null;
 
-const buildFilter = ({ user, action, resource, startDate, endDate }) => {
+const buildFilter = ({ company, user, action, resource, startDate, endDate }) => {
     const filter = {};
+    if (company) filter.company = company;
     if (user) filter.user = user;
     if (action) filter.action = action;
     if (resource) filter.resource = resource;
@@ -49,8 +51,8 @@ const buildFilter = ({ user, action, resource, startDate, endDate }) => {
  * del módulo que conoce sintaxis de Mongo (populate, refPath, ObjectId).
  */
 export class MongoLogRepository extends LogRepository {
-    async findAll({ user, action, resource, startDate, endDate, skip = 0, limit = 10 } = {}) {
-        const filter = buildFilter({ user, action, resource, startDate, endDate });
+    async findAll({ company, user, action, resource, startDate, endDate, skip = 0, limit = 10 } = {}) {
+        const filter = buildFilter({ company, user, action, resource, startDate, endDate });
 
         const [docs, total] = await Promise.all([
             LogModel.find(filter)
@@ -66,12 +68,11 @@ export class MongoLogRepository extends LogRepository {
         return { items: docs.map(toDomain), total };
     }
 
-    async findByEntity({ entityId, entityModel, actions = ['create', 'update', 'delete'] }) {
-        const docs = await LogModel.find({
-            entityId,
-            entityModel,
-            action: { $in: actions },
-        })
+    async findByEntity({ company, entityId, entityModel, actions = ['create', 'update', 'delete'] }) {
+        const filter = { entityId, entityModel, action: { $in: actions } };
+        if (company) filter.company = company;
+
+        const docs = await LogModel.find(filter)
             .populate('user', 'name email')
             .populate('entityId', '-password -__v')
             .sort({ createdAt: -1 })
@@ -82,6 +83,7 @@ export class MongoLogRepository extends LogRepository {
 
     async create(logEntry) {
         const doc = await LogModel.create({
+            company: logEntry.company,
             user: logEntry.user,
             action: logEntry.action,
             resource: logEntry.resource,
@@ -99,8 +101,9 @@ export class MongoLogRepository extends LogRepository {
         return toDomain(doc);
     }
 
-    async deleteAll() {
-        const result = await LogModel.deleteMany({});
+    async deleteAll({ company } = {}) {
+        if (!company) throw new Error('deleteAll requiere company: no se permite borrar logs de todas las empresas');
+        const result = await LogModel.deleteMany({ company });
         return result.deletedCount;
     }
 }

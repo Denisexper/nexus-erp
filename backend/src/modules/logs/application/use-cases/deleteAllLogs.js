@@ -3,8 +3,8 @@ export class DeleteAllLogsUseCase {
     this.logRepository = logRepository;
   }
 
-  async execute() {
-    const deletedCount = await this.logRepository.deleteAll();
+  async execute({ company }) {
+    const deletedCount = await this.logRepository.deleteAll({ company });
     return { deletedCount };
   }
 }

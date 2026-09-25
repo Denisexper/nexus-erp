@@ -26,7 +26,7 @@ export const createEntityHistoryHandler = (entityModel, paramName = 'id') => {
     return async (req, res) => {
         try {
             const entityId = req.params[paramName];
-            const logs = await getEntityHistoryUseCase.execute({ entityId, entityModel });
+            const logs = await getEntityHistoryUseCase.execute({ company: req.user.companyId, entityId, entityModel });
 
             res.status(200).json({
                 msj: 'Historial obtenido',

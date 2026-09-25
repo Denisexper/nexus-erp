@@ -73,6 +73,7 @@ export class AuthController {
       await this.logoutUseCase.execute({
         userId: req.user.id,
         userName: req.user.name,
+        companyId: req.user.companyId,
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
       });

@@ -3,7 +3,7 @@ export class GetEntityHistoryUseCase {
     this.logRepository = logRepository;
   }
 
-  async execute({ entityId, entityModel }) {
-    return this.logRepository.findByEntity({ entityId, entityModel });
+  async execute({ company, entityId, entityModel }) {
+    return this.logRepository.findByEntity({ company, entityId, entityModel });
   }
 }
