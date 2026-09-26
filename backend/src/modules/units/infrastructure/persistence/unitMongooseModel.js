@@ -14,7 +14,11 @@ const unitSchema = new Schema({
     type: {
         type: String,
         required: [true, 'El tipo de la unidad es obligatorio'],
-        trim: true
+        trim: true,
+        enum: {
+            values: ['purchase', 'sale'],
+            message: 'El tipo de la unidad debe ser purchase o sale'
+        }
     },
     isActive: {
         type: Boolean,

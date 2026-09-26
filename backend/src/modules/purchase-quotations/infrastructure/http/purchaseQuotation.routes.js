@@ -9,6 +9,7 @@ import { MongoUnitRepository } from '#modules/units/infrastructure/persistence/M
 import { MongoExpenseTypeRepository } from '#modules/expense-types/infrastructure/persistence/MongoExpenseTypeRepository.js';
 import { MongoPurchaseRequestRepository } from '#modules/purchase-requests/infrastructure/persistence/MongoPurchaseRequestRepository.js';
 import { MongoPurchaseRequestDetailRepository } from '#modules/purchase-request-details/infrastructure/persistence/MongoPurchaseRequestDetailRepository.js';
+import { MongoCompanyRepository } from '#modules/companies/infrastructure/persistence/MongoCompanyRepository.js';
 
 import { PurchaseQuotationModel } from '../persistence/purchaseQuotationMongooseModel.js';
 import { MongoPurchaseQuotationRepository } from '../persistence/MongoPurchaseQuotationRepository.js';
@@ -29,6 +30,7 @@ const unitRepository = new MongoUnitRepository();
 const expenseTypeRepository = new MongoExpenseTypeRepository();
 const purchaseRequestRepository = new MongoPurchaseRequestRepository();
 const purchaseRequestDetailRepository = new MongoPurchaseRequestDetailRepository();
+const companyRepository = new MongoCompanyRepository();
 
 const controller = new PurchaseQuotationController({
     listPurchaseQuotations: new ListPurchaseQuotationsUseCase(purchaseQuotationRepository),
@@ -41,6 +43,7 @@ const controller = new PurchaseQuotationController({
         expenseTypeRepository,
         purchaseRequestRepository,
         purchaseRequestDetailRepository,
+        companyRepository,
     ),
     updatePurchaseQuotation: new UpdatePurchaseQuotationUseCase(purchaseQuotationRepository),
     rejectPurchaseQuotation: new RejectPurchaseQuotationUseCase(purchaseQuotationRepository),

@@ -3,6 +3,7 @@ import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
+  InactiveLocationForKardexError,
   InvalidQuantityError,
   InsufficientStockError,
 } from '../../domain/errors.js';
@@ -20,7 +21,7 @@ export class RegisterMovementUseCase {
     this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(data, companyId) {
+  async execute(data, companyId, userId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
 
     const product = await this.productRepository.findById(data.product, companyId);
@@ -31,6 +32,7 @@ export class RegisterMovementUseCase {
     const warehouseIds = await resolveWarehouseIdsForCompany(companyId, this.branchRepository, this.warehouseRepository);
     const location = await this.locationRepository.findById(data.location, warehouseIds);
     if (!location) throw new LocationNotFoundForKardexError();
+    if (!location.isActive) throw new InactiveLocationForKardexError();
 
     if (data.type === 'out') {
       const currentStock = await this.kardexRepository.getStockByProductAndLocation(data.product, data.location);
@@ -44,6 +46,7 @@ export class RegisterMovementUseCase {
       reason: data.reason,
       quantity: Number(data.quantity),
       notes: data.notes,
+      user: userId,
     });
 
     return this.kardexRepository.create(movement);

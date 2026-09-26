@@ -35,6 +35,13 @@ const kardexMovementSchema = new Schema({
     transferRef: {
         type: String,
     },
+    user: {
+        type: Schema.Types.ObjectId,
+        // Nombre de modelo real es 'userModel', mismo criterio que
+        // purchase-orders/purchase-quotations/purchases.
+        ref: 'userModel',
+        required: [true, 'El usuario es obligatorio']
+    },
 }, {
     // El kardex es un libro contable: es append-only, nunca se edita. No hace
     // falta updatedAt, solo la fecha en la que se registró el movimiento.

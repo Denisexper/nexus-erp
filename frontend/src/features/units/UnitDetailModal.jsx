@@ -7,6 +7,8 @@ import {
   DetailAvatar,
 } from "../../components/DetailModal";
 
+const TYPE_LABELS = { purchase: "Compra", sale: "Venta" };
+
 function UnitDetailModal(props) {
   const [detail] = createResource(
     () => props.unit?._id,
@@ -28,7 +30,7 @@ function UnitDetailModal(props) {
     >
       <DetailSection title="Información general" cols={2}>
         <DetailField label="Nombre" value={unit()?.name} />
-        <DetailField label="Tipo" value={unit()?.type} />
+        <DetailField label="Tipo" value={unit() && (TYPE_LABELS[unit().type] || unit().type)} />
       </DetailSection>
 
       <DetailSection title="Auditoría" cols={2} divider>

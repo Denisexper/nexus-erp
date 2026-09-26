@@ -23,6 +23,15 @@ export class WarehouseNotFoundForLocationError extends DomainError {
   }
 }
 
+// Por consistencia con RN-EMP-005/RN-BRA-004: un almacén inactivo tampoco
+// admite ubicaciones nuevas (el ERS no lo exige explícito en este tramo,
+// pero se aplica el mismo criterio en los 4 niveles de la jerarquía).
+export class InactiveWarehouseForLocationError extends DomainError {
+  constructor() {
+    super('No se puede crear una ubicación bajo un almacén inactivo');
+  }
+}
+
 export class DuplicateLocationCodeError extends DomainError {
   constructor() {
     super('Ya existe una ubicación con ese código en este almacén');

@@ -2,6 +2,7 @@ import {
   InvalidUserIdError,
   UserNotFoundError,
   DuplicateEmailError,
+  InactiveCompanyForUserError,
   InvalidRoleError,
   WeakPasswordError,
   ForbiddenRoleChangeError,
@@ -42,6 +43,7 @@ export class UserController {
     if (error instanceof InvalidUserIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof UserNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof DuplicateEmailError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveCompanyForUserError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidRoleError) return res.status(400).json({ msj: error.message });
     if (error instanceof WeakPasswordError) return res.status(400).json({ msj: error.message });
     if (error instanceof ForbiddenRoleChangeError) return res.status(403).json({ msj: error.message });

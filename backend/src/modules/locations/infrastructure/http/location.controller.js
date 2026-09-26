@@ -2,6 +2,7 @@ import {
   InvalidLocationIdError,
   LocationNotFoundError,
   WarehouseNotFoundForLocationError,
+  InactiveWarehouseForLocationError,
   DuplicateLocationCodeError,
   InvalidCapacityError,
   DuplicateLocationCoordinatesError,
@@ -77,6 +78,7 @@ export class LocationController {
     if (error instanceof InvalidLocationIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof LocationNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof WarehouseNotFoundForLocationError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveWarehouseForLocationError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateLocationCodeError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidCapacityError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateLocationCoordinatesError) return res.status(400).json({ msj: error.message });

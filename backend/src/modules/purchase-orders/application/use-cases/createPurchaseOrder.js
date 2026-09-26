@@ -3,6 +3,7 @@ import {
   PurchaseQuotationNotFoundForOrderError,
   PurchaseQuotationNotSelectableError,
   BranchNotFoundForPurchaseOrderError,
+  InactiveBranchForPurchaseOrderError,
   WarehouseNotFoundForPurchaseOrderError,
 } from '../../domain/errors.js';
 
@@ -63,6 +64,7 @@ export class CreatePurchaseOrderUseCase {
 
     const branchDoc = await this.branchRepository.findById(branch, company);
     if (!branchDoc) throw new BranchNotFoundForPurchaseOrderError();
+    if (!branchDoc.isActive) throw new InactiveBranchForPurchaseOrderError();
 
     // El almacén debe pertenecer justo a la sucursal elegida, no solo a la
     // empresa (mismo criterio que purchase-requests).

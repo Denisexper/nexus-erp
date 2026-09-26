@@ -30,7 +30,7 @@ export class LogController {
     getAll = async (req, res) => {
         try {
             const { user, action, resource, startDate, endDate, page = 1, limit = 10 } = req.query;
-            const result = await this.listLogsUseCase.execute({ user, action, resource, startDate, endDate, page, limit });
+            const result = await this.listLogsUseCase.execute({ company: req.user.companyId, user, action, resource, startDate, endDate, page, limit });
 
             res.status(200).json({
                 data: result.items.map(toLogDTO),
@@ -56,7 +56,7 @@ export class LogController {
     exportExcel = async (req, res) => {
         try {
             const { user, action, resource, startDate, endDate, exportAll = 'true', page = 1, limit = 10 } = req.query;
-            const logs = await this.listLogsForExportUseCase.execute({ user, action, resource, startDate, endDate, exportAll, page, limit });
+            const logs = await this.listLogsForExportUseCase.execute({ company: req.user.companyId, user, action, resource, startDate, endDate, exportAll, page, limit });
 
             const buffer = await buildExcelWorkbook(logs.map(toLogDTO), { action, resource, startDate, endDate, exportAll, page });
 
@@ -75,7 +75,7 @@ export class LogController {
     exportPdf = async (req, res) => {
         try {
             const { user, action, resource, startDate, endDate, exportAll = 'true', page = 1, limit = 10 } = req.query;
-            const logs = await this.listLogsForExportUseCase.execute({ user, action, resource, startDate, endDate, exportAll, page, limit });
+            const logs = await this.listLogsForExportUseCase.execute({ company: req.user.companyId, user, action, resource, startDate, endDate, exportAll, page, limit });
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename=logs_${Date.now()}.pdf`);
@@ -91,7 +91,7 @@ export class LogController {
 
     deleteAll = async (req, res) => {
         try {
-            const result = await this.deleteAllLogsUseCase.execute();
+            const result = await this.deleteAllLogsUseCase.execute({ company: req.user.companyId });
 
             res.status(200).json({
                 msj: 'Logs eliminados correctamente',

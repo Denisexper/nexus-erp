@@ -1,6 +1,7 @@
 import { PurchaseQuotation } from '../../domain/PurchaseQuotation.js';
 import { PurchaseQuotationDetail } from '../../domain/PurchaseQuotationDetail.js';
 import {
+  InactiveCompanyForQuotationError,
   SupplierNotFoundForQuotationError,
   EmptyPurchaseQuotationError,
   ProductNotFoundForQuotationError,
@@ -32,6 +33,7 @@ export class CreatePurchaseQuotationUseCase {
     expenseTypeRepository,
     purchaseRequestRepository,
     purchaseRequestDetailRepository,
+    companyRepository,
   ) {
     this.purchaseQuotationRepository = purchaseQuotationRepository;
     this.supplierRepository = supplierRepository;
@@ -40,6 +42,7 @@ export class CreatePurchaseQuotationUseCase {
     this.expenseTypeRepository = expenseTypeRepository;
     this.purchaseRequestRepository = purchaseRequestRepository;
     this.purchaseRequestDetailRepository = purchaseRequestDetailRepository;
+    this.companyRepository = companyRepository;
   }
 
   async #validateLine(line, company, requestIds) {
@@ -154,6 +157,9 @@ export class CreatePurchaseQuotationUseCase {
   }
 
   async execute({ supplier, quotationDate, validUntil, currency, paymentTerms, deliveryDays, notes, lines, expenses }, company, user) {
+    const companyDoc = await this.companyRepository.findById(company);
+    if (companyDoc && !companyDoc.isActive) throw new InactiveCompanyForQuotationError();
+
     const supplierDoc = await this.supplierRepository.findById(supplier, company);
     if (!supplierDoc) throw new SupplierNotFoundForQuotationError();
 

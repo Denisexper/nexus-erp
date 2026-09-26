@@ -2,6 +2,7 @@ import {
   InvalidPurchaseRequestIdError,
   PurchaseRequestNotFoundError,
   BranchNotFoundForPurchaseRequestError,
+  InactiveBranchForPurchaseRequestError,
   WarehouseNotFoundForPurchaseRequestError,
   PurchaseRequestNotEditableError,
   InvalidPurchaseRequestStatusTransitionError,
@@ -60,6 +61,7 @@ export class PurchaseRequestController {
     if (error instanceof InvalidPurchaseRequestIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof PurchaseRequestNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof BranchNotFoundForPurchaseRequestError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveBranchForPurchaseRequestError) return res.status(400).json({ msj: error.message });
     if (error instanceof WarehouseNotFoundForPurchaseRequestError) return res.status(400).json({ msj: error.message });
     if (error instanceof PurchaseRequestNotEditableError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidPurchaseRequestStatusTransitionError) return res.status(400).json({ msj: error.message });

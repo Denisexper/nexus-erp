@@ -3,7 +3,7 @@ export class ListRetaceosUseCase {
     this.retaceoRepository = retaceoRepository;
   }
 
-  async execute({ search, companyId, status, supplier, purchaseOrder, page = 1, limit = 10 } = {}) {
+  async execute({ search, companyId, status, supplier, purchase, page = 1, limit = 10 } = {}) {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
 
@@ -12,7 +12,7 @@ export class ListRetaceosUseCase {
       company: companyId,
       status,
       supplier,
-      purchaseOrder,
+      purchase,
       page: pageNum,
       limit: limitNum,
     });

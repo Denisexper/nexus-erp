@@ -3,12 +3,13 @@ export class ListLogsUseCase {
     this.logRepository = logRepository;
   }
 
-  async execute({ user, action, resource, startDate, endDate, page = 1, limit = 10 } = {}) {
+  async execute({ company, user, action, resource, startDate, endDate, page = 1, limit = 10 } = {}) {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
     const skip = (pageNum - 1) * limitNum;
 
     const { items, total } = await this.logRepository.findAll({
+      company,
       user,
       action,
       resource,

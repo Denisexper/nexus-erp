@@ -6,6 +6,11 @@ const retaceoDetailSchema = new Schema({
         ref: 'Retaceo',
         required: [true, 'El retaceo es obligatorio']
     },
+    purchaseDetail: {
+        type: Schema.Types.ObjectId,
+        ref: 'PurchaseDetail',
+        required: [true, 'La línea de recepción es obligatoria']
+    },
     product: {
         type: Schema.Types.ObjectId,
         ref: 'Product',

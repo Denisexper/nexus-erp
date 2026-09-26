@@ -29,6 +29,15 @@ export class LocationNotFoundForKardexError extends DomainError {
   }
 }
 
+// Por consistencia con RN-EMP-005/RN-BRA-004: una ubicación inactiva nunca
+// tiene existencias (RN-WHS-007 impide desactivarla si tiene stock), así que
+// bloquear movimientos ahí no deja inventario sin forma de moverse.
+export class InactiveLocationForKardexError extends DomainError {
+  constructor() {
+    super('No se puede registrar un movimiento en una ubicación inactiva');
+  }
+}
+
 export class InvalidQuantityError extends DomainError {
   constructor() {
     super('La cantidad debe ser mayor que cero');

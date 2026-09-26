@@ -4,6 +4,7 @@ import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 import {
   ProductNotFoundForKardexError,
   LocationNotFoundForKardexError,
+  InactiveLocationForKardexError,
   InvalidQuantityError,
   InsufficientStockError,
   SameLocationTransferError,
@@ -22,7 +23,7 @@ export class RegisterTransferUseCase {
     this.warehouseRepository = warehouseRepository;
   }
 
-  async execute(data, companyId) {
+  async execute(data, companyId, userId) {
     if (!(Number(data.quantity) > 0)) throw new InvalidQuantityError();
     if (data.fromLocation === data.toLocation) throw new SameLocationTransferError();
 
@@ -33,9 +34,11 @@ export class RegisterTransferUseCase {
 
     const fromLocation = await this.locationRepository.findById(data.fromLocation, warehouseIds);
     if (!fromLocation) throw new LocationNotFoundForKardexError();
+    if (!fromLocation.isActive) throw new InactiveLocationForKardexError();
 
     const toLocation = await this.locationRepository.findById(data.toLocation, warehouseIds);
     if (!toLocation) throw new LocationNotFoundForKardexError();
+    if (!toLocation.isActive) throw new InactiveLocationForKardexError();
 
     const currentStock = await this.kardexRepository.getStockByProductAndLocation(data.product, data.fromLocation);
     if (currentStock < Number(data.quantity)) throw new InsufficientStockError();
@@ -52,6 +55,7 @@ export class RegisterTransferUseCase {
         quantity,
         notes: data.notes,
         transferRef,
+        user: userId,
       }),
       new KardexMovement({
         product: data.product,
@@ -61,6 +65,7 @@ export class RegisterTransferUseCase {
         quantity,
         notes: data.notes,
         transferRef,
+        user: userId,
       }),
     ]);
 

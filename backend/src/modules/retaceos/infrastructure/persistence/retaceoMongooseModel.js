@@ -12,10 +12,10 @@ const retaceoSchema = new Schema({
         required: [true, 'El código es obligatorio'],
         trim: true
     },
-    purchaseOrder: {
+    purchase: {
         type: Schema.Types.ObjectId,
-        ref: 'PurchaseOrder',
-        required: [true, 'La orden de compra de origen es obligatoria']
+        ref: 'Purchase',
+        required: [true, 'La compra de origen es obligatoria']
     },
     supplier: {
         type: Schema.Types.ObjectId,
@@ -87,9 +87,10 @@ const retaceoSchema = new Schema({
 
 // Código único dentro de la misma empresa, no global.
 retaceoSchema.index({ company: 1, code: 1 }, { unique: true });
-// RN de dominio (PurchaseOrderAlreadyRetaceadoError): una orden solo puede
-// tener un retaceo. Se refuerza también a nivel de índice, no solo en el
-// use case.
-retaceoSchema.index({ company: 1, purchaseOrder: 1 }, { unique: true });
+// RN de dominio (PurchaseAlreadyRetaceadoError): una compra (recepción) solo
+// puede tener un retaceo. Se refuerza también a nivel de índice, no solo en
+// el use case. Una orden con varias recepciones parciales puede tener varios
+// retaceos, uno por compra/embarque.
+retaceoSchema.index({ company: 1, purchase: 1 }, { unique: true });
 
 export const RetaceoModel = model('Retaceo', retaceoSchema);

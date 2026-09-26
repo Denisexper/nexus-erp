@@ -31,6 +31,7 @@ const toExpenseDomain = (doc) => ({
     expenseType: doc.expenseType,
     description: doc.description,
     amount: doc.amount,
+    isCostable: doc.isCostable,
 });
 
 const toDetailDomain = (doc) =>
@@ -190,6 +191,7 @@ export class MongoPurchaseOrderRepository extends PurchaseOrderRepository {
             expenseType: expense.expenseType,
             description: expense.description,
             amount: expense.amount,
+            isCostable: expense.isCostable,
         });
 
         // additionalExpenses/total del header se recalculan sobre la suma real
@@ -208,5 +210,25 @@ export class MongoPurchaseOrderRepository extends PurchaseOrderRepository {
             { new: true, runValidators: true },
         ).populate(HEADER_POPULATE);
         return this.#loadAggregate(doc);
+    }
+
+    async findExpenseById(expenseId, companyId) {
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) return null;
+
+        const expenseDoc = await PurchaseOrderExpenseModel.findById(expenseId);
+        if (!expenseDoc) return null;
+
+        const orderFilter = companyId ? { _id: expenseDoc.purchaseOrder, company: companyId } : { _id: expenseDoc.purchaseOrder };
+        const orderDoc = await PurchaseOrderModel.findOne(orderFilter).select('_id');
+        if (!orderDoc) return null;
+
+        return {
+            id: expenseDoc._id.toString(),
+            purchaseOrder: orderDoc._id.toString(),
+            expenseType: expenseDoc.expenseType,
+            description: expenseDoc.description,
+            amount: expenseDoc.amount,
+            isCostable: expenseDoc.isCostable,
+        };
     }
 }

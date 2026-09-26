@@ -21,7 +21,7 @@ const roleRepository = new MongoRoleRepository();
 const companyRepository = new MongoCompanyRepository();
 const logRepository = new MongoLogRepository();
 
-const createUserUseCase = new CreateUserUseCase(userRepository, roleRepository);
+const createUserUseCase = new CreateUserUseCase(userRepository, roleRepository, companyRepository);
 const writeLogEntryUseCase = new WriteLogEntryUseCase(logRepository);
 
 const controller = new AuthController({

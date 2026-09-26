@@ -1,9 +1,9 @@
 import { Retaceo } from '../../domain/Retaceo.js';
 import { RetaceoDetail } from '../../domain/RetaceoDetail.js';
 import {
-  PurchaseOrderNotFoundForRetaceoError,
-  PurchaseOrderNotRetaceableError,
-  PurchaseOrderAlreadyRetaceadoError,
+  PurchaseNotFoundForRetaceoError,
+  PurchaseNotRetaceableError,
+  PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
 } from '../../domain/errors.js';
@@ -17,18 +17,25 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 //
 // Flete y DAI se capturan aquí (no se leen del catálogo de expense-types de
 // la orden) porque en la práctica solo se conocen al momento del despacho
-// aduanal, después de que la orden ya fue aprobada. "Gastos" sí toma
-// additionalExpenses de la orden, que es la suma de lo ya registrado vía
-// purchase_order_expenses (RN-COM y CU-086).
+// aduanal. "Gastos" toma los purchase_order_expenses de la orden de origen
+// (RN-COM y CU-086), filtrados por isCostable: un gasto marcado como no
+// costeable (ej. un gasto puramente administrativo) queda fuera del
+// prorrateo (ERS v0.9, diagrama Eraser de Denis).
+//
+// El retaceo ahora se ancla a la compra (recepción real), no a la orden
+// (ERS v0.9, 6.8.26): el FOB y las cantidades salen de purchase_details, ya
+// que reflejan lo realmente recibido, que puede diferir de lo ordenado en
+// una recepción parcial.
 export class CreateRetaceoUseCase {
-  constructor(retaceoRepository, purchaseOrderRepository) {
+  constructor(retaceoRepository, purchaseRepository, purchaseOrderRepository) {
     this.retaceoRepository = retaceoRepository;
+    this.purchaseRepository = purchaseRepository;
     this.purchaseOrderRepository = purchaseOrderRepository;
   }
 
   async execute(
     {
-      purchaseOrder,
+      purchase: purchaseId,
       retaceoDate,
       originCountry,
       importInvoiceNumber,
@@ -42,24 +49,43 @@ export class CreateRetaceoUseCase {
     company,
     user,
   ) {
-    const order = await this.purchaseOrderRepository.findById(purchaseOrder, company);
-    if (!order) throw new PurchaseOrderNotFoundForRetaceoError();
-    if (order.status !== 'approved') throw new PurchaseOrderNotRetaceableError();
+    const purchase = await this.purchaseRepository.findById(purchaseId, company);
+    if (!purchase) throw new PurchaseNotFoundForRetaceoError();
+    if (purchase.status !== 'received') throw new PurchaseNotRetaceableError();
 
-    const existing = await this.retaceoRepository.findByPurchaseOrder(purchaseOrder, company);
-    if (existing) throw new PurchaseOrderAlreadyRetaceadoError();
+    const existing = await this.retaceoRepository.findByPurchase(purchaseId, company);
+    if (existing) throw new PurchaseAlreadyRetaceadoError();
 
     if (Number(totalFreight) < 0) throw new InvalidFreightAmountError();
     if (Number(totalDai) < 0) throw new InvalidDaiAmountError();
 
-    const totalFob = order.subtotal;
+    const purchaseOrderId = purchase.purchaseOrder?._id || purchase.purchaseOrder;
+    const order = await this.purchaseOrderRepository.findById(purchaseOrderId, company);
+    const orderCostableExpenses = round2(
+      (order?.expenses || []).filter((expense) => expense.isCostable).reduce((sum, expense) => sum + expense.amount, 0),
+    );
+
+    const totalFob = purchase.subtotal;
+    const orderFob = order?.subtotal || totalFob;
+
+    // Una orden se puede recibir (y retacear) en varias recepciones
+    // parciales. Los gastos costeables viven en la orden, no en la
+    // recepción, así que cada retaceo solo debe cargar la porción de esos
+    // gastos que le corresponde a lo que él mismo recibió, según su
+    // participación en el FOB total de la orden — si no se prorratea, cada
+    // recepción retaceada carga el 100% del gasto y se duplica entre
+    // recepciones de la misma orden.
+    const expenseShare = orderFob > 0 ? totalFob / orderFob : 1;
+    const costableExpenses = round2(orderCostableExpenses * expenseShare);
+
     const freight = round2(totalFreight);
     const dai = round2(totalDai);
-    const expenses = round2(order.additionalExpenses);
+    const expenses = costableExpenses;
 
-    const lines = order.details.map((detail) => ({
+    const lines = purchase.details.map((detail) => ({
       product: detail.product?._id || detail.product,
-      quantity: detail.quantity,
+      purchaseDetail: detail.id,
+      quantity: detail.quantityReceived,
       costFob: detail.subtotal,
       ratio: detail.subtotal / totalFob,
     }));
@@ -87,6 +113,7 @@ export class CreateRetaceoUseCase {
 
       return new RetaceoDetail({
         product: line.product,
+        purchaseDetail: line.purchaseDetail,
         quantity: line.quantity,
         costFob: line.costFob,
         freightAmount,
@@ -103,8 +130,8 @@ export class CreateRetaceoUseCase {
     const retaceo = new Retaceo({
       company,
       code,
-      purchaseOrder: order.id,
-      supplier: order.supplier?._id || order.supplier,
+      purchase: purchase.id,
+      supplier: purchase.supplier?._id || purchase.supplier,
       retaceoDate: retaceoDate || new Date(),
       originCountry,
       importInvoiceNumber,

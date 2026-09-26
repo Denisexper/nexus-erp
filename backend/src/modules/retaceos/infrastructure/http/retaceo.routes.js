@@ -4,6 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoPurchaseOrderRepository } from '#modules/purchase-orders/infrastructure/persistence/MongoPurchaseOrderRepository.js';
+import { MongoPurchaseRepository } from '#modules/purchases/infrastructure/persistence/MongoPurchaseRepository.js';
 
 import { RetaceoModel } from '../persistence/retaceoMongooseModel.js';
 import { MongoRetaceoRepository } from '../persistence/MongoRetaceoRepository.js';
@@ -15,11 +16,12 @@ import { RetaceoController } from './retaceo.controller.js';
 // --- Composition root ---
 const retaceoRepository = new MongoRetaceoRepository();
 const purchaseOrderRepository = new MongoPurchaseOrderRepository();
+const purchaseRepository = new MongoPurchaseRepository();
 
 const controller = new RetaceoController({
     listRetaceos: new ListRetaceosUseCase(retaceoRepository),
     getRetaceoById: new GetRetaceoByIdUseCase(retaceoRepository),
-    createRetaceo: new CreateRetaceoUseCase(retaceoRepository, purchaseOrderRepository),
+    createRetaceo: new CreateRetaceoUseCase(retaceoRepository, purchaseRepository, purchaseOrderRepository),
 });
 
 const router = Router();
@@ -40,7 +42,7 @@ const requireOwnCompanyRetaceo = async (req, res, next) => {
 const retaceoAudit = {
     entityModel: RetaceoModel,
     snapshot: {
-        fields: ['company', 'code', 'purchaseOrder', 'supplier', 'retaceoDate', 'originCountry', 'importInvoiceNumber', 'importInvoiceDate', 'importPolicyNumber', 'importPolicyDate', 'totalFob', 'totalFreight', 'totalExpenses', 'totalDai', 'totalCost', 'status', 'notes'],
+        fields: ['company', 'code', 'purchase', 'supplier', 'retaceoDate', 'originCountry', 'importInvoiceNumber', 'importInvoiceDate', 'importPolicyNumber', 'importPolicyDate', 'totalFob', 'totalFreight', 'totalExpenses', 'totalDai', 'totalCost', 'status', 'notes'],
         populate: 'supplier',
     },
     compareFields: ['status', 'notes'],
@@ -49,13 +51,14 @@ const retaceoAudit = {
 };
 
 // Módulo de Retaceo (distribución de gastos de importación, RN-011/RN-012 del
-// ERS) — etapa "posterior" del capítulo 6.8, ahora habilitada. Se registra
-// completo en un solo POST a partir de una orden de compra 'approved': toma
-// el FOB y los gastos ya registrados de la orden, y agrega flete/DAI como
-// datos capturados en este mismo paso (solo se conocen al despacho aduanal).
-// Es inmutable una vez creado: no hay PUT, la única forma de corregirlo es
-// registrar uno nuevo después de resolver el dato incorrecto en la orden de
-// origen (no existe todavía un endpoint de cancelación).
+// ERS). Se registra completo en un solo POST a partir de una compra
+// (recepción) 'received' (ERS v0.9, 6.8.26): toma el FOB de purchase_details
+// (lo realmente recibido) y los gastos costeables (isCostable) ya registrados
+// en la orden de origen, y agrega flete/DAI como datos capturados en este
+// mismo paso (solo se conocen al despacho aduanal). Es inmutable una vez
+// creado: no hay PUT, la única forma de corregirlo es registrar uno nuevo
+// después de resolver el dato incorrecto en la compra de origen (no existe
+// todavía un endpoint de cancelación).
 const routes = [
     {
         method: 'GET',

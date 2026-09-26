@@ -55,6 +55,7 @@ export class LoginUseCase {
     // El log de login no debe tumbar el login si falla; solo se reporta.
     try {
       await this.writeLogEntryUseCase.execute({
+        company: company.id,
         user: updated.id,
         action: 'login',
         resource: 'auth',

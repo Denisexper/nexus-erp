@@ -1,6 +1,7 @@
 import {
   InvalidPurchaseQuotationIdError,
   PurchaseQuotationNotFoundError,
+  InactiveCompanyForQuotationError,
   SupplierNotFoundForQuotationError,
   EmptyPurchaseQuotationError,
   ProductNotFoundForQuotationError,
@@ -23,6 +24,7 @@ import {
 // dominio. Los que necesitan otro código (404) se listan aparte.
 const BAD_REQUEST_ERRORS = [
   InvalidPurchaseQuotationIdError,
+  InactiveCompanyForQuotationError,
   SupplierNotFoundForQuotationError,
   EmptyPurchaseQuotationError,
   ProductNotFoundForQuotationError,

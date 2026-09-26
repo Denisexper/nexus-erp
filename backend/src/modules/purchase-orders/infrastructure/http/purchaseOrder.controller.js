@@ -4,6 +4,7 @@ import {
   PurchaseQuotationNotFoundForOrderError,
   PurchaseQuotationNotSelectableError,
   BranchNotFoundForPurchaseOrderError,
+  InactiveBranchForPurchaseOrderError,
   WarehouseNotFoundForPurchaseOrderError,
   ExpenseTypeNotFoundForOrderError,
   InvalidExpenseAmountError,
@@ -16,6 +17,7 @@ const BAD_REQUEST_ERRORS = [
   InvalidPurchaseOrderIdError,
   PurchaseQuotationNotSelectableError,
   BranchNotFoundForPurchaseOrderError,
+  InactiveBranchForPurchaseOrderError,
   WarehouseNotFoundForPurchaseOrderError,
   ExpenseTypeNotFoundForOrderError,
   InvalidExpenseAmountError,
@@ -47,6 +49,7 @@ const toExpenseDTO = (expense) => ({
   expenseType: expense.expenseType,
   description: expense.description,
   amount: expense.amount,
+  isCostable: expense.isCostable,
 });
 
 const toPurchaseOrderDTO = (order) => ({
@@ -96,7 +99,7 @@ const pickDefinedFields = (body, keys) =>
 
 const CREATE_FIELDS = ['purchaseQuotation', 'branch', 'warehouse', 'expectedDate', 'currency', 'paymentTerms', 'notes'];
 const UPDATE_FIELDS = ['branch', 'warehouse', 'expectedDate', 'currency', 'paymentTerms', 'notes'];
-const EXPENSE_FIELDS = ['expenseType', 'description', 'amount'];
+const EXPENSE_FIELDS = ['expenseType', 'description', 'amount', 'isCostable'];
 
 export class PurchaseOrderController {
   constructor({

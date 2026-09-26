@@ -2,6 +2,7 @@ import {
   InvalidWarehouseIdError,
   WarehouseNotFoundError,
   BranchNotFoundForWarehouseError,
+  InactiveBranchForWarehouseError,
   WarehouseCategoryNotFoundForWarehouseError,
   DuplicateWarehouseNameError,
 } from '../../domain/errors.js';
@@ -42,6 +43,7 @@ export class WarehouseController {
     if (error instanceof InvalidWarehouseIdError) return res.status(400).json({ msj: error.message });
     if (error instanceof WarehouseNotFoundError) return res.status(404).json({ msj: error.message });
     if (error instanceof BranchNotFoundForWarehouseError) return res.status(400).json({ msj: error.message });
+    if (error instanceof InactiveBranchForWarehouseError) return res.status(400).json({ msj: error.message });
     if (error instanceof WarehouseCategoryNotFoundForWarehouseError) return res.status(400).json({ msj: error.message });
     if (error instanceof DuplicateWarehouseNameError) return res.status(400).json({ msj: error.message });
     return res.status(500).json({ msj: fallbackMsj, error: error.message });

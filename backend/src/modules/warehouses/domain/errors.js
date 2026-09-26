@@ -23,6 +23,13 @@ export class BranchNotFoundForWarehouseError extends DomainError {
   }
 }
 
+// RN-BRA-004: una sucursal inactiva no puede generar transacciones nuevas.
+export class InactiveBranchForWarehouseError extends DomainError {
+  constructor() {
+    super('No se puede crear un almacén bajo una sucursal inactiva');
+  }
+}
+
 export class WarehouseCategoryNotFoundForWarehouseError extends DomainError {
   constructor() {
     super('La categoría de almacén indicada no existe');

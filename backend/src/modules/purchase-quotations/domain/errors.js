@@ -17,6 +17,15 @@ export class InvalidPurchaseQuotationIdError extends DomainError {
   }
 }
 
+// RN-EMP-005: una empresa inactiva no puede generar transacciones nuevas.
+// La cotización no tiene sucursal propia (queda ligada a la de las
+// solicitudes de origen), así que acá el chequeo es a nivel de empresa.
+export class InactiveCompanyForQuotationError extends DomainError {
+  constructor() {
+    super('No se puede registrar una cotización bajo una empresa inactiva');
+  }
+}
+
 export class SupplierNotFoundForQuotationError extends DomainError {
   constructor() {
     super('El proveedor indicado no existe');

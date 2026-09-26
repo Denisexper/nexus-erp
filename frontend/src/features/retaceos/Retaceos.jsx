@@ -148,7 +148,7 @@ function Retaceos() {
                       Código
                     </th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Orden de compra
+                      Compra
                     </th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Proveedor
@@ -175,7 +175,7 @@ function Retaceos() {
                           </p>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                          {retaceo.purchaseOrder?.code || "-"}
+                          {retaceo.purchase?.code || "-"}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                           {retaceo.supplier?.name || "-"}

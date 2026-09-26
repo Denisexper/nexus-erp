@@ -17,21 +17,21 @@ export class InvalidRetaceoIdError extends DomainError {
   }
 }
 
-export class PurchaseOrderNotFoundForRetaceoError extends DomainError {
+export class PurchaseNotFoundForRetaceoError extends DomainError {
   constructor() {
-    super('La orden de compra indicada no existe');
+    super('La compra indicada no existe');
   }
 }
 
-export class PurchaseOrderNotRetaceableError extends DomainError {
+export class PurchaseNotRetaceableError extends DomainError {
   constructor() {
-    super('Solo se puede retacear una orden de compra aprobada');
+    super('Solo se puede retacear una compra recibida');
   }
 }
 
-export class PurchaseOrderAlreadyRetaceadoError extends DomainError {
+export class PurchaseAlreadyRetaceadoError extends DomainError {
   constructor() {
-    super('Esta orden de compra ya tiene un retaceo registrado');
+    super('Esta compra ya tiene un retaceo registrado');
   }
 }
 
