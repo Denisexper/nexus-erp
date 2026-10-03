@@ -100,13 +100,6 @@ function PurchaseRequestDetailModal(props) {
       "¿Enviar esta solicitud? Ya no podrás editar sus líneas.",
     );
 
-  const approve = () =>
-    runAction(
-      "Solicitud aprobada correctamente",
-      () => purchaseRequestsApi.approve(purchaseRequest()._id),
-      "¿Aprobar esta solicitud?",
-    );
-
   const reject = () =>
     runAction(
       "Solicitud rechazada correctamente",
@@ -172,11 +165,6 @@ function PurchaseRequestDetailModal(props) {
                 Enviar solicitud
               </button>
             </Show>
-            <Show when={purchaseRequest()?.status === "submitted" && auth.hasPermission("purchase_requests.approve")}>
-              <button disabled={actionLoading()} onClick={approve} class="text-xs px-3 py-1.5 rounded-md border border-mint-600/30 text-mint-700 dark:text-mint hover:bg-mint-600/10 transition-colors disabled:opacity-50">
-                Aprobar
-              </button>
-            </Show>
             <Show when={purchaseRequest()?.status === "submitted" && auth.hasPermission("purchase_requests.reject")}>
               <button disabled={actionLoading()} onClick={reject} class="text-xs px-3 py-1.5 rounded-md border border-coral-200 dark:border-coral/30 text-coral-600 dark:text-coral hover:bg-coral-50 dark:hover:bg-coral/10 transition-colors disabled:opacity-50">
                 Rechazar
@@ -184,7 +172,7 @@ function PurchaseRequestDetailModal(props) {
             </Show>
             <Show
               when={
-                ["draft", "submitted", "approved"].includes(purchaseRequest()?.status) &&
+                ["draft", "submitted"].includes(purchaseRequest()?.status) &&
                 auth.hasPermission("purchase_requests.cancel")
               }
             >
@@ -199,7 +187,7 @@ function PurchaseRequestDetailModal(props) {
             </Show>
             <Show
               when={
-                !["draft", "submitted", "approved"].includes(purchaseRequest()?.status) &&
+                !["draft", "submitted"].includes(purchaseRequest()?.status) &&
                 !(QUOTED_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_quotations.view"))
               }
             >

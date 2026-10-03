@@ -147,7 +147,6 @@ function PurchaseRequests() {
                 <option value="">Todos los estados</option>
                 <option value="draft">Borrador</option>
                 <option value="submitted">Enviada</option>
-                <option value="approved">Aprobada</option>
                 <option value="rejected">Rechazada</option>
                 <option value="cancelled">Cancelada</option>
                 <option value="partially_quoted">Parcialmente cotizada</option>

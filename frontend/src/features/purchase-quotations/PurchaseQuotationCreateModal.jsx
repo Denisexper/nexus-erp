@@ -6,16 +6,16 @@ import { suppliersApi } from "../../services/suppliers.api";
 import { expenseTypesApi } from "../../services/expenseTypes.api";
 import { showToast } from "../../utils/toast";
 
-// Solicitudes con líneas que todavía admiten cotización (ERS 6.8): aprobadas
-// del todo, o parcialmente cotizadas (les faltan líneas por cubrir). El
-// backend solo filtra por un status exacto, así que se piden ambos y se
-// combinan acá.
+// Solicitudes con líneas que todavía admiten cotización (ERS 6.8): recién
+// enviadas, o parcialmente cotizadas (les faltan líneas por cubrir). No hay
+// paso de aprobación intermedio. El backend solo filtra por un status
+// exacto, así que se piden ambos y se combinan acá.
 const fetchQuotableRequests = async () => {
-  const [approved, partiallyQuoted] = await Promise.all([
-    purchaseRequestsApi.getAll({ status: "approved", limit: 1000 }),
+  const [submitted, partiallyQuoted] = await Promise.all([
+    purchaseRequestsApi.getAll({ status: "submitted", limit: 1000 }),
     purchaseRequestsApi.getAll({ status: "partially_quoted", limit: 1000 }),
   ]);
-  return [...(approved.data || []), ...(partiallyQuoted.data || [])];
+  return [...(submitted.data || []), ...(partiallyQuoted.data || [])];
 };
 
 function PurchaseQuotationCreateModal(props) {
