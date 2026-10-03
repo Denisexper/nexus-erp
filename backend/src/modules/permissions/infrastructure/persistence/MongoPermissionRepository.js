@@ -39,4 +39,11 @@ export class MongoPermissionRepository extends PermissionRepository {
         );
         return toDomain(doc);
     }
+
+    async deactivateMissing(discoveredCodes) {
+        await PermissionModel.updateMany(
+            { code: { $nin: discoveredCodes }, isActive: true },
+            { isActive: false }
+        );
+    }
 }

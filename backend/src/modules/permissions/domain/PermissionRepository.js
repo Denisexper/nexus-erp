@@ -11,4 +11,8 @@ export class PermissionRepository {
   async upsertByCode(_permission) {
     throw new Error('PermissionRepository.upsertByCode no implementado');
   }
+
+  async deactivateMissing(_discoveredCodes) {
+    throw new Error('PermissionRepository.deactivateMissing no implementado');
+  }
 }
