@@ -356,6 +356,11 @@ function PurchaseRequests() {
           <PurchaseRequestConsolidatedModal
             requests={selectedList()}
             onClose={() => setShowConsolidatedModal(false)}
+            onQuotationCreated={() => {
+              setShowConsolidatedModal(false);
+              clearSelection();
+              refetch();
+            }}
           />
         </Show>
       </Layout>

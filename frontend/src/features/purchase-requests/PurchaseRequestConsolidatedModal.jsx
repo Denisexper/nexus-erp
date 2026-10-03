@@ -1,5 +1,6 @@
-import { createResource, createMemo, Show, For } from "solid-js";
+import { createSignal, createResource, createMemo, Show, For } from "solid-js";
 import { purchaseRequestDetailsApi } from "../../services/purchaseRequestDetails.api";
+import PurchaseQuotationCreateModal from "../purchase-quotations/PurchaseQuotationCreateModal";
 
 // Junta las líneas de varias solicitudes a la vez para que Compras pueda
 // analizarlas antes de decidir cómo cotizar/ordenar (pedido de Denis tras la
@@ -14,6 +15,12 @@ const fetchLinesForRequests = async (requests) => {
 
 function PurchaseRequestConsolidatedModal(props) {
   const [groups] = createResource(() => props.requests, fetchLinesForRequests);
+  const [showQuotationModal, setShowQuotationModal] = createSignal(false);
+
+  const handleQuotationSaved = () => {
+    setShowQuotationModal(false);
+    props.onQuotationCreated?.();
+  };
 
   const consolidated = createMemo(() => {
     const data = groups();
@@ -122,12 +129,25 @@ function PurchaseRequestConsolidatedModal(props) {
           </Show>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
-          <button onClick={props.onClose} class="btn-secondary w-full">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+          <button onClick={props.onClose} class="btn-secondary flex-1">
             Cerrar
           </button>
+          <Show when={consolidated().length > 0}>
+            <button onClick={() => setShowQuotationModal(true)} class="btn-primary flex-1">
+              Crear cotización con estas solicitudes
+            </button>
+          </Show>
         </div>
       </div>
+
+      <Show when={showQuotationModal()}>
+        <PurchaseQuotationCreateModal
+          presetRequests={props.requests}
+          onClose={() => setShowQuotationModal(false)}
+          onSaved={handleQuotationSaved}
+        />
+      </Show>
     </div>
   );
 }
