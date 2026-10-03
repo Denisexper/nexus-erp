@@ -6,16 +6,16 @@ import { suppliersApi } from "../../services/suppliers.api";
 import { expenseTypesApi } from "../../services/expenseTypes.api";
 import { showToast } from "../../utils/toast";
 
-// Solicitudes con líneas que todavía admiten cotización (ERS 6.8): aprobadas
-// del todo, o parcialmente cotizadas (les faltan líneas por cubrir). El
-// backend solo filtra por un status exacto, así que se piden ambos y se
-// combinan acá.
+// Solicitudes con líneas que todavía admiten cotización (ERS 6.8): recién
+// enviadas, o parcialmente cotizadas (les faltan líneas por cubrir). No hay
+// paso de aprobación intermedio. El backend solo filtra por un status
+// exacto, así que se piden ambos y se combinan acá.
 const fetchQuotableRequests = async () => {
-  const [approved, partiallyQuoted] = await Promise.all([
-    purchaseRequestsApi.getAll({ status: "approved", limit: 1000 }),
+  const [submitted, partiallyQuoted] = await Promise.all([
+    purchaseRequestsApi.getAll({ status: "submitted", limit: 1000 }),
     purchaseRequestsApi.getAll({ status: "partially_quoted", limit: 1000 }),
   ]);
-  return [...(approved.data || []), ...(partiallyQuoted.data || [])];
+  return [...(submitted.data || []), ...(partiallyQuoted.data || [])];
 };
 
 function PurchaseQuotationCreateModal(props) {
@@ -34,25 +34,52 @@ function PurchaseQuotationCreateModal(props) {
 
   const [suppliers] = createResource(() => suppliersApi.getAll({ isActive: true, limit: 1000 }));
   const [expenseTypes] = createResource(() => expenseTypesApi.getAll({ isActive: true, limit: 1000 }));
-  const [quotableRequests] = createResource(fetchQuotableRequests);
+  // Si viene de la vista consolidada (props.presetRequests) ya sabemos qué
+  // solicitudes queremos: no hace falta el selector de "una por una".
+  const [quotableRequests] = createResource(() => (props.presetRequests ? null : true), fetchQuotableRequests);
 
-  // --- "Agregar desde solicitud" ---
+  // --- "Agregar desde solicitud" (una por una) ---
   const [pickingRequest, setPickingRequest] = createSignal("");
   const [requestDetails] = createResource(
-    () => pickingRequest() || undefined,
+    () => (!props.presetRequests && pickingRequest()) || undefined,
     (purchaseRequest) => purchaseRequestDetailsApi.getAll({ purchaseRequest, limit: 1000 }),
   );
+
+  // --- "Agregar desde varias solicitudes" (consolidado) ---
+  const [presetDetails] = createResource(
+    () => props.presetRequests || null,
+    async (requests) => {
+      const results = await Promise.all(
+        requests.map((r) => purchaseRequestDetailsApi.getAll({ purchaseRequest: r._id, limit: 1000 })),
+      );
+      return requests.map((request, i) => ({ request, lines: results[i]?.data || [] }));
+    },
+  );
+
   const [checkedSources, setCheckedSources] = createSignal({});
 
   const toggleSource = (detailId, checked) => {
     setCheckedSources((prev) => ({ ...prev, [detailId]: checked }));
   };
 
+  // En modo consolidado todo viene pre-chequeado (ya se revisó en la vista
+  // anterior); el usuario solo destildaría algo puntual.
+  const isSourceChecked = (detailId) => {
+    const explicit = checkedSources()[detailId];
+    return explicit !== undefined ? explicit : !!props.presetRequests;
+  };
+
   const requestOptions = createMemo(() => quotableRequests() || []);
 
   const addCheckedSources = () => {
-    const details = requestDetails()?.data || [];
-    const picked = details.filter((d) => checkedSources()[d._id]);
+    const visible = props.presetRequests
+      ? (presetDetails() || []).flatMap((g) => g.lines.map((l) => ({ ...l, _requestCode: g.request.code })))
+      : (requestDetails()?.data || []).map((l) => ({
+          ...l,
+          _requestCode: requestOptions().find((r) => r._id === pickingRequest())?.code,
+        }));
+
+    const picked = visible.filter((d) => isSourceChecked(d._id));
     if (picked.length === 0) return;
 
     setLines((prev) => {
@@ -63,7 +90,7 @@ function PurchaseQuotationCreateModal(props) {
         const source = {
           purchaseRequestDetail: detail._id,
           quantity: detail.quantity,
-          requestCode: requestOptions().find((r) => r._id === pickingRequest())?.code,
+          requestCode: detail._requestCode,
           productLabel: detail.product?.name,
           maxQuantity: detail.quantity,
         };
@@ -133,7 +160,7 @@ function PurchaseQuotationCreateModal(props) {
     setError("");
 
     if (lines().length === 0) {
-      setError("Agrega al menos un producto desde una solicitud aprobada.");
+      setError("Agrega al menos un producto desde una solicitud enviada.");
       return;
     }
 
@@ -220,51 +247,98 @@ function PurchaseQuotationCreateModal(props) {
             </div>
           </div>
 
-          {/* Agregar productos desde una solicitud aprobada */}
+          {/* Agregar productos desde solicitud(es) */}
           <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-4 space-y-3">
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Agregar productos desde una solicitud aprobada
-            </p>
-            <select
-              class="input-field w-full"
-              value={pickingRequest()}
-              onChange={(e) => {
-                setPickingRequest(e.target.value);
-                setCheckedSources({});
-              }}
-            >
-              <option value="">Seleccionar solicitud...</option>
-              <For each={requestOptions()}>
-                {(r) => (
-                  <option value={r._id}>
-                    {r.code} — {r.branch?.name} / {r.warehouse?.name}
-                  </option>
-                )}
-              </For>
-            </select>
+            <Show when={!props.presetRequests}>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Agregar productos desde una solicitud enviada
+              </p>
+              <select
+                class="input-field w-full"
+                value={pickingRequest()}
+                onChange={(e) => {
+                  setPickingRequest(e.target.value);
+                  setCheckedSources({});
+                }}
+              >
+                <option value="">Seleccionar solicitud...</option>
+                <For each={requestOptions()}>
+                  {(r) => (
+                    <option value={r._id}>
+                      {r.code} — {r.branch?.name} / {r.warehouse?.name}
+                    </option>
+                  )}
+                </For>
+              </select>
 
-            <Show when={pickingRequest()}>
-              <Show when={requestDetails.loading}>
+              <Show when={pickingRequest()}>
+                <Show when={requestDetails.loading}>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Cargando líneas...</p>
+                </Show>
+                <Show when={requestDetails() && requestDetails().data.length === 0}>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Esta solicitud no tiene líneas pendientes.</p>
+                </Show>
+                <Show when={requestDetails() && requestDetails().data.length > 0}>
+                  <div class="space-y-2">
+                    <For each={requestDetails()?.data}>
+                      {(detail) => (
+                        <label class="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={isSourceChecked(detail._id)}
+                            onChange={(e) => toggleSource(detail._id, e.target.checked)}
+                          />
+                          {detail.product?.name} — {detail.quantity} {detail.unit?.name}
+                          <Show when={detail.description}>
+                            <span class="text-gray-400">({detail.description})</span>
+                          </Show>
+                        </label>
+                      )}
+                    </For>
+                    <button type="button" onClick={addCheckedSources} class="btn-secondary text-xs px-3 py-1.5">
+                      + Agregar seleccionadas
+                    </button>
+                  </div>
+                </Show>
+              </Show>
+            </Show>
+
+            <Show when={props.presetRequests}>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Productos de las {props.presetRequests.length} solicitudes seleccionadas
+              </p>
+              <Show when={presetDetails.loading}>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Cargando líneas...</p>
               </Show>
-              <Show when={requestDetails() && requestDetails().data.length === 0}>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Esta solicitud no tiene líneas pendientes.</p>
-              </Show>
-              <Show when={requestDetails() && requestDetails().data.length > 0}>
-                <div class="space-y-2">
-                  <For each={requestDetails()?.data}>
-                    {(detail) => (
-                      <label class="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={!!checkedSources()[detail._id]}
-                          onChange={(e) => toggleSource(detail._id, e.target.checked)}
-                        />
-                        {detail.product?.name} — {detail.quantity} {detail.unit?.name}
-                        <Show when={detail.description}>
-                          <span class="text-gray-400">({detail.description})</span>
+              <Show when={presetDetails()}>
+                <div class="space-y-3">
+                  <For each={presetDetails()}>
+                    {(group) => (
+                      <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                          {group.request.code}
+                        </p>
+                        <Show when={group.lines.length === 0}>
+                          <p class="text-xs text-gray-400">Sin líneas pendientes.</p>
                         </Show>
-                      </label>
+                        <div class="space-y-1">
+                          <For each={group.lines}>
+                            {(detail) => (
+                              <label class="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={isSourceChecked(detail._id)}
+                                  onChange={(e) => toggleSource(detail._id, e.target.checked)}
+                                />
+                                {detail.product?.name} — {detail.quantity} {detail.unit?.name}
+                                <Show when={detail.description}>
+                                  <span class="text-gray-400">({detail.description})</span>
+                                </Show>
+                              </label>
+                            )}
+                          </For>
+                        </div>
+                      </div>
                     )}
                   </For>
                   <button type="button" onClick={addCheckedSources} class="btn-secondary text-xs px-3 py-1.5">

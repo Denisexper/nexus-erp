@@ -43,7 +43,6 @@ export class PurchaseRequestController {
     createPurchaseRequest,
     updatePurchaseRequest,
     submitPurchaseRequest,
-    approvePurchaseRequest,
     rejectPurchaseRequest,
     cancelPurchaseRequest,
   }) {
@@ -52,7 +51,6 @@ export class PurchaseRequestController {
     this.createPurchaseRequestUseCase = createPurchaseRequest;
     this.updatePurchaseRequestUseCase = updatePurchaseRequest;
     this.submitPurchaseRequestUseCase = submitPurchaseRequest;
-    this.approvePurchaseRequestUseCase = approvePurchaseRequest;
     this.rejectPurchaseRequestUseCase = rejectPurchaseRequest;
     this.cancelPurchaseRequestUseCase = cancelPurchaseRequest;
   }
@@ -139,15 +137,6 @@ export class PurchaseRequestController {
       res.status(200).json({ msj: 'Solicitud de compra enviada correctamente', purchaseRequest: toPurchaseRequestDTO(purchaseRequest) });
     } catch (error) {
       this.#handleError(res, error, 'Error al enviar la solicitud de compra');
-    }
-  };
-
-  approve = async (req, res) => {
-    try {
-      const purchaseRequest = await this.approvePurchaseRequestUseCase.execute(req.params.id, req.user.companyId);
-      res.status(200).json({ msj: 'Solicitud de compra aprobada correctamente', purchaseRequest: toPurchaseRequestDTO(purchaseRequest) });
-    } catch (error) {
-      this.#handleError(res, error, 'Error al aprobar la solicitud de compra');
     }
   };
 

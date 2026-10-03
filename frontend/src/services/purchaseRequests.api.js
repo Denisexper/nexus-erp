@@ -28,10 +28,6 @@ export const purchaseRequestsApi = {
     return http.request(`/purchase-requests/${id}/submit`, { method: "PATCH" });
   },
 
-  approve(id) {
-    return http.request(`/purchase-requests/${id}/approve`, { method: "PATCH" });
-  },
-
   reject(id) {
     return http.request(`/purchase-requests/${id}/reject`, { method: "PATCH" });
   },

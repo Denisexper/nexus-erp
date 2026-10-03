@@ -14,7 +14,6 @@ import { GetPurchaseRequestByIdUseCase } from '../../application/use-cases/getPu
 import { CreatePurchaseRequestUseCase } from '../../application/use-cases/createPurchaseRequest.js';
 import { UpdatePurchaseRequestUseCase } from '../../application/use-cases/updatePurchaseRequest.js';
 import { SubmitPurchaseRequestUseCase } from '../../application/use-cases/submitPurchaseRequest.js';
-import { ApprovePurchaseRequestUseCase } from '../../application/use-cases/approvePurchaseRequest.js';
 import { RejectPurchaseRequestUseCase } from '../../application/use-cases/rejectPurchaseRequest.js';
 import { CancelPurchaseRequestUseCase } from '../../application/use-cases/cancelPurchaseRequest.js';
 import { PurchaseRequestController } from './purchaseRequest.controller.js';
@@ -31,7 +30,6 @@ const controller = new PurchaseRequestController({
     createPurchaseRequest: new CreatePurchaseRequestUseCase(purchaseRequestRepository, branchRepository, warehouseRepository),
     updatePurchaseRequest: new UpdatePurchaseRequestUseCase(purchaseRequestRepository, branchRepository, warehouseRepository),
     submitPurchaseRequest: new SubmitPurchaseRequestUseCase(purchaseRequestRepository, purchaseRequestDetailRepository),
-    approvePurchaseRequest: new ApprovePurchaseRequestUseCase(purchaseRequestRepository),
     rejectPurchaseRequest: new RejectPurchaseRequestUseCase(purchaseRequestRepository),
     cancelPurchaseRequest: new CancelPurchaseRequestUseCase(purchaseRequestRepository),
 });
@@ -68,8 +66,9 @@ const purchaseRequestAudit = {
 // (expense-types). Detalle de líneas vive en el módulo hermano
 // purchase-request-details (mismo patrón que suppliers/supplier-contacts).
 // Solo editable en estado draft; las transiciones de estado son endpoints
-// explícitos (submit/approve/reject/cancel), igual que activate/deactivate
-// en otros módulos.
+// explícitos (submit/reject/cancel), igual que activate/deactivate en otros
+// módulos. No hay paso de aprobación: al enviarse (submitted) ya queda
+// visible y accionable para el departamento de Compras.
 const routes = [
     {
         method: 'GET',
@@ -117,14 +116,6 @@ const routes = [
         permission: 'purchase_requests.submit',
         description: 'Enviar solicitud de compra',
         handler: controller.submit,
-        middlewares: [logAction({ ...purchaseRequestAudit, action: 'update', resource: 'purchase_requests', responseKey: 'purchaseRequest' })]
-    },
-    {
-        method: 'PATCH',
-        path: '/:id/approve',
-        permission: 'purchase_requests.approve',
-        description: 'Aprobar solicitud de compra',
-        handler: controller.approve,
         middlewares: [logAction({ ...purchaseRequestAudit, action: 'update', resource: 'purchase_requests', responseKey: 'purchaseRequest' })]
     },
     {

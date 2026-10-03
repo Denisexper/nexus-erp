@@ -19,8 +19,9 @@ import {
 import { resolvePurchaseRequestIdsForCompany } from '#shared/lib/tenantScope.js';
 
 // Estados de PurchaseRequest desde los que se puede seguir cotizando (ERS
-// 6.8: draft -> submitted -> approved -> partially_quoted -> quoted -> ...).
-const QUOTABLE_REQUEST_STATUSES = ['approved', 'partially_quoted'];
+// 6.8: draft -> submitted -> partially_quoted -> quoted -> ...). No hay paso
+// de aprobación: Compras cotiza directo desde una solicitud enviada.
+const QUOTABLE_REQUEST_STATUSES = ['submitted', 'partially_quoted'];
 
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
