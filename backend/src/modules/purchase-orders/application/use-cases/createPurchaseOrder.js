@@ -13,7 +13,7 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 // generar una orden (ERS 6.8: ... -> partially_quoted -> quoted ->
 // partially_ordered -> completed). Nunca se retrocede ni se toca una
 // solicitud rechazada/cancelada.
-const ORDERABLE_REQUEST_STATUSES = ['approved', 'partially_quoted', 'quoted', 'partially_ordered'];
+const ORDERABLE_REQUEST_STATUSES = ['partially_quoted', 'quoted', 'partially_ordered'];
 
 // RN-COM-010: una orden se genera copiando íntegramente la cotización
 // seleccionada (cabecera + líneas + gastos) — no hay tabla puente entre
