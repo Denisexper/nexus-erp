@@ -36,7 +36,8 @@ export const purchaseQuotationsApi = {
     return http.request(`/purchase-quotations/${id}/history`);
   },
 
-  getComparison(purchaseRequestId) {
-    return http.request(`/purchase-quotations/comparison/${purchaseRequestId}`);
+  getComparison(purchaseRequestIds) {
+    const ids = Array.isArray(purchaseRequestIds) ? purchaseRequestIds : [purchaseRequestIds];
+    return http.request(`/purchase-quotations/comparison/${ids.join(",")}`);
   },
 };

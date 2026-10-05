@@ -284,8 +284,8 @@ function PurchaseRequestDetailModal(props) {
 
       <Show when={showComparisonModal()}>
         <PurchaseQuotationComparisonModal
-          purchaseRequestId={purchaseRequest()?._id}
-          requestCode={purchaseRequest()?.code}
+          purchaseRequestIds={[purchaseRequest()?._id]}
+          requestCodes={[purchaseRequest()?.code]}
           onClose={() => setShowComparisonModal(false)}
         />
       </Show>
