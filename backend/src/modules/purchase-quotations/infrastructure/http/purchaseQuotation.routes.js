@@ -100,9 +100,9 @@ const routes = [
     },
     {
         method: 'GET',
-        path: '/comparison/:purchaseRequestId',
+        path: '/comparison/:purchaseRequestIds',
         permission: 'purchase_quotations.view',
-        description: 'Comparar cotizaciones recibidas para una solicitud de compra',
+        description: 'Comparar cotizaciones recibidas para una o varias solicitudes de compra (IDs separados por coma)',
         handler: controller.getComparison,
         middlewares: []
     },

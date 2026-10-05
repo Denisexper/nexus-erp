@@ -178,7 +178,8 @@ export class PurchaseQuotationController {
 
   getComparison = async (req, res) => {
     try {
-      const entries = await this.getPurchaseQuotationsComparisonUseCase.execute(req.params.purchaseRequestId, req.user.companyId);
+      const purchaseRequestIds = req.params.purchaseRequestIds.split(',').map((id) => id.trim()).filter(Boolean);
+      const entries = await this.getPurchaseQuotationsComparisonUseCase.execute(purchaseRequestIds, req.user.companyId);
       res.status(200).json({
         msj: entries.length === 0 ? 'no hay cotizaciones registradas para esta solicitud' : 'Comparación obtenida correctamente',
         data: entries.map(({ quotation, lines }) => ({

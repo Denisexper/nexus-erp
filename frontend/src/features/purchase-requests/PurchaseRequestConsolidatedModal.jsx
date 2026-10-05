@@ -1,6 +1,7 @@
 import { createSignal, createResource, createMemo, Show, For } from "solid-js";
 import { purchaseRequestDetailsApi } from "../../services/purchaseRequestDetails.api";
 import PurchaseQuotationCreateModal from "../purchase-quotations/PurchaseQuotationCreateModal";
+import PurchaseQuotationComparisonModal from "../purchase-quotations/PurchaseQuotationComparisonModal";
 
 // Junta las líneas de varias solicitudes a la vez para que Compras pueda
 // analizarlas antes de decidir cómo cotizar/ordenar (pedido de Denis tras la
@@ -16,6 +17,7 @@ const fetchLinesForRequests = async (requests) => {
 function PurchaseRequestConsolidatedModal(props) {
   const [groups] = createResource(() => props.requests, fetchLinesForRequests);
   const [showQuotationModal, setShowQuotationModal] = createSignal(false);
+  const [showComparisonModal, setShowComparisonModal] = createSignal(false);
 
   const handleQuotationSaved = () => {
     setShowQuotationModal(false);
@@ -134,6 +136,9 @@ function PurchaseRequestConsolidatedModal(props) {
             Cerrar
           </button>
           <Show when={consolidated().length > 0}>
+            <button onClick={() => setShowComparisonModal(true)} class="btn-secondary flex-1">
+              Comparar cotizaciones
+            </button>
             <button onClick={() => setShowQuotationModal(true)} class="btn-primary flex-1">
               Crear cotización con estas solicitudes
             </button>
@@ -146,6 +151,14 @@ function PurchaseRequestConsolidatedModal(props) {
           presetRequests={props.requests}
           onClose={() => setShowQuotationModal(false)}
           onSaved={handleQuotationSaved}
+        />
+      </Show>
+
+      <Show when={showComparisonModal()}>
+        <PurchaseQuotationComparisonModal
+          purchaseRequestIds={props.requests.map((r) => r._id)}
+          requestCodes={props.requests.map((r) => r.code)}
+          onClose={() => setShowComparisonModal(false)}
         />
       </Show>
     </div>

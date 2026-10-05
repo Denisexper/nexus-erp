@@ -2,14 +2,14 @@ import { createResource, Show, For } from "solid-js";
 import { purchaseQuotationsApi } from "../../services/purchaseQuotations.api";
 import { statusLabel, statusBadgeClass, formatMoney } from "./statusMeta";
 
-// Pantalla de comparación (ERS 6.8.24): cotizaciones lado a lado para una
-// misma solicitud. A propósito NO resalta "la más barata" como mejor opción
-// automáticamente (CA-COM del ERS lo advierte explícito) — solo muestra los
-// datos para que el comprador decida.
+// Pantalla de comparación (ERS 6.8.24): cotizaciones lado a lado para una o
+// varias solicitudes a la vez (ver consolidado). A propósito NO resalta "la
+// más barata" como mejor opción automáticamente (CA-COM del ERS lo advierte
+// explícito) — solo muestra los datos para que el comprador decida.
 function PurchaseQuotationComparisonModal(props) {
   const [comparison] = createResource(
-    () => props.purchaseRequestId,
-    (id) => purchaseQuotationsApi.getComparison(id),
+    () => props.purchaseRequestIds,
+    (ids) => purchaseQuotationsApi.getComparison(ids),
   );
 
   return (
@@ -20,7 +20,9 @@ function PurchaseQuotationComparisonModal(props) {
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
               Comparación de cotizaciones
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{props.requestCode}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {Array.isArray(props.requestCodes) ? props.requestCodes.join(", ") : props.requestCodes}
+            </p>
           </div>
           <button onClick={props.onClose} class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
             ✕

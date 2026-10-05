@@ -7,15 +7,20 @@ export class GetPurchaseQuotationsComparisonUseCase {
     this.purchaseRequestDetailRepository = purchaseRequestDetailRepository;
   }
 
-  async execute(purchaseRequestId, companyId) {
-    const purchaseRequest = await this.purchaseRequestRepository.findById(purchaseRequestId, companyId);
-    if (!purchaseRequest) throw new PurchaseRequestNotFoundForQuotationComparisonError();
+  async execute(purchaseRequestIds, companyId) {
+    const ids = Array.isArray(purchaseRequestIds) ? purchaseRequestIds : [purchaseRequestIds];
 
-    const { items: requestDetails } = await this.purchaseRequestDetailRepository.findAll({
-      purchaseRequest: purchaseRequestId,
-      limit: 1000,
-    });
-    const detailIds = requestDetails.map((detail) => detail.id);
+    const detailIds = [];
+    for (const purchaseRequestId of ids) {
+      const purchaseRequest = await this.purchaseRequestRepository.findById(purchaseRequestId, companyId);
+      if (!purchaseRequest) throw new PurchaseRequestNotFoundForQuotationComparisonError();
+
+      const { items: requestDetails } = await this.purchaseRequestDetailRepository.findAll({
+        purchaseRequest: purchaseRequestId,
+        limit: 1000,
+      });
+      detailIds.push(...requestDetails.map((detail) => detail.id));
+    }
 
     return this.purchaseQuotationRepository.findComparisonForRequestDetailIds(detailIds, companyId);
   }
