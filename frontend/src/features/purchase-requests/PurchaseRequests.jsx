@@ -1,4 +1,4 @@
-import { createSignal, createResource, Show, For } from "solid-js";
+import { createSignal, createResource, createMemo, Show, For } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { purchaseRequestsApi } from "../../services/purchaseRequests.api";
 import { useAuth } from "../../context/AuthContext";
@@ -9,6 +9,12 @@ import { statusLabel, statusBadgeClass } from "./statusMeta";
 import PurchaseRequestFormModal from "./PurchaseRequestFormModal";
 import PurchaseRequestDetailModal from "./PurchaseRequestDetailModal";
 import PurchaseRequestHistoryModal from "./PurchaseRequestHistoryModal";
+import PurchaseRequestConsolidatedModal from "./PurchaseRequestConsolidatedModal";
+
+// Solo tiene sentido consolidar solicitudes que todavía admiten cotización
+// (ver QUOTABLE_REQUEST_STATUSES en el backend) — una en borrador, rechazada
+// o ya completada no aporta nada a un análisis de compra conjunto.
+const CONSOLIDATABLE_STATUSES = ["submitted", "partially_quoted"];
 
 function PurchaseRequests() {
   const auth = useAuth();
@@ -54,6 +60,24 @@ function PurchaseRequests() {
 
   const [showDetailModal, setShowDetailModal] = createSignal(false);
   const [detailPurchaseRequest, setDetailPurchaseRequest] = createSignal(null);
+
+  // Mapa (no array) para que la selección sobreviva cambios de página: se
+  // guarda el objeto completo porque el consolidado necesita code/branch/etc,
+  // no solo el id.
+  const [selected, setSelected] = createSignal(new Map());
+  const selectedList = createMemo(() => Array.from(selected().values()));
+  const [showConsolidatedModal, setShowConsolidatedModal] = createSignal(false);
+
+  const toggleSelected = (purchaseRequest, checked) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      if (checked) next.set(purchaseRequest._id, purchaseRequest);
+      else next.delete(purchaseRequest._id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelected(new Map());
 
   const applyFilters = () => {
     setAppliedFilters({
@@ -147,7 +171,6 @@ function PurchaseRequests() {
                 <option value="">Todos los estados</option>
                 <option value="draft">Borrador</option>
                 <option value="submitted">Enviada</option>
-                <option value="approved">Aprobada</option>
                 <option value="rejected">Rechazada</option>
                 <option value="cancelled">Cancelada</option>
                 <option value="partially_quoted">Parcialmente cotizada</option>
@@ -167,6 +190,28 @@ function PurchaseRequests() {
             </div>
           </div>
 
+          {/* Barra de selección para consolidado */}
+          <Show when={selectedList().length > 0}>
+            <div class="card mb-4 flex items-center justify-between py-3">
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                {selectedList().length} solicitud{selectedList().length === 1 ? "" : "es"} seleccionada{selectedList().length === 1 ? "" : "s"}
+              </p>
+              <div class="flex gap-2">
+                <button onClick={clearSelection} class="btn-secondary text-xs px-3 py-1.5">
+                  Limpiar selección
+                </button>
+                <button
+                  onClick={() => setShowConsolidatedModal(true)}
+                  disabled={selectedList().length < 2}
+                  class="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
+                  title={selectedList().length < 2 ? "Selecciona al menos 2 solicitudes" : undefined}
+                >
+                  Ver consolidado ({selectedList().length})
+                </button>
+              </div>
+            </div>
+          </Show>
+
           {/* Tabla */}
           <div class="card overflow-hidden p-0">
             <Show when={purchaseRequests.loading}>
@@ -185,6 +230,7 @@ function PurchaseRequests() {
               <table class="w-full">
                 <thead>
                   <tr class="border-b border-gray-200 dark:border-gray-800">
+                    <th class="px-6 py-3"></th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Código
                     </th>
@@ -204,6 +250,15 @@ function PurchaseRequests() {
                   <For each={purchaseRequests()?.data}>
                     {(purchaseRequest) => (
                       <tr class="border-b border-gray-100 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+                        <td class="px-6 py-4">
+                          <Show when={CONSOLIDATABLE_STATUSES.includes(purchaseRequest.status)}>
+                            <input
+                              type="checkbox"
+                              checked={selected().has(purchaseRequest._id)}
+                              onChange={(e) => toggleSelected(purchaseRequest, e.target.checked)}
+                            />
+                          </Show>
+                        </td>
                         <td class="px-6 py-4">
                           <p class="text-sm font-medium text-gray-900 dark:text-white">
                             {purchaseRequest.code}
@@ -294,6 +349,18 @@ function PurchaseRequests() {
             purchaseRequest={detailPurchaseRequest()}
             onClose={() => setShowDetailModal(false)}
             onChanged={handleDetailChanged}
+          />
+        </Show>
+
+        <Show when={showConsolidatedModal()}>
+          <PurchaseRequestConsolidatedModal
+            requests={selectedList()}
+            onClose={() => setShowConsolidatedModal(false)}
+            onQuotationCreated={() => {
+              setShowConsolidatedModal(false);
+              clearSelection();
+              refetch();
+            }}
           />
         </Show>
       </Layout>

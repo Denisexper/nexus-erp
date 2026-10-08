@@ -1,7 +1,6 @@
 export const PURCHASE_REQUEST_STATUSES = [
   'draft',
   'submitted',
-  'approved',
   'rejected',
   'cancelled',
   'partially_quoted',

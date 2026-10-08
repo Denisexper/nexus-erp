@@ -23,6 +23,10 @@ export class SyncDiscoveredPermissionsUseCase {
       await this.permissionRepository.upsertByCode(new Permission(perm));
     }
 
+    // Un permiso cuya ruta ya no existe (ej. se quitó un endpoint) no debe
+    // seguir apareciendo como asignable en el catálogo/UI de roles.
+    await this.permissionRepository.deactivateMissing(discovered.map((perm) => perm.code));
+
     console.log('✅ Permisos sincronizados en base de datos');
     console.log('📊 Permisos por recurso:', Object.fromEntries(
       Object.entries(groupPermissionsByResource(discovered)).map(([resource, perms]) => [resource, perms.length])

@@ -3,7 +3,7 @@ import {
   InvalidPurchaseRequestStatusTransitionError,
 } from '../../domain/errors.js';
 
-const CANCELLABLE_FROM = ['draft', 'submitted', 'approved'];
+const CANCELLABLE_FROM = ['draft', 'submitted'];
 
 export class CancelPurchaseRequestUseCase {
   constructor(purchaseRequestRepository) {
