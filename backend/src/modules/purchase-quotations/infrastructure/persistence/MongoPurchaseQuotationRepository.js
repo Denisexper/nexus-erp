@@ -225,12 +225,18 @@ export class MongoPurchaseQuotationRepository extends PurchaseQuotationRepositor
         return this.#loadAggregate(doc);
     }
 
-    async findCoveredRequestDetailIds(purchaseRequestDetailIds) {
-        if (!purchaseRequestDetailIds || purchaseRequestDetailIds.length === 0) return [];
+    async sumQuotedQuantitiesByRequestDetailIds(purchaseRequestDetailIds) {
+        if (!purchaseRequestDetailIds || purchaseRequestDetailIds.length === 0) return {};
         const docs = await PurchaseQuotationRequestDetailModel.find({
             purchaseRequestDetail: { $in: purchaseRequestDetailIds },
-        }).distinct('purchaseRequestDetail');
-        return docs.map((id) => id.toString());
+        }).select('purchaseRequestDetail quantity');
+
+        const totals = {};
+        for (const doc of docs) {
+            const key = doc.purchaseRequestDetail.toString();
+            totals[key] = (totals[key] || 0) + doc.quantity;
+        }
+        return totals;
     }
 
     async findComparisonForRequestDetailIds(purchaseRequestDetailIds, companyId) {
@@ -283,13 +289,13 @@ export class MongoPurchaseQuotationRepository extends PurchaseQuotationRepositor
         return docs.map((doc) => doc.purchaseRequest.toString());
     }
 
-    async findOrderedRequestDetailIds(purchaseRequestDetailIds) {
-        if (!purchaseRequestDetailIds || purchaseRequestDetailIds.length === 0) return [];
+    async sumOrderedQuantitiesByRequestDetailIds(purchaseRequestDetailIds) {
+        if (!purchaseRequestDetailIds || purchaseRequestDetailIds.length === 0) return {};
 
         const sourceDocs = await PurchaseQuotationRequestDetailModel.find({
             purchaseRequestDetail: { $in: purchaseRequestDetailIds },
-        }).select('purchaseRequestDetail purchaseQuotationDetail');
-        if (sourceDocs.length === 0) return [];
+        }).select('purchaseRequestDetail purchaseQuotationDetail quantity');
+        if (sourceDocs.length === 0) return {};
 
         const quotationDetailIds = [...new Set(sourceDocs.map((s) => s.purchaseQuotationDetail.toString()))];
         const quotationDetailDocs = await PurchaseQuotationDetailModel.find({
@@ -309,13 +315,13 @@ export class MongoPurchaseQuotationRepository extends PurchaseQuotationRepositor
                 .map((d) => d._id.toString()),
         );
 
-        const orderedRequestDetailIds = new Set();
+        const totals = {};
         for (const source of sourceDocs) {
-            if (selectedDetailIds.has(source.purchaseQuotationDetail.toString())) {
-                orderedRequestDetailIds.add(source.purchaseRequestDetail.toString());
-            }
+            if (!selectedDetailIds.has(source.purchaseQuotationDetail.toString())) continue;
+            const key = source.purchaseRequestDetail.toString();
+            totals[key] = (totals[key] || 0) + source.quantity;
         }
 
-        return [...orderedRequestDetailIds];
+        return totals;
     }
 }
