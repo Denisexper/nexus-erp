@@ -169,8 +169,17 @@ generalizarla no la rompió.
 
 | # | Paso | Descripción | Severidad (bug/duda de UX/esperado) |
 |---|------|-------------|--------------------------------------|
-|   |      |             |                                      |
-|   |      |             |                                      |
+| 1 | 3 (y análogo en Órdenes) | Al cotizar/ordenar solo una **cantidad parcial** de una línea (ej. 3 de 5 unidades), la solicitud avanzaba igual a `Cotizada`/`Completada` en vez de quedarse en `Parcialmente cotizada`/`Parcialmente ordenada`, porque el cálculo de status solo miraba si la línea fue "tocada" por alguna cotización/orden, no si la **cantidad** quedó realmente cubierta. Efecto: la solicitud desaparecía de las listas seleccionables y las unidades restantes quedaban inalcanzables para siempre. **Bug confirmado y arreglado** en `fix/purchase-status-quantity-coverage` (ver detalle abajo). |
+
+### Bug encontrado y arreglado (2026-10-16)
+
+**Repro:** solicitud con línea de 5 unidades de Producto A → cotización por solo 3 → la solicitud pasaba directo a `Cotizada` (debía quedar en `Parcialmente cotizada`). Al intentar cotizar las 2 unidades restantes, el sistema las rechazaba porque la solicitud ya no estaba en un estado cotizable. Mismo patrón confirmado en Órdenes de compra (`Completada` en vez de `Parcialmente ordenada`).
+
+**Causa:** `#advanceSourceRequestsStatus` en `createPurchaseQuotation.js` y `createPurchaseOrder.js` comparaba *cantidad de líneas tocadas* contra *cantidad de líneas totales*, en vez de *cantidad cotizada/ordenada* contra *cantidad pedida* por línea.
+
+**Fix:** se reemplazaron `findCoveredRequestDetailIds`/`findOrderedRequestDetailIds` (devolvían ids binarios) por `sumQuotedQuantitiesByRequestDetailIds`/`sumOrderedQuantitiesByRequestDetailIds` (suman cantidad real por línea), y ambos use-cases ahora comparan esa suma contra `detail.quantity` antes de decidir si una línea está "completa".
+
+**Verificado con datos reales en QA Distribuciones:** solicitud SCR-00008 quedó en `partially_quoted` tras cotizar 3/5, pasó a `quoted` al cubrir las 5; con órdenes, quedó en `partially_ordered` tras ordenar la primera cotización parcial y pasó a `completed` al ordenar el resto.
 
 ---
 *Generado para validar PR #74 (`feature/purchase-request-consolidation`) y

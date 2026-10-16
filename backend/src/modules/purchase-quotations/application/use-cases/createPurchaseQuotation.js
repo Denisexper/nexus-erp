@@ -125,9 +125,10 @@ export class CreatePurchaseQuotationUseCase {
   }
 
   // Recalcula el status de cada solicitud de origen afectada: 'quoted' si
-  // todas sus líneas ya tienen al menos una cotización que las cubre,
-  // 'partially_quoted' si solo algunas. Solo avanza (nunca retrocede) y solo
-  // toca solicitudes que siguen en un estado cotizable.
+  // todas sus líneas ya tienen cantidad cotizada suficiente para cubrir lo
+  // pedido, 'partially_quoted' si solo algunas (o alguna quedó incompleta).
+  // Solo avanza (nunca retrocede) y solo toca solicitudes que siguen en un
+  // estado cotizable.
   async #advanceSourceRequestsStatus(lines) {
     const requestIds = new Set();
     for (const line of lines) {
@@ -142,11 +143,14 @@ export class CreatePurchaseQuotationUseCase {
         limit: 1000,
       });
       const detailIds = requestDetails.map((detail) => detail.id);
-      const coveredIds = await this.purchaseQuotationRepository.findCoveredRequestDetailIds(detailIds);
+      const quotedQuantities = await this.purchaseQuotationRepository.sumQuotedQuantitiesByRequestDetailIds(detailIds);
 
-      const newStatus = coveredIds.length === 0
+      const touchedCount = requestDetails.filter((detail) => (quotedQuantities[detail.id] || 0) > 0).length;
+      const fullyCoveredCount = requestDetails.filter((detail) => (quotedQuantities[detail.id] || 0) >= detail.quantity).length;
+
+      const newStatus = touchedCount === 0
         ? null
-        : (coveredIds.length >= detailIds.length ? 'quoted' : 'partially_quoted');
+        : (fullyCoveredCount >= detailIds.length ? 'quoted' : 'partially_quoted');
 
       if (!newStatus) continue;
 
