@@ -27,11 +27,12 @@ export class PurchaseQuotationRepository {
     throw new Error('PurchaseQuotationRepository.update no implementado');
   }
 
-  // ids de PurchaseRequestDetail que ya tienen al menos un vínculo de
-  // trazabilidad hacia alguna cotización (de cualquier estado, incluida esta
-  // recién creada). Usado para avanzar el status de la solicitud de origen.
-  async findCoveredRequestDetailIds(_purchaseRequestDetailIds) {
-    throw new Error('PurchaseQuotationRepository.findCoveredRequestDetailIds no implementado');
+  // Suma, por cada PurchaseRequestDetail dado, la cantidad ya cotizada
+  // (de cualquier estado, incluida esta recién creada) — {detailId: cantidad}.
+  // Usado para avanzar el status de la solicitud de origen según cuánta
+  // cantidad de cada línea quedó realmente cubierta, no solo si fue tocada.
+  async sumQuotedQuantitiesByRequestDetailIds(_purchaseRequestDetailIds) {
+    throw new Error('PurchaseQuotationRepository.sumQuotedQuantitiesByRequestDetailIds no implementado');
   }
 
   // Cotizaciones (no canceladas) que cubren alguna de las líneas de
@@ -50,11 +51,12 @@ export class PurchaseQuotationRepository {
     throw new Error('PurchaseQuotationRepository.findRequestIdsForQuotation no implementado');
   }
 
-  // De las líneas de solicitud dadas, cuáles ya quedaron "compradas": tienen
-  // trazabilidad hacia una línea de cotización cuya cotización está en
-  // status 'selected' (o sea, ya se generó una orden a partir de ella). Usado
-  // por purchase-orders para avanzar la solicitud a partially_ordered/completed.
-  async findOrderedRequestDetailIds(_purchaseRequestDetailIds) {
-    throw new Error('PurchaseQuotationRepository.findOrderedRequestDetailIds no implementado');
+  // Suma, por cada línea de solicitud dada, la cantidad ya "comprada": la
+  // trazada hacia líneas de cotización cuya cotización está en status
+  // 'selected' (o sea, ya se generó una orden a partir de ella) — {detailId:
+  // cantidad}. Usado por purchase-orders para avanzar la solicitud a
+  // partially_ordered/completed según cantidad real, no solo línea tocada.
+  async sumOrderedQuantitiesByRequestDetailIds(_purchaseRequestDetailIds) {
+    throw new Error('PurchaseQuotationRepository.sumOrderedQuantitiesByRequestDetailIds no implementado');
   }
 }

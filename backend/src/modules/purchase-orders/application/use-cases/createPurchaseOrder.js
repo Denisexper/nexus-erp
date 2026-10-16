@@ -31,8 +31,9 @@ export class CreatePurchaseOrderUseCase {
   }
 
   // Avanza cada solicitud vinculada a la cotización de origen a
-  // 'partially_ordered' o 'completed' según si todas sus líneas ya quedaron
-  // cubiertas por una cotización seleccionada (con orden generada).
+  // 'partially_ordered' o 'completed' según cuánta cantidad de cada línea ya
+  // quedó cubierta por una cotización seleccionada (con orden generada), no
+  // solo si la línea fue tocada.
   async #advanceSourceRequestsStatus(quotationId) {
     const requestIds = await this.purchaseQuotationRepository.findRequestIdsForQuotation(quotationId);
 
@@ -42,11 +43,14 @@ export class CreatePurchaseOrderUseCase {
         limit: 1000,
       });
       const detailIds = requestDetails.map((detail) => detail.id);
-      const orderedIds = await this.purchaseQuotationRepository.findOrderedRequestDetailIds(detailIds);
+      const orderedQuantities = await this.purchaseQuotationRepository.sumOrderedQuantitiesByRequestDetailIds(detailIds);
 
-      const newStatus = orderedIds.length === 0
+      const touchedCount = requestDetails.filter((detail) => (orderedQuantities[detail.id] || 0) > 0).length;
+      const completedCount = requestDetails.filter((detail) => (orderedQuantities[detail.id] || 0) >= detail.quantity).length;
+
+      const newStatus = touchedCount === 0
         ? null
-        : (orderedIds.length >= detailIds.length ? 'completed' : 'partially_ordered');
+        : (completedCount >= detailIds.length ? 'completed' : 'partially_ordered');
 
       if (!newStatus) continue;
 
