@@ -2,7 +2,9 @@
 
 > Anotado el 2026-10-21 a partir de lo que pidió Denis. Esto NO está en la ERS (se verificó contra `docs/MiniERP ERS v0.8-1.pdf` y `docs/MiniERP ERS v0.9-1.pdf`, cap. 6.8): es un plus-feature de Denis, igual criterio que Kardex/Retaceo en su momento.
 >
-> **Decisiones confirmadas el 2026-10-25** (quedan resueltas las 3 preguntas de abajo, se mantienen tachadas como referencia): el PDF de solicitud se genera solo desde la vista consolidada (cubre también el caso de 1 sola solicitud tildada); una cotización puede tener **varios** PDFs/imágenes adjuntos (no uno solo); rama `feature/purchase-quotation-pdf-documents`. Arrancando la implementación en esta sesión.
+> **Decisiones confirmadas el 2026-10-25** (quedan resueltas las 3 preguntas de abajo, se mantienen tachadas como referencia): el PDF de solicitud se genera solo desde la vista consolidada (cubre también el caso de 1 sola solicitud tildada); una cotización puede tener **varios** PDFs/imágenes adjuntos (no uno solo); rama `feature/purchase-quotation-pdf-documents`.
+>
+> **Implementado el 2026-10-25** (backend mergeado a `developer` vía PR #82; frontend en la misma rama, pendiente de mergear). Único detalle que cambió respecto al borrador de abajo: el botón "Comparar PDFs" quedó dentro de `PurchaseQuotationComparisonModal.jsx` (el comparador numérico) en vez de en `PurchaseRequestConsolidatedModal.jsx`, porque esa pantalla ya tiene cargadas las cotizaciones a comparar — ponerlo en la consolidada hubiera obligado a pedir la comparación dos veces.
 
 ## Contexto
 
