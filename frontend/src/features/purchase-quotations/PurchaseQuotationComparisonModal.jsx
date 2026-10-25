@@ -1,6 +1,7 @@
-import { createResource, Show, For } from "solid-js";
+import { createSignal, createResource, Show, For } from "solid-js";
 import { purchaseQuotationsApi } from "../../services/purchaseQuotations.api";
 import { statusLabel, statusBadgeClass, formatMoney } from "./statusMeta";
+import PurchaseQuotationPdfComparisonModal from "./PurchaseQuotationPdfComparisonModal";
 
 // Pantalla de comparación (ERS 6.8.24): cotizaciones lado a lado para una o
 // varias solicitudes a la vez (ver consolidado). A propósito NO resalta "la
@@ -11,6 +12,11 @@ function PurchaseQuotationComparisonModal(props) {
     () => props.purchaseRequestIds,
     (ids) => purchaseQuotationsApi.getComparison(ids),
   );
+
+  // Comparador visual de PDFs (plus-feature de Denis, ver
+  // docs/features/README.md): se abre desde acá porque esta pantalla ya
+  // tiene cargadas las cotizaciones que se están comparando numéricamente.
+  const [showPdfComparison, setShowPdfComparison] = createSignal(false);
 
   return (
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -103,12 +109,24 @@ function PurchaseQuotationComparisonModal(props) {
           </Show>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
-          <button onClick={props.onClose} class="btn-secondary w-full">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+          <button onClick={props.onClose} class="btn-secondary flex-1">
             Cerrar
           </button>
+          <Show when={comparison() && comparison().data.length > 0}>
+            <button onClick={() => setShowPdfComparison(true)} class="btn-secondary flex-1">
+              Comparar PDFs
+            </button>
+          </Show>
         </div>
       </div>
+
+      <Show when={showPdfComparison()}>
+        <PurchaseQuotationPdfComparisonModal
+          quotations={comparison().data.map((entry) => entry.quotation)}
+          onClose={() => setShowPdfComparison(false)}
+        />
+      </Show>
     </div>
   );
 }

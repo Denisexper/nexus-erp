@@ -39,4 +39,9 @@ export const purchaseRequestsApi = {
   getHistory(id) {
     return http.request(`/purchase-requests/${id}/history`);
   },
+
+  getConsolidatedPdf(ids) {
+    const params = new URLSearchParams({ ids: ids.join(",") }).toString();
+    return http.requestBlob(`/purchase-requests/consolidated/pdf?${params}`);
+  },
 };

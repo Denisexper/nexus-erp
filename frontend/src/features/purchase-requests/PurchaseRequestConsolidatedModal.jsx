@@ -1,5 +1,8 @@
 import { createSignal, createResource, createMemo, Show, For } from "solid-js";
 import { purchaseRequestDetailsApi } from "../../services/purchaseRequestDetails.api";
+import { purchaseRequestsApi } from "../../services/purchaseRequests.api";
+import { showToast } from "../../utils/toast";
+import { useAuth } from "../../context/AuthContext";
 import PurchaseQuotationCreateModal from "../purchase-quotations/PurchaseQuotationCreateModal";
 import PurchaseQuotationComparisonModal from "../purchase-quotations/PurchaseQuotationComparisonModal";
 
@@ -15,13 +18,39 @@ const fetchLinesForRequests = async (requests) => {
 };
 
 function PurchaseRequestConsolidatedModal(props) {
+  const auth = useAuth();
   const [groups] = createResource(() => props.requests, fetchLinesForRequests);
   const [showQuotationModal, setShowQuotationModal] = createSignal(false);
   const [showComparisonModal, setShowComparisonModal] = createSignal(false);
+  const [generatingPdf, setGeneratingPdf] = createSignal(false);
 
   const handleQuotationSaved = () => {
     setShowQuotationModal(false);
     props.onQuotationCreated?.();
+  };
+
+  // RFQ para mandarle al proveedor (plus-feature de Denis, no está en la
+  // ERS — ver docs/features/README.md). Solo genera y descarga el PDF, no
+  // manda nada automático. Mismo patrón de descarga que el export de
+  // Bitácoras (Logs.jsx): blob -> object URL -> <a download> temporal.
+  const generatePdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const blob = await purchaseRequestsApi.getConsolidatedPdf(props.requests.map((r) => r._id));
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `solicitud_cotizacion_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast.success("PDF de solicitud generado");
+    } catch (error) {
+      showToast.error(error.message || "Error al generar el PDF de solicitud");
+    } finally {
+      setGeneratingPdf(false);
+    }
   };
 
   const consolidated = createMemo(() => {
@@ -136,6 +165,11 @@ function PurchaseRequestConsolidatedModal(props) {
             Cerrar
           </button>
           <Show when={consolidated().length > 0}>
+            <Show when={auth.hasPermission("purchase_requests.export")}>
+              <button onClick={generatePdf} disabled={generatingPdf()} class="btn-secondary flex-1 disabled:opacity-50">
+                {generatingPdf() ? "Generando..." : "Generar PDF de solicitud"}
+              </button>
+            </Show>
             <button onClick={() => setShowComparisonModal(true)} class="btn-secondary flex-1">
               Comparar cotizaciones
             </button>

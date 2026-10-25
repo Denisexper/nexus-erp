@@ -1,5 +1,7 @@
 import { createSignal, createResource, Show, For } from "solid-js";
 import { purchaseQuotationsApi } from "../../services/purchaseQuotations.api";
+import { purchaseQuotationDocumentsApi } from "../../services/purchaseQuotationDocuments.api";
+import { SERVER_URL } from "../../services/http";
 import { useAuth } from "../../context/AuthContext";
 import { showToast } from "../../utils/toast";
 import {
@@ -10,6 +12,100 @@ import {
 } from "../../components/DetailModal";
 import { statusLabel, statusBadgeClass, formatMoney } from "./statusMeta";
 import PurchaseOrderCreateModal from "../purchase-orders/PurchaseOrderCreateModal";
+
+// Respaldo documental de la cotización (plus-feature de Denis, no está en la
+// ERS — ver docs/features/README.md): el PDF/foto que el proveedor devuelve
+// cotizado, varios adjuntos por cotización. Calco de ExpenseDocuments en
+// PurchaseOrderDetailModal.jsx (misma UI, mismo patrón de upload/remove).
+function QuotationDocuments(props) {
+  const auth = useAuth();
+  const [uploading, setUploading] = createSignal(false);
+  let fileInput;
+
+  const [documents, { refetch }] = createResource(
+    () => props.quotationId,
+    (quotationId) => purchaseQuotationDocumentsApi.getByQuotation(quotationId),
+  );
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      await purchaseQuotationDocumentsApi.upload(props.quotationId, file);
+      showToast.success("Documento cargado correctamente");
+      refetch();
+    } catch (error) {
+      showToast.error(error.message);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeDocument = (id) => {
+    showToast.confirm("¿Eliminar este documento?", async () => {
+      try {
+        await purchaseQuotationDocumentsApi.remove(id);
+        showToast.success("Documento eliminado correctamente");
+        refetch();
+      } catch (error) {
+        showToast.error(error.message);
+      }
+    });
+  };
+
+  return (
+    <div class="mt-1.5 space-y-1.5">
+      <div class="flex flex-wrap items-center gap-2">
+        <For each={documents()?.data}>
+          {(doc) => (
+            <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 dark:bg-white/5 rounded-md px-2 py-1">
+              <a
+                href={`${SERVER_URL}/uploads/${doc.filePath}`}
+                target="_blank"
+                rel="noreferrer"
+                class="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                📎 {doc.fileName}
+              </a>
+              <Show when={auth.hasPermission("purchase_quotation_documents.delete")}>
+                <button
+                  type="button"
+                  onClick={() => removeDocument(doc._id)}
+                  class="text-gray-400 hover:text-coral-600 dark:hover:text-coral"
+                >
+                  ✕
+                </button>
+              </Show>
+            </span>
+          )}
+        </For>
+        <Show when={documents() && documents().data.length === 0}>
+          <p class="text-xs text-gray-500 dark:text-night-400">Sin documentos adjuntos.</p>
+        </Show>
+      </div>
+      <Show when={auth.hasPermission("purchase_quotation_documents.upload")}>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          class="hidden"
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          onClick={() => fileInput.click()}
+          disabled={uploading()}
+          class="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+        >
+          {uploading() ? "Cargando..." : "+ Adjuntar documento"}
+        </button>
+      </Show>
+    </div>
+  );
+}
 
 function PurchaseQuotationDetailModal(props) {
   const auth = useAuth();
@@ -207,6 +303,15 @@ function PurchaseQuotationDetailModal(props) {
             <span>{formatMoney(quotation()?.total, quotation()?.currency)}</span>
           </div>
         </div>
+      </DetailSection>
+
+      <DetailSection title="Documentos adjuntos" cols={1} divider>
+        <p class="text-xs text-gray-500 dark:text-night-400 mb-1">
+          Respaldo documental de la cotización (PDF o foto que mandó el proveedor). Los precios y condiciones siguen siendo los que se tipearon arriba.
+        </p>
+        <Show when={quotation()}>
+          <QuotationDocuments quotationId={quotation()._id} />
+        </Show>
       </DetailSection>
     </DetailModal>
 
