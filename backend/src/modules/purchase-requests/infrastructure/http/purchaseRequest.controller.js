@@ -7,7 +7,10 @@ import {
   PurchaseRequestNotEditableError,
   InvalidPurchaseRequestStatusTransitionError,
   EmptyPurchaseRequestError,
+  EmptyConsolidatedPdfRequestIdsError,
+  NoPurchaseRequestsFoundForPdfError,
 } from '../../domain/errors.js';
+import { streamConsolidatedRequestPdf } from '../reports/pdfConsolidatedRequestReport.js';
 
 const toPurchaseRequestDTO = (purchaseRequest) => ({
   _id: purchaseRequest.id,
@@ -45,6 +48,7 @@ export class PurchaseRequestController {
     submitPurchaseRequest,
     rejectPurchaseRequest,
     cancelPurchaseRequest,
+    generateConsolidatedPurchaseRequestPdf,
   }) {
     this.listPurchaseRequestsUseCase = listPurchaseRequests;
     this.getPurchaseRequestByIdUseCase = getPurchaseRequestById;
@@ -53,6 +57,7 @@ export class PurchaseRequestController {
     this.submitPurchaseRequestUseCase = submitPurchaseRequest;
     this.rejectPurchaseRequestUseCase = rejectPurchaseRequest;
     this.cancelPurchaseRequestUseCase = cancelPurchaseRequest;
+    this.generateConsolidatedPurchaseRequestPdfUseCase = generateConsolidatedPurchaseRequestPdf;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -64,6 +69,8 @@ export class PurchaseRequestController {
     if (error instanceof PurchaseRequestNotEditableError) return res.status(400).json({ msj: error.message });
     if (error instanceof InvalidPurchaseRequestStatusTransitionError) return res.status(400).json({ msj: error.message });
     if (error instanceof EmptyPurchaseRequestError) return res.status(400).json({ msj: error.message });
+    if (error instanceof EmptyConsolidatedPdfRequestIdsError) return res.status(400).json({ msj: error.message });
+    if (error instanceof NoPurchaseRequestsFoundForPdfError) return res.status(404).json({ msj: error.message });
     return res.status(500).json({ msj: fallbackMsj, error: error.message });
   }
 
@@ -155,6 +162,18 @@ export class PurchaseRequestController {
       res.status(200).json({ msj: 'Solicitud de compra cancelada correctamente', purchaseRequest: toPurchaseRequestDTO(purchaseRequest) });
     } catch (error) {
       this.#handleError(res, error, 'Error al cancelar la solicitud de compra');
+    }
+  };
+
+  exportConsolidatedPdf = async (req, res) => {
+    try {
+      const ids = (req.query.ids || '').split(',').map((id) => id.trim()).filter(Boolean);
+      const { lines, meta } = await this.generateConsolidatedPurchaseRequestPdfUseCase.execute(ids, req.user.companyId);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=solicitud_cotizacion_${Date.now()}.pdf`);
+      streamConsolidatedRequestPdf(lines, meta, res);
+    } catch (error) {
+      this.#handleError(res, error, 'Error generando el PDF de solicitud de cotización');
     }
   };
 }
