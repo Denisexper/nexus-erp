@@ -53,3 +53,15 @@ export class EmptyPurchaseRequestError extends DomainError {
     super('La solicitud necesita al menos una línea de producto para enviarse');
   }
 }
+
+export class EmptyConsolidatedPdfRequestIdsError extends DomainError {
+  constructor() {
+    super('Hay que indicar al menos una solicitud para generar el PDF');
+  }
+}
+
+export class NoPurchaseRequestsFoundForPdfError extends DomainError {
+  constructor() {
+    super('Las solicitudes indicadas no existen o no pertenecen a esta empresa');
+  }
+}
