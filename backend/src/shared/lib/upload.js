@@ -57,3 +57,13 @@ export const uploadPurchaseOrderExpenseDocument = buildSingleUploader('purchase-
     'image/png',
     'image/webp',
 ]);
+
+// Plus-feature de Denis (docs/features/README.md): respaldo documental de
+// cotizaciones de compra. Acepta imagen también por si el proveedor manda
+// una foto en vez de PDF, mismo criterio que gastos de orden.
+export const uploadPurchaseQuotationDocument = buildSingleUploader('purchase-quotations', [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+]);

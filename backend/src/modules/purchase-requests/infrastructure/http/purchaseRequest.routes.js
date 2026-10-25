@@ -6,6 +6,7 @@ import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/e
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
 import { MongoPurchaseRequestDetailRepository } from '#modules/purchase-request-details/infrastructure/persistence/MongoPurchaseRequestDetailRepository.js';
+import { MongoCompanyRepository } from '#modules/companies/infrastructure/persistence/MongoCompanyRepository.js';
 
 import { PurchaseRequestModel } from '../persistence/purchaseRequestMongooseModel.js';
 import { MongoPurchaseRequestRepository } from '../persistence/MongoPurchaseRequestRepository.js';
@@ -16,6 +17,7 @@ import { UpdatePurchaseRequestUseCase } from '../../application/use-cases/update
 import { SubmitPurchaseRequestUseCase } from '../../application/use-cases/submitPurchaseRequest.js';
 import { RejectPurchaseRequestUseCase } from '../../application/use-cases/rejectPurchaseRequest.js';
 import { CancelPurchaseRequestUseCase } from '../../application/use-cases/cancelPurchaseRequest.js';
+import { GenerateConsolidatedPurchaseRequestPdfUseCase } from '../../application/use-cases/generateConsolidatedPurchaseRequestPdf.js';
 import { PurchaseRequestController } from './purchaseRequest.controller.js';
 
 // --- Composition root ---
@@ -23,6 +25,7 @@ const purchaseRequestRepository = new MongoPurchaseRequestRepository();
 const branchRepository = new MongoBranchRepository();
 const warehouseRepository = new MongoWarehouseRepository();
 const purchaseRequestDetailRepository = new MongoPurchaseRequestDetailRepository();
+const companyRepository = new MongoCompanyRepository();
 
 const controller = new PurchaseRequestController({
     listPurchaseRequests: new ListPurchaseRequestsUseCase(purchaseRequestRepository),
@@ -32,6 +35,7 @@ const controller = new PurchaseRequestController({
     submitPurchaseRequest: new SubmitPurchaseRequestUseCase(purchaseRequestRepository, purchaseRequestDetailRepository),
     rejectPurchaseRequest: new RejectPurchaseRequestUseCase(purchaseRequestRepository),
     cancelPurchaseRequest: new CancelPurchaseRequestUseCase(purchaseRequestRepository),
+    generateConsolidatedPurchaseRequestPdf: new GenerateConsolidatedPurchaseRequestPdfUseCase(purchaseRequestRepository, purchaseRequestDetailRepository, companyRepository),
 });
 
 const router = Router();
@@ -76,6 +80,14 @@ const routes = [
         permission: 'purchase_requests.view',
         description: 'Listar solicitudes de compra',
         handler: controller.getAll,
+        middlewares: []
+    },
+    {
+        method: 'GET',
+        path: '/consolidated/pdf',
+        permission: 'purchase_requests.export',
+        description: 'Generar PDF de solicitud de cotización (RFQ) a partir de solicitudes consolidadas',
+        handler: controller.exportConsolidatedPdf,
         middlewares: []
     },
     {
