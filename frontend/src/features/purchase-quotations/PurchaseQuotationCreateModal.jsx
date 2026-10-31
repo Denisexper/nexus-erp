@@ -5,6 +5,7 @@ import { purchaseRequestDetailsApi } from "../../services/purchaseRequestDetails
 import { suppliersApi } from "../../services/suppliers.api";
 import { expenseTypesApi } from "../../services/expenseTypes.api";
 import { showToast } from "../../utils/toast";
+import SearchableSelect from "../../components/SearchableSelect";
 
 // Solicitudes con líneas que todavía admiten cotización (ERS 6.8): recién
 // enviadas, o parcialmente cotizadas (les faltan líneas por cubrir). No hay
@@ -32,7 +33,6 @@ function PurchaseQuotationCreateModal(props) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  const [suppliers] = createResource(() => suppliersApi.getAll({ isActive: true, limit: 1000 }));
   const [expenseTypes] = createResource(() => expenseTypesApi.getAll({ isActive: true, limit: 1000 }));
   // Si viene de la vista consolidada (props.presetRequests) ya sabemos qué
   // solicitudes queremos: no hace falta el selector de "una por una".
@@ -220,10 +220,18 @@ function PurchaseQuotationCreateModal(props) {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Proveedor *
               </label>
-              <select required class="input-field w-full" value={supplier()} onChange={(e) => setSupplier(e.target.value)}>
-                <option value="">Seleccionar...</option>
-                <For each={suppliers()?.data}>{(s) => <option value={s._id}>{s.name}</option>}</For>
-              </select>
+              <SearchableSelect
+                required
+                value={supplier()}
+                onChange={(id) => setSupplier(id)}
+                placeholder="Buscar proveedor..."
+                fetchOptions={async (search) => {
+                  const res = await suppliersApi.getAll({ search, isActive: true, limit: 20 });
+                  return res.data || [];
+                }}
+                getOptionLabel={(s) => s.name}
+                getOptionSubLabel={(s) => s.code}
+              />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vigente hasta</label>

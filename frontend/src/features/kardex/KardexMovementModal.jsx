@@ -3,6 +3,7 @@ import { kardexApi } from "../../services/kardex.api";
 import { productsApi } from "../../services/products.api";
 import { locationsApi } from "../../services/locations.api";
 import { showToast } from "../../utils/toast";
+import SearchableSelect from "../../components/SearchableSelect";
 
 const REASONS = [
   { value: "purchase", label: "Compra" },
@@ -23,9 +24,6 @@ function KardexMovementModal(props) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  const [products] = createResource(() =>
-    productsApi.getAll({ isActive: true, limit: 1000 }),
-  );
   const [locations] = createResource(() =>
     locationsApi.getAll({ isActive: true, limit: 1000 }),
   );
@@ -74,30 +72,18 @@ function KardexMovementModal(props) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Producto *
             </label>
-            <Show
-              when={!products.loading}
-              fallback={
-                <div class="input-field bg-gray-100 dark:bg-gray-800">
-                  Cargando...
-                </div>
-              }
-            >
-              <select
-                class="input-field w-full"
-                required
-                value={product()}
-                onChange={(e) => setProduct(e.target.value)}
-              >
-                <option value="">Selecciona...</option>
-                <For each={products()?.data}>
-                  {(p) => (
-                    <option value={p._id}>
-                      {p.name} ({p.sku})
-                    </option>
-                  )}
-                </For>
-              </select>
-            </Show>
+            <SearchableSelect
+              required
+              value={product()}
+              onChange={(id) => setProduct(id)}
+              placeholder="Buscar producto..."
+              fetchOptions={async (search) => {
+                const res = await productsApi.getAll({ search, isActive: true, limit: 20 });
+                return res.data || [];
+              }}
+              getOptionLabel={(p) => `${p.name} (${p.sku})`}
+              getOptionSubLabel={(p) => p.internalCode}
+            />
           </div>
 
           <div>

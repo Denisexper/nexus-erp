@@ -11,6 +11,7 @@ import KardexMovementModal from "./KardexMovementModal";
 import KardexTransferModal from "./KardexTransferModal";
 import KardexStockPanel from "./KardexStockPanel";
 import KardexMovementDetailModal from "./KardexMovementDetailModal";
+import SearchableSelect from "../../components/SearchableSelect";
 
 const REASON_LABELS = {
   purchase: "Compra",
@@ -36,15 +37,13 @@ function Kardex() {
   const [limit] = createSignal(15);
 
   const [productFilter, setProductFilter] = createSignal("");
+  const [productFilterLabel, setProductFilterLabel] = createSignal("");
   const [locationFilter, setLocationFilter] = createSignal("");
   const [typeFilter, setTypeFilter] = createSignal("");
   const [reasonFilter, setReasonFilter] = createSignal("");
 
   const [appliedFilters, setAppliedFilters] = createSignal({});
 
-  const [products] = createResource(() =>
-    productsApi.getAll({ isActive: true, limit: 1000 }),
-  );
   const [locations] = createResource(() =>
     locationsApi.getAll({ isActive: true, limit: 1000 }),
   );
@@ -81,6 +80,7 @@ function Kardex() {
 
   const clearFilters = () => {
     setProductFilter("");
+    setProductFilterLabel("");
     setLocationFilter("");
     setTypeFilter("");
     setReasonFilter("");
@@ -164,16 +164,21 @@ function Kardex() {
                 Filtros
               </p>
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <select
-                  class="input-field"
+                <SearchableSelect
                   value={productFilter()}
-                  onChange={(e) => setProductFilter(e.target.value)}
-                >
-                  <option value="">Todos los productos</option>
-                  <For each={products()?.data}>
-                    {(p) => <option value={p._id}>{p.name}</option>}
-                  </For>
-                </select>
+                  displayLabel={productFilterLabel()}
+                  onChange={(id, item) => {
+                    setProductFilter(id);
+                    setProductFilterLabel(item?.name || "");
+                  }}
+                  placeholder="Todos los productos"
+                  fetchOptions={async (search) => {
+                    const res = await productsApi.getAll({ search, isActive: true, limit: 20 });
+                    return res.data || [];
+                  }}
+                  getOptionLabel={(p) => p.name}
+                  getOptionSubLabel={(p) => p.sku}
+                />
 
                 <select
                   class="input-field"

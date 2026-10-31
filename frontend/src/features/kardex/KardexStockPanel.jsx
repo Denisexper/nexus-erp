@@ -2,15 +2,14 @@ import { createSignal, createResource, Show, For } from "solid-js";
 import { kardexApi } from "../../services/kardex.api";
 import { productsApi } from "../../services/products.api";
 import { locationsApi } from "../../services/locations.api";
+import SearchableSelect from "../../components/SearchableSelect";
 
 function KardexStockPanel() {
   const [mode, setMode] = createSignal("location"); // 'location' | 'product'
   const [selectedLocation, setSelectedLocation] = createSignal("");
   const [selectedProduct, setSelectedProduct] = createSignal("");
+  const [selectedProductLabel, setSelectedProductLabel] = createSignal("");
 
-  const [products] = createResource(() =>
-    productsApi.getAll({ isActive: true, limit: 1000 }),
-  );
   const [locations] = createResource(() =>
     locationsApi.getAll({ isActive: true, limit: 1000 }),
   );
@@ -30,6 +29,7 @@ function KardexStockPanel() {
     setMode(next);
     setSelectedLocation("");
     setSelectedProduct("");
+    setSelectedProductLabel("");
   };
 
   return (
@@ -71,20 +71,23 @@ function KardexStockPanel() {
       </Show>
 
       <Show when={mode() === "product"}>
-        <select
-          class="input-field w-full md:w-96 mb-4"
-          value={selectedProduct()}
-          onChange={(e) => setSelectedProduct(e.target.value)}
-        >
-          <option value="">Selecciona un producto...</option>
-          <For each={products()?.data}>
-            {(p) => (
-              <option value={p._id}>
-                {p.name} ({p.sku})
-              </option>
-            )}
-          </For>
-        </select>
+        <div class="w-full md:w-96 mb-4">
+          <SearchableSelect
+            value={selectedProduct()}
+            displayLabel={selectedProductLabel()}
+            onChange={(id, item) => {
+              setSelectedProduct(id);
+              setSelectedProductLabel(item?.name || "");
+            }}
+            placeholder="Buscar producto..."
+            fetchOptions={async (search) => {
+              const res = await productsApi.getAll({ search, isActive: true, limit: 20 });
+              return res.data || [];
+            }}
+            getOptionLabel={(p) => `${p.name} (${p.sku})`}
+            getOptionSubLabel={(p) => p.internalCode}
+          />
+        </div>
       </Show>
 
       <Show when={stock.loading}>
