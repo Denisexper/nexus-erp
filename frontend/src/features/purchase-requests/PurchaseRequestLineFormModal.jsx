@@ -3,6 +3,7 @@ import { purchaseRequestDetailsApi } from "../../services/purchaseRequestDetails
 import { productsApi } from "../../services/products.api";
 import { unitsApi } from "../../services/units.api";
 import { showToast } from "../../utils/toast";
+import SearchableSelect from "../../components/SearchableSelect";
 
 const extractId = (value) => {
   if (!value) return "";
@@ -14,6 +15,7 @@ function PurchaseRequestLineFormModal(props) {
   const isEditing = () => !!props.line;
 
   const [product, setProduct] = createSignal("");
+  const [productLabel, setProductLabel] = createSignal("");
   const [quantity, setQuantity] = createSignal("");
   const [unit, setUnit] = createSignal("");
   const [description, setDescription] = createSignal("");
@@ -22,9 +24,6 @@ function PurchaseRequestLineFormModal(props) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  const [products] = createResource(() =>
-    productsApi.getAll({ isActive: true, limit: 1000 }),
-  );
   const [units] = createResource(() => unitsApi.getAll({ isActive: true, limit: 1000 }));
   // RN-COM (units): los documentos del lado compra solo admiten unidades type=purchase.
   const purchaseUnits = () => units()?.data?.filter((u) => u.type === "purchase") || [];
@@ -32,6 +31,7 @@ function PurchaseRequestLineFormModal(props) {
   createEffect(() => {
     const line = props.line;
     setProduct(extractId(line?.product));
+    setProductLabel(line?.product && typeof line.product === "object" ? line.product.name : "");
     setQuantity(line?.quantity ?? "");
     setUnit(extractId(line?.unit));
     setDescription(line?.description || "");
@@ -92,19 +92,22 @@ function PurchaseRequestLineFormModal(props) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Producto *
             </label>
-            <Show when={!products.loading} fallback={<div class="input-field text-gray-400">Cargando...</div>}>
-              <select
-                required
-                class="input-field w-full"
-                value={product()}
-                onChange={(e) => setProduct(e.target.value)}
-              >
-                <option value="">Seleccionar...</option>
-                <For each={products()?.data}>
-                  {(p) => <option value={p._id}>{p.name}</option>}
-                </For>
-              </select>
-            </Show>
+            <SearchableSelect
+              required
+              value={product()}
+              displayLabel={productLabel()}
+              onChange={(id, item) => {
+                setProduct(id);
+                setProductLabel(item?.name || "");
+              }}
+              placeholder="Buscar producto..."
+              fetchOptions={async (search) => {
+                const res = await productsApi.getAll({ search, isActive: true, limit: 20 });
+                return res.data || [];
+              }}
+              getOptionLabel={(p) => p.name}
+              getOptionSubLabel={(p) => p.internalCode}
+            />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
