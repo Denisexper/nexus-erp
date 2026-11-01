@@ -5,6 +5,108 @@ import { warehousesApi } from "../../services/warehouses.api";
 import { locationsApi } from "../../services/locations.api";
 import { showToast } from "../../utils/toast";
 
+// Una línea de traslado en su propio componente: así cada una trae, con su
+// propio createResource, las ubicaciones donde SU lote realmente tiene
+// existencias (GET /lots/:id/locations) en vez de listar todas las
+// ubicaciones del almacén sin filtrar.
+function TransferLineFields(props) {
+  const [lotLocations] = createResource(
+    () => props.line.inventoryLot,
+    (lotId) => inventoryApi.getLotLocations(lotId),
+  );
+
+  const availableSourceLocations = () =>
+    (lotLocations()?.data || []).filter((d) => d.location?.warehouse === props.sourceWarehouse());
+
+  const handleLotChange = (value) => {
+    props.updateLine(props.index(), "inventoryLot", value);
+    props.updateLine(props.index(), "sourceLocation", "");
+  };
+
+  return (
+    <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-3 space-y-2">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lote *</label>
+          <select
+            class="input-field w-full text-sm"
+            required
+            value={props.line.inventoryLot}
+            onChange={(e) => handleLotChange(e.target.value)}
+          >
+            <option value="">Selecciona...</option>
+            <For each={props.placeableLots()}>
+              {(lot) => (
+                <option value={lot._id}>
+                  {lot.lotCode} — {lot.product?.name}
+                </option>
+              )}
+            </For>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ubicación origen *</label>
+          <select
+            class="input-field w-full text-sm"
+            required
+            disabled={!props.line.inventoryLot || !props.sourceWarehouse()}
+            value={props.line.sourceLocation}
+            onChange={(e) => props.updateLine(props.index(), "sourceLocation", e.target.value)}
+          >
+            <option value="">Selecciona...</option>
+            <For each={availableSourceLocations()}>
+              {(d) => (
+                <option value={d.location._id}>
+                  {d.location.code} — {d.quantity} disponibles
+                </option>
+              )}
+            </For>
+          </select>
+          <Show when={props.line.inventoryLot && props.sourceWarehouse() && !lotLocations.loading && availableSourceLocations().length === 0}>
+            <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+              Este lote no tiene existencias en el almacén de origen elegido.
+            </p>
+          </Show>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ubicación destino *</label>
+          <select
+            class="input-field w-full text-sm"
+            required
+            disabled={!props.destinationWarehouse()}
+            value={props.line.destinationLocation}
+            onChange={(e) => props.updateLine(props.index(), "destinationLocation", e.target.value)}
+          >
+            <option value="">Selecciona...</option>
+            <For each={props.destinationLocations()?.data}>{(l) => <option value={l._id}>{l.code}</option>}</For>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Cantidad *</label>
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            class="input-field w-full text-sm"
+            value={props.line.quantityDispatched}
+            onInput={(e) => props.updateLine(props.index(), "quantityDispatched", e.target.value)}
+          />
+        </div>
+      </div>
+      <Show when={props.canRemove}>
+        <button
+          type="button"
+          onClick={() => props.removeLine(props.index())}
+          class="text-xs text-coral-600 dark:text-coral hover:underline"
+        >
+          Quitar línea
+        </button>
+      </Show>
+    </div>
+  );
+}
+
 // Crear un traslado solo planifica (ERS 6.9.19): todavía no mueve stock,
 // eso pasa al despachar. La ubicación vehículo se exige siempre en esta
 // fase (sin atajo de traslado directo dentro del mismo almacén).
@@ -21,9 +123,6 @@ function TransferFormModal(props) {
 
   const [warehouses] = createResource(() => warehousesApi.getAll({ isActive: true, limit: 1000 }));
   const [vehicleLocations] = createResource(() => locationsApi.getAll({ type: "vehicle", isActive: true, limit: 1000 }));
-  const [sourceLocations] = createResource(sourceWarehouse, (w) =>
-    w ? locationsApi.getAll({ warehouse: w, type: "storage", isActive: true, limit: 1000 }) : null,
-  );
   const [destinationLocations] = createResource(destinationWarehouse, (w) =>
     w ? locationsApi.getAll({ warehouse: w, type: "storage", isActive: true, limit: 1000 }) : null,
   );
@@ -156,75 +255,17 @@ function TransferFormModal(props) {
             <div class="space-y-3">
               <For each={lines()}>
                 {(line, index) => (
-                  <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-3 space-y-2">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                      <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Lote *</label>
-                        <select
-                          class="input-field w-full text-sm"
-                          required
-                          value={line.inventoryLot}
-                          onChange={(e) => updateLine(index(), "inventoryLot", e.target.value)}
-                        >
-                          <option value="">Selecciona...</option>
-                          <For each={placeableLots()}>
-                            {(lot) => (
-                              <option value={lot._id}>
-                                {lot.lotCode} — {lot.product?.name}
-                              </option>
-                            )}
-                          </For>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ubicación origen *</label>
-                        <select
-                          class="input-field w-full text-sm"
-                          required
-                          disabled={!sourceWarehouse()}
-                          value={line.sourceLocation}
-                          onChange={(e) => updateLine(index(), "sourceLocation", e.target.value)}
-                        >
-                          <option value="">Selecciona...</option>
-                          <For each={sourceLocations()?.data}>{(l) => <option value={l._id}>{l.code}</option>}</For>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ubicación destino *</label>
-                        <select
-                          class="input-field w-full text-sm"
-                          required
-                          disabled={!destinationWarehouse()}
-                          value={line.destinationLocation}
-                          onChange={(e) => updateLine(index(), "destinationLocation", e.target.value)}
-                        >
-                          <option value="">Selecciona...</option>
-                          <For each={destinationLocations()?.data}>{(l) => <option value={l._id}>{l.code}</option>}</For>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Cantidad *</label>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          required
-                          class="input-field w-full text-sm"
-                          value={line.quantityDispatched}
-                          onInput={(e) => updateLine(index(), "quantityDispatched", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <Show when={lines().length > 1}>
-                      <button
-                        type="button"
-                        onClick={() => removeLine(index())}
-                        class="text-xs text-coral-600 dark:text-coral hover:underline"
-                      >
-                        Quitar línea
-                      </button>
-                    </Show>
-                  </div>
+                  <TransferLineFields
+                    line={line}
+                    index={index}
+                    updateLine={updateLine}
+                    removeLine={removeLine}
+                    canRemove={lines().length > 1}
+                    sourceWarehouse={sourceWarehouse}
+                    destinationWarehouse={destinationWarehouse}
+                    destinationLocations={destinationLocations}
+                    placeableLots={placeableLots}
+                  />
                 )}
               </For>
             </div>

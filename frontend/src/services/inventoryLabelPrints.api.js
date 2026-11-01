@@ -11,4 +11,8 @@ export const inventoryLabelPrintsApi = {
       body: JSON.stringify(data),
     });
   },
+
+  getPdf(id) {
+    return http.requestBlob(`/inventory-label-prints/${id}/pdf`);
+  },
 };

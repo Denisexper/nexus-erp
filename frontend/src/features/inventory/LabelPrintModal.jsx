@@ -17,13 +17,31 @@ function LabelPrintModal(props) {
   );
   const isReprint = () => (history()?.data?.length || 0) > 0;
 
+  // Mismo patrón de descarga que el PDF de solicitud de cotización:
+  // blob -> object URL -> <a download> temporal.
+  const downloadPdf = async (labelPrintId) => {
+    try {
+      const blob = await inventoryLabelPrintsApi.getPdf(labelPrintId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `etiquetas_${props.lot?.lotCode}_${labelPrintId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast.error(err.message || "Error al generar el PDF de etiquetas");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      await inventoryLabelPrintsApi.print({
+      const result = await inventoryLabelPrintsApi.print({
         inventoryLot: props.lot.id,
         quantityPrinted: Number(quantity()),
         reprintReason: isReprint() ? reprintReason() : undefined,
@@ -32,6 +50,7 @@ function LabelPrintModal(props) {
       setReprintReason("");
       refetch();
       props.onSaved?.();
+      await downloadPdf(result.newLabelPrint.id);
     } catch (err) {
       setError(err.message);
       showToast.error(err.message);
@@ -115,7 +134,7 @@ function LabelPrintModal(props) {
               <For each={history()?.data}>
                 {(print) => (
                   <div class="border border-gray-200 dark:border-gray-800 rounded-md px-3 py-2 text-sm">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-start">
                       <span class="text-gray-900 dark:text-white font-medium">
                         {print.quantityPrinted} etiqueta(s)
                       </span>
@@ -131,6 +150,13 @@ function LabelPrintModal(props) {
                         Motivo: {print.reprintReason}
                       </p>
                     </Show>
+                    <button
+                      type="button"
+                      onClick={() => downloadPdf(print.id)}
+                      class="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
+                    >
+                      Descargar PDF
+                    </button>
                   </div>
                 )}
               </For>

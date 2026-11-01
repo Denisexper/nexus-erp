@@ -50,6 +50,19 @@ export class InventoryRepository {
     throw new Error('InventoryRepository.getLotQuantityAtLocation no implementado');
   }
 
+  // Desglose de en qué ubicaciones (con cantidad > 0) está un lote —
+  // reemplaza, para el formulario de traslados, la lista de "todas las
+  // ubicaciones del almacén" por "solo donde este lote realmente tiene algo".
+  async findLocationDetailsByLot(_lotId) {
+    throw new Error('InventoryRepository.findLocationDetailsByLot no implementado');
+  }
+
+  // Desglose de qué lotes (con cantidad > 0) hay en una ubicación — para el
+  // detalle de Ubicaciones, que hoy no muestra contenido.
+  async findLotDetailsByLocation(_locationId) {
+    throw new Error('InventoryRepository.findLotDetailsByLocation no implementado');
+  }
+
   // Operación atómica (transacción Mongo) reusada por inventory-transfers
   // para cada "pata" de un traslado (origen->vehículo al despachar,
   // vehículo->destino al recibir): escribe una salida en fromLocation

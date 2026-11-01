@@ -28,4 +28,12 @@ export const inventoryApi = {
       body: JSON.stringify(data),
     });
   },
+
+  getLotLocations(id) {
+    return http.request(`/inventory/lots/${id}/locations`);
+  },
+
+  getLocationStock(id) {
+    return http.request(`/inventory/locations/${id}/stock`);
+  },
 };

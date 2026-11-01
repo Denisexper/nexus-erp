@@ -8,6 +8,7 @@ import { InventoryLabelPrintModel } from '../persistence/inventoryLabelPrintMong
 import { MongoInventoryLabelPrintRepository } from '../persistence/MongoInventoryLabelPrintRepository.js';
 import { PrintInventoryLabelUseCase } from '../../application/use-cases/printLabel.js';
 import { ListInventoryLabelPrintsUseCase } from '../../application/use-cases/listLabelPrints.js';
+import { GetInventoryLabelPrintForPdfUseCase } from '../../application/use-cases/getLabelPrintForPdf.js';
 import { InventoryLabelPrintController } from './inventoryLabelPrint.controller.js';
 
 // --- Composition root ---
@@ -17,6 +18,7 @@ const inventoryRepository = new MongoInventoryRepository();
 const controller = new InventoryLabelPrintController({
     printLabel: new PrintInventoryLabelUseCase(inventoryLabelPrintRepository, inventoryRepository),
     listLabelPrints: new ListInventoryLabelPrintsUseCase(inventoryLabelPrintRepository, inventoryRepository),
+    getLabelPrintForPdf: new GetInventoryLabelPrintForPdfUseCase(inventoryLabelPrintRepository, inventoryRepository),
 });
 
 const router = Router();
@@ -47,6 +49,14 @@ const routes = [
         description: 'Imprimir o reimprimir etiqueta de un lote de inventario',
         handler: controller.print,
         middlewares: [logAction({ ...labelPrintAudit, action: 'create', resource: 'inventory_label_prints', responseKey: 'newLabelPrint' })]
+    },
+    {
+        method: 'GET',
+        path: '/:id/pdf',
+        permission: 'inventory.label.print',
+        description: 'Descargar la hoja de etiquetas en PDF de una impresión',
+        handler: controller.downloadPdf,
+        middlewares: []
     }
 ];
 
