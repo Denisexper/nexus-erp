@@ -171,6 +171,21 @@ function Sidebar() {
           </NavSection>
         </Show>
 
+        {/* Inventario (ERS v1.0, cap. 6.9) — Fase 1: lotes + asignación a
+            ubicación. Reemplaza en el tiempo al Kardex manual de arriba
+            (ver roadmap: se retira en una fase posterior). */}
+        <Show when={auth.hasPermission('inventory.lots.view')}>
+          <NavSection id="inventario" title="Inventario">
+            <A href="/inventory/lots" class={navLinkClass('/inventory/lots')}>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Lotes
+            </A>
+          </NavSection>
+        </Show>
+
         {/* Catálogo - países, categorías, unidades y proveedores para el módulo de productos */}
         <Show when={auth.hasPermission('countries.view')}>
           <NavSection id="catalogo" title="Catálogo">
