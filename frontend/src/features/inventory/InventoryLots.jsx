@@ -8,6 +8,7 @@ import Layout from "../../components/layout/Layout";
 import Pagination from "../../components/Pagination";
 import SearchableSelect from "../../components/SearchableSelect";
 import AssignLocationModal from "./AssignLocationModal";
+import LabelPrintModal from "./LabelPrintModal";
 
 const STATUS_LABELS = {
   pending_placement: "Pendiente de ubicar",
@@ -48,6 +49,9 @@ function InventoryLots() {
   const [showAssignModal, setShowAssignModal] = createSignal(false);
   const [assigningLot, setAssigningLot] = createSignal(null);
 
+  const [showLabelModal, setShowLabelModal] = createSignal(false);
+  const [labelingLot, setLabelingLot] = createSignal(null);
+
   const applyFilters = () => {
     const filters = {};
     if (statusFilter()) filters.status = statusFilter();
@@ -74,6 +78,11 @@ function InventoryLots() {
   const handleAssigned = () => {
     setShowAssignModal(false);
     refetch();
+  };
+
+  const openLabel = (lot) => {
+    setLabelingLot(lot);
+    setShowLabelModal(true);
   };
 
   return (
@@ -202,7 +211,7 @@ function InventoryLots() {
                           </span>
                         </td>
                         <td class="px-6 py-4">
-                          <div class="flex items-center justify-end">
+                          <div class="flex items-center justify-end gap-2">
                             <Show
                               when={
                                 ["pending_placement", "partially_placed"].includes(lot.status) &&
@@ -214,6 +223,14 @@ function InventoryLots() {
                                 class="text-xs px-3 py-1.5 rounded-md border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
                               >
                                 Ubicar
+                              </button>
+                            </Show>
+                            <Show when={auth.hasPermission("inventory.label.print")}>
+                              <button
+                                onClick={() => openLabel(lot)}
+                                class="text-xs px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                              >
+                                Etiquetas
                               </button>
                             </Show>
                           </div>
@@ -240,6 +257,13 @@ function InventoryLots() {
             lot={assigningLot()}
             onClose={() => setShowAssignModal(false)}
             onSaved={handleAssigned}
+          />
+        </Show>
+
+        <Show when={showLabelModal()}>
+          <LabelPrintModal
+            lot={labelingLot()}
+            onClose={() => setShowLabelModal(false)}
           />
         </Show>
       </Layout>
