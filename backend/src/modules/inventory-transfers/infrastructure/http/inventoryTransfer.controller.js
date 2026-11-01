@@ -67,11 +67,12 @@ const toTransferDTO = (transfer) => ({
 });
 
 export class InventoryTransferController {
-  constructor({ createTransfer, dispatchTransfer, receiveTransfer, reportIncident, listTransfers, getTransferById }) {
+  constructor({ createTransfer, dispatchTransfer, receiveTransfer, reportIncident, resolveIncident, listTransfers, getTransferById }) {
     this.createTransferUseCase = createTransfer;
     this.dispatchTransferUseCase = dispatchTransfer;
     this.receiveTransferUseCase = receiveTransfer;
     this.reportIncidentUseCase = reportIncident;
+    this.resolveIncidentUseCase = resolveIncident;
     this.listTransfersUseCase = listTransfers;
     this.getTransferByIdUseCase = getTransferById;
   }
@@ -157,6 +158,16 @@ export class InventoryTransferController {
       res.status(200).json({ msj: 'Incidencia registrada correctamente', inventoryTransfer: toTransferDTO(transfer) });
     } catch (error) {
       this.#handleError(res, error, 'Error registrando la incidencia');
+    }
+  };
+
+  resolveIncident = async (req, res) => {
+    try {
+      const { action, notes } = req.body;
+      const transfer = await this.resolveIncidentUseCase.execute(req.params.id, { action, notes }, req.user.companyId, req.user.id);
+      res.status(200).json({ msj: 'Incidencia resuelta correctamente', inventoryTransfer: toTransferDTO(transfer) });
+    } catch (error) {
+      this.#handleError(res, error, 'Error resolviendo la incidencia');
     }
   };
 }

@@ -1,7 +1,10 @@
 // EN_PREPARACION / EN_TRANSITO / RECIBIDO / INCIDENCIA del ERS 6.9.19, en
 // inglés para seguir la convención del resto del codebase (los enums de
-// Mongo son en inglés, los mensajes al usuario en español).
-export const INVENTORY_TRANSFER_STATUSES = ['preparing', 'in_transit', 'received', 'incident'];
+// Mongo son en inglés, los mensajes al usuario en español). 'resolved' es
+// una extensión de la Fase 5: una incidencia se resuelve reanudando el
+// traslado (vuelve a 'in_transit') o dando por perdida la mercancía
+// (termina en 'resolved', con el faltante ya registrado como ajuste).
+export const INVENTORY_TRANSFER_STATUSES = ['preparing', 'in_transit', 'received', 'incident', 'resolved'];
 
 export class InventoryTransfer {
   constructor({

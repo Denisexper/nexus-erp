@@ -15,6 +15,7 @@ const STATUS_LABELS = {
   in_transit: "En tránsito",
   received: "Recibido",
   incident: "Incidencia",
+  resolved: "Resuelto (pérdida)",
 };
 
 const STATUS_BADGE_CLASS = {
@@ -22,6 +23,7 @@ const STATUS_BADGE_CLASS = {
   in_transit: "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400",
   received: "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400",
   incident: "bg-coral-50 dark:bg-coral/10 text-coral-600 dark:text-coral",
+  resolved: "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400",
 };
 
 function InventoryTransfers() {
@@ -87,6 +89,37 @@ function InventoryTransfers() {
   const handleIncidentReported = () => {
     setShowIncidentModal(false);
     refetch();
+  };
+
+  const resumeFromIncident = (transfer) => {
+    showToast.confirm(`¿Reanudar el traslado ${transfer.transferCode}? Vuelve a "En tránsito" tal cual estaba, sin tocar el inventario.`, async () => {
+      setActionLoading(true);
+      try {
+        await inventoryTransfersApi.resolveIncident(transfer.id, { action: "resume" });
+        showToast.success("Traslado reanudado correctamente");
+        refetch();
+      } catch (error) {
+        showToast.error(error.message);
+      }
+      setActionLoading(false);
+    });
+  };
+
+  const writeOffFromIncident = (transfer) => {
+    showToast.confirm(
+      `¿Dar por perdida la mercancía del traslado ${transfer.transferCode}? Esto descuenta la existencia y el costo promedio de forma permanente. No se puede deshacer.`,
+      async () => {
+        setActionLoading(true);
+        try {
+          await inventoryTransfersApi.resolveIncident(transfer.id, { action: "write_off" });
+          showToast.success("Mercancía dada de baja correctamente");
+          refetch();
+        } catch (error) {
+          showToast.error(error.message);
+        }
+        setActionLoading(false);
+      },
+    );
   };
 
   return (
@@ -184,6 +217,22 @@ function InventoryTransfers() {
                                 class="text-xs px-3 py-1.5 rounded-md border border-coral-200 dark:border-coral/30 text-coral-600 dark:text-coral hover:bg-coral-50 dark:hover:bg-coral/10 transition-colors"
                               >
                                 Incidencia
+                              </button>
+                            </Show>
+                            <Show when={transfer.status === "incident"}>
+                              <button
+                                disabled={actionLoading()}
+                                onClick={() => resumeFromIncident(transfer)}
+                                class="text-xs px-3 py-1.5 rounded-md border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                              >
+                                Reanudar
+                              </button>
+                              <button
+                                disabled={actionLoading()}
+                                onClick={() => writeOffFromIncident(transfer)}
+                                class="text-xs px-3 py-1.5 rounded-md border border-coral-200 dark:border-coral/30 text-coral-600 dark:text-coral hover:bg-coral-50 dark:hover:bg-coral/10 transition-colors disabled:opacity-50"
+                              >
+                                Dar por perdida
                               </button>
                             </Show>
                           </div>

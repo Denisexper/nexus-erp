@@ -9,6 +9,7 @@ import Pagination from "../../components/Pagination";
 import SearchableSelect from "../../components/SearchableSelect";
 import AssignLocationModal from "./AssignLocationModal";
 import LabelPrintModal from "./LabelPrintModal";
+import AdjustmentFormModal from "./AdjustmentFormModal";
 
 const STATUS_LABELS = {
   pending_placement: "Pendiente de ubicar",
@@ -52,6 +53,9 @@ function InventoryLots() {
   const [showLabelModal, setShowLabelModal] = createSignal(false);
   const [labelingLot, setLabelingLot] = createSignal(null);
 
+  const [showAdjustModal, setShowAdjustModal] = createSignal(false);
+  const [adjustingLot, setAdjustingLot] = createSignal(null);
+
   const applyFilters = () => {
     const filters = {};
     if (statusFilter()) filters.status = statusFilter();
@@ -83,6 +87,16 @@ function InventoryLots() {
   const openLabel = (lot) => {
     setLabelingLot(lot);
     setShowLabelModal(true);
+  };
+
+  const openAdjust = (lot) => {
+    setAdjustingLot(lot);
+    setShowAdjustModal(true);
+  };
+
+  const handleAdjusted = () => {
+    setShowAdjustModal(false);
+    refetch();
   };
 
   return (
@@ -233,6 +247,14 @@ function InventoryLots() {
                                 Etiquetas
                               </button>
                             </Show>
+                            <Show when={auth.hasPermission("inventory.adjust")}>
+                              <button
+                                onClick={() => openAdjust(lot)}
+                                class="text-xs px-3 py-1.5 rounded-md border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors"
+                              >
+                                Ajustar
+                              </button>
+                            </Show>
                           </div>
                         </td>
                       </tr>
@@ -264,6 +286,14 @@ function InventoryLots() {
           <LabelPrintModal
             lot={labelingLot()}
             onClose={() => setShowLabelModal(false)}
+          />
+        </Show>
+
+        <Show when={showAdjustModal()}>
+          <AdjustmentFormModal
+            lot={adjustingLot()}
+            onClose={() => setShowAdjustModal(false)}
+            onSaved={handleAdjusted}
           />
         </Show>
       </Layout>

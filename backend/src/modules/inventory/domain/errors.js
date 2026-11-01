@@ -55,3 +55,22 @@ export class VehicleLocationNotValidForPlacementError extends DomainError {
     super('No se puede ubicar mercancía directamente en una ubicación de tipo vehículo');
   }
 }
+
+export class InvalidAdjustmentQuantityError extends DomainError {
+  constructor() {
+    super('La cantidad del ajuste debe ser mayor que cero');
+  }
+}
+
+// RN-INV-001: nunca existencias negativas.
+export class InsufficientQuantityForAdjustmentError extends DomainError {
+  constructor() {
+    super('No hay suficiente existencia de ese lote en esa ubicación para registrar la salida');
+  }
+}
+
+export class AdjustmentReasonRequiredError extends DomainError {
+  constructor() {
+    super('Debes indicar el motivo del ajuste');
+  }
+}

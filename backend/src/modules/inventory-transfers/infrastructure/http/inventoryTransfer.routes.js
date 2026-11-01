@@ -13,6 +13,7 @@ import { CreateTransferUseCase } from '../../application/use-cases/createTransfe
 import { DispatchTransferUseCase } from '../../application/use-cases/dispatchTransfer.js';
 import { ReceiveTransferUseCase } from '../../application/use-cases/receiveTransfer.js';
 import { ReportTransferIncidentUseCase } from '../../application/use-cases/reportIncident.js';
+import { ResolveIncidentUseCase } from '../../application/use-cases/resolveIncident.js';
 import { ListTransfersUseCase } from '../../application/use-cases/listTransfers.js';
 import { GetTransferByIdUseCase } from '../../application/use-cases/getTransferById.js';
 import { InventoryTransferController } from './inventoryTransfer.controller.js';
@@ -29,6 +30,7 @@ const controller = new InventoryTransferController({
     dispatchTransfer: new DispatchTransferUseCase(inventoryTransferRepository, inventoryRepository),
     receiveTransfer: new ReceiveTransferUseCase(inventoryTransferRepository, inventoryRepository),
     reportIncident: new ReportTransferIncidentUseCase(inventoryTransferRepository),
+    resolveIncident: new ResolveIncidentUseCase(inventoryTransferRepository, inventoryRepository),
     listTransfers: new ListTransfersUseCase(inventoryTransferRepository),
     getTransferById: new GetTransferByIdUseCase(inventoryTransferRepository),
 });
@@ -93,6 +95,16 @@ const routes = [
         permission: 'inventory.transfer',
         description: 'Reportar incidencia en un traslado en tránsito',
         handler: controller.reportIncident,
+        middlewares: [logAction({ ...transferAudit, action: 'update', resource: 'inventory_transfers', responseKey: 'inventoryTransfer' })]
+    },
+    {
+        // Fase 5: resolución manual de una incidencia — reanudar o dar la
+        // mercancía por perdida (ver resolveIncident.js).
+        method: 'PATCH',
+        path: '/:id/resolve-incident',
+        permission: 'inventory.transfer',
+        description: 'Resolver incidencia de un traslado (reanudar o dar por perdida la mercancía)',
+        handler: controller.resolveIncident,
         middlewares: [logAction({ ...transferAudit, action: 'update', resource: 'inventory_transfers', responseKey: 'inventoryTransfer' })]
     }
 ];

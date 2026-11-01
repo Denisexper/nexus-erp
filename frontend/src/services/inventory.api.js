@@ -21,4 +21,11 @@ export const inventoryApi = {
     const params = new URLSearchParams(filters).toString();
     return http.request(`/inventory/movements${params ? `?${params}` : ""}`);
   },
+
+  adjustLot(id, data) {
+    return http.request(`/inventory/lots/${id}/adjust`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
 };
