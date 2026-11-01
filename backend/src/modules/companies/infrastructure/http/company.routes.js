@@ -8,7 +8,7 @@ import { seedRolesForCompany } from '#modules/roles/infrastructure/seed/seedRole
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
 import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
-import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
 import { DeactivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/deactivateWarehouse.js';
 import { DeactivateBranchUseCase } from '#modules/branches/application/use-cases/deactivateBranch.js';
 import { ActivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/activateWarehouse.js';
@@ -32,12 +32,12 @@ const geoRepository = new MongoGeoRepository();
 const branchRepository = new MongoBranchRepository();
 const warehouseRepository = new MongoWarehouseRepository();
 const locationRepository = new MongoLocationRepository();
-const kardexRepository = new MongoKardexRepository();
+const inventoryRepository = new MongoInventoryRepository();
 
 // Cascada completa RN-EMP-005: empresa -> sucursales -> almacenes ->
 // ubicaciones, reusando los mismos casos de uso que branches/warehouses (en
 // ambos sentidos: desactivar y reactivar).
-const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, kardexRepository);
+const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, inventoryRepository);
 const deactivateBranchUseCase = new DeactivateBranchUseCase(branchRepository, warehouseRepository, deactivateWarehouseUseCase);
 const activateWarehouseUseCase = new ActivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository);
 const activateBranchUseCase = new ActivateBranchUseCase(branchRepository, warehouseRepository, activateWarehouseUseCase);

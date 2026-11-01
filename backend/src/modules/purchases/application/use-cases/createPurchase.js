@@ -18,13 +18,16 @@ const RECEIVABLE_ORDER_STATUSES = ['approved', 'partially_received'];
 
 // RN-008/6.8.21-24 del ERS: la compra representa lo realmente recibido
 // contra una orden, y admite recepciones parciales a través de múltiples
-// compras. No se toca Kardex acá (6.8.46: la actualización de existencias es
-// responsabilidad del módulo de Inventario, que todavía no existe).
+// compras. 6.9.12 del ERS: cada recepción confirmada crea un lote de
+// inventario por línea recibida (vía createInventoryLotFromPurchase, abajo);
+// el lote arranca 'pending_placement' y todavía no cuenta como stock real
+// hasta que alguien lo asigne a una ubicación física.
 export class CreatePurchaseUseCase {
-  constructor(purchaseRepository, purchaseOrderRepository, branchRepository) {
+  constructor(purchaseRepository, purchaseOrderRepository, branchRepository, createInventoryLotFromPurchase) {
     this.purchaseRepository = purchaseRepository;
     this.purchaseOrderRepository = purchaseOrderRepository;
     this.branchRepository = branchRepository;
+    this.createInventoryLotFromPurchase = createInventoryLotFromPurchase;
   }
 
   async execute(
@@ -110,6 +113,8 @@ export class CreatePurchaseUseCase {
     });
 
     const created = await this.purchaseRepository.create({ purchase, lines: details });
+
+    await this.createInventoryLotFromPurchase.execute(created, company);
 
     // Con receivedByDetail ya actualizado con esta recepción, si toda línea
     // de la orden quedó completa la orden pasa a 'received', si no a

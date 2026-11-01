@@ -5,6 +5,8 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoPurchaseOrderRepository } from '#modules/purchase-orders/infrastructure/persistence/MongoPurchaseOrderRepository.js';
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
+import { CreateInventoryLotFromPurchaseUseCase } from '#modules/inventory/application/use-cases/createInventoryLotFromPurchase.js';
 
 import { PurchaseModel } from '../persistence/purchaseMongooseModel.js';
 import { MongoPurchaseRepository } from '../persistence/MongoPurchaseRepository.js';
@@ -18,11 +20,17 @@ import { PurchaseController } from './purchase.controller.js';
 const purchaseRepository = new MongoPurchaseRepository();
 const purchaseOrderRepository = new MongoPurchaseOrderRepository();
 const branchRepository = new MongoBranchRepository();
+const inventoryRepository = new MongoInventoryRepository();
 
 const controller = new PurchaseController({
     listPurchases: new ListPurchasesUseCase(purchaseRepository),
     getPurchaseById: new GetPurchaseByIdUseCase(purchaseRepository),
-    createPurchase: new CreatePurchaseUseCase(purchaseRepository, purchaseOrderRepository, branchRepository),
+    createPurchase: new CreatePurchaseUseCase(
+        purchaseRepository,
+        purchaseOrderRepository,
+        branchRepository,
+        new CreateInventoryLotFromPurchaseUseCase(inventoryRepository),
+    ),
     cancelPurchase: new CancelPurchaseUseCase(purchaseRepository, purchaseOrderRepository),
 });
 
