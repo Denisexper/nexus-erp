@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { InventoryRepository } from '../../domain/InventoryRepository.js';
 import { InventoryLot } from '../../domain/InventoryLot.js';
+import { InventoryMovement } from '../../domain/InventoryMovement.js';
 import { InvalidInventoryLotIdError } from '../../domain/errors.js';
 import { InventoryLotModel } from './inventoryLotMongooseModel.js';
 import { InventoryLocationDetailModel } from './inventoryLocationDetailMongooseModel.js';
@@ -18,6 +19,35 @@ const assertValidId = (id) => {
 const LOT_POPULATE = [
     { path: 'product', select: 'name internalCode sku' },
 ];
+
+const MOVEMENT_POPULATE = [
+    { path: 'product', select: 'name internalCode sku' },
+    { path: 'inventoryLot', select: 'lotCode' },
+    { path: 'warehouse', select: 'name' },
+    { path: 'location', select: 'code' },
+    { path: 'user', select: 'name email' },
+];
+
+const toMovementDomain = (doc) =>
+    doc
+        ? new InventoryMovement({
+              id: doc._id.toString(),
+              product: doc.product,
+              inventoryLot: doc.inventoryLot,
+              warehouse: doc.warehouse,
+              location: doc.location,
+              movementType: doc.movementType,
+              movementDate: doc.movementDate,
+              quantityIn: doc.quantityIn,
+              quantityOut: doc.quantityOut,
+              unitCost: doc.unitCost,
+              totalCost: doc.totalCost,
+              referenceType: doc.referenceType,
+              referenceId: doc.referenceId,
+              user: doc.user,
+              createdAt: doc.createdAt,
+          })
+        : null;
 
 const toLotDomain = (doc) =>
     doc
@@ -298,5 +328,28 @@ export class MongoInventoryRepository extends InventoryRepository {
         } finally {
             await session.endSession();
         }
+    }
+
+    async findMovements({ location, product, inventoryLot, warehouse, movementType, dateFrom, dateTo, page = 1, limit = 20 } = {}) {
+        const filter = {};
+        if (location) filter.location = location;
+        if (product) filter.product = product;
+        if (inventoryLot) filter.inventoryLot = inventoryLot;
+        if (warehouse) filter.warehouse = warehouse;
+        if (movementType) filter.movementType = movementType;
+        if (dateFrom || dateTo) {
+            filter.movementDate = {};
+            if (dateFrom) filter.movementDate.$gte = new Date(dateFrom);
+            if (dateTo) filter.movementDate.$lte = new Date(dateTo);
+        }
+
+        const skip = (page - 1) * limit;
+
+        const [docs, total] = await Promise.all([
+            InventoryMovementModel.find(filter).populate(MOVEMENT_POPULATE).sort({ movementDate: -1 }).skip(skip).limit(limit),
+            InventoryMovementModel.countDocuments(filter),
+        ]);
+
+        return { items: docs.map(toMovementDomain), total };
     }
 }

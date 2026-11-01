@@ -16,4 +16,9 @@ export const inventoryApi = {
       body: JSON.stringify(data),
     });
   },
+
+  getMovements(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    return http.request(`/inventory/movements${params ? `?${params}` : ""}`);
+  },
 };

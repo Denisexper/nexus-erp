@@ -21,6 +21,25 @@ const BAD_REQUEST_ERRORS = [
 
 const NOT_FOUND_ERRORS = [InventoryLotNotFoundError];
 
+const toMovementDTO = (movement) => ({
+  _id: movement.id,
+  id: movement.id,
+  product: movement.product,
+  inventoryLot: movement.inventoryLot,
+  warehouse: movement.warehouse,
+  location: movement.location,
+  movementType: movement.movementType,
+  movementDate: movement.movementDate,
+  quantityIn: movement.quantityIn,
+  quantityOut: movement.quantityOut,
+  unitCost: movement.unitCost,
+  totalCost: movement.totalCost,
+  referenceType: movement.referenceType,
+  referenceId: movement.referenceId,
+  user: movement.user,
+  createdAt: movement.createdAt,
+});
+
 const toLotDTO = (lot) => ({
   _id: lot.id,
   id: lot.id,
@@ -38,10 +57,11 @@ const toLotDTO = (lot) => ({
 });
 
 export class InventoryController {
-  constructor({ listInventoryLots, getInventoryLotById, assignLotToLocation }) {
+  constructor({ listInventoryLots, getInventoryLotById, assignLotToLocation, listMovements }) {
     this.listInventoryLotsUseCase = listInventoryLots;
     this.getInventoryLotByIdUseCase = getInventoryLotById;
     this.assignLotToLocationUseCase = assignLotToLocation;
+    this.listMovementsUseCase = listMovements;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -103,6 +123,40 @@ export class InventoryController {
       res.status(200).json({ msj: 'Mercancía ubicada correctamente', data: toLotDTO(lot) });
     } catch (error) {
       this.#handleError(res, error, 'Error ubicando el lote de inventario');
+    }
+  };
+
+  getAllMovements = async (req, res) => {
+    try {
+      const { location, product, inventoryLot, warehouse, movementType, dateFrom, dateTo, page = 1, limit = 20 } = req.query;
+      const result = await this.listMovementsUseCase.execute({
+        companyId: req.user.companyId,
+        location,
+        product,
+        inventoryLot,
+        warehouse,
+        movementType,
+        dateFrom,
+        dateTo,
+        page,
+        limit,
+      });
+
+      res.status(200).json({
+        msj: result.items.length === 0 ? 'lista de movimientos vacia' : 'Movimientos obtenidos correctamente',
+        total: result.total,
+        data: result.items.map(toMovementDTO),
+        pagination: {
+          currentPage: Number(page),
+          totalPages: Math.ceil(result.total / limit) || 1,
+          totalRecords: result.total,
+          limit: Number(limit),
+          hasNextPage: page * limit < result.total,
+          hasPrevPage: page > 1,
+        },
+      });
+    } catch (error) {
+      this.#handleError(res, error, 'Error obteniendo movimientos de inventario');
     }
   };
 }

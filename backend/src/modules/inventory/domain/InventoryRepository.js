@@ -70,4 +70,12 @@ export class InventoryRepository {
   async recordInventoryAdjustment(_data) {
     throw new Error('InventoryRepository.recordInventoryAdjustment no implementado');
   }
+
+  // Consulta de movimientos (ERS 6.9.16, "Kardex y consultas"): por
+  // producto, lote, almacén, ubicación o rango de fechas. Reemplaza al
+  // kardex viejo — ahora es solo una vista de solo lectura sobre
+  // inventory_movements, no una pantalla de carga manual.
+  async findMovements(_criteria) {
+    throw new Error('InventoryRepository.findMovements no implementado');
+  }
 }

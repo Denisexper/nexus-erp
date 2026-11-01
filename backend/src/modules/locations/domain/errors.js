@@ -64,6 +64,6 @@ export class BatchSizeExceededError extends DomainError {
 
 export class LocationHasStockError extends DomainError {
   constructor() {
-    super('No se puede desactivar la ubicación: todavía tiene existencias registradas en el kardex');
+    super('No se puede desactivar la ubicación: todavía tiene existencias registradas en el inventario');
   }
 }
