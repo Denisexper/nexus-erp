@@ -8,6 +8,7 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import Layout from "../../components/layout/Layout";
 import Pagination from "../../components/Pagination";
 import SearchableSelect from "../../components/SearchableSelect";
+import InventoryMovementDetailModal from "./InventoryMovementDetailModal";
 
 // Vista de solo lectura sobre inventory_movements (ERS 6.9.16) — reemplaza
 // al Kardex viejo, que era una pantalla de carga manual. Acá no hay botón
@@ -48,6 +49,7 @@ function InventoryKardexQuery() {
   const [dateFrom, setDateFrom] = createSignal("");
   const [dateTo, setDateTo] = createSignal("");
   const [appliedFilters, setAppliedFilters] = createSignal({});
+  const [selectedMovement, setSelectedMovement] = createSignal(null);
 
   const [warehouses] = createResource(() => warehousesApi.getAll({ isActive: true, limit: 1000 }));
 
@@ -175,6 +177,9 @@ function InventoryKardexQuery() {
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Costo unit.
                     </th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Detalle
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,11 +213,28 @@ function InventoryKardexQuery() {
                         <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                           ${movement.unitCost?.toFixed(2)}
                         </td>
+                        <td class="px-6 py-4">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedMovement(movement)}
+                            title="Ver detalle"
+                            class="text-xs px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                          >
+                            👁️
+                          </button>
+                        </td>
                       </tr>
                     )}
                   </For>
                 </tbody>
               </table>
+
+              <Show when={selectedMovement()}>
+                <InventoryMovementDetailModal
+                  movement={selectedMovement()}
+                  onClose={() => setSelectedMovement(null)}
+                />
+              </Show>
 
               <Show when={movements()?.pagination}>
                 <Pagination

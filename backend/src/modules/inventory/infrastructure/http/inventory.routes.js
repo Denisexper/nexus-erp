@@ -14,6 +14,8 @@ import { GetInventoryLotByIdUseCase } from '../../application/use-cases/getInven
 import { AssignLotToLocationUseCase } from '../../application/use-cases/assignLotToLocation.js';
 import { ListMovementsUseCase } from '../../application/use-cases/listMovements.js';
 import { RegisterInventoryAdjustmentUseCase } from '../../application/use-cases/registerInventoryAdjustment.js';
+import { GetLotLocationDetailsUseCase } from '../../application/use-cases/getLotLocationDetails.js';
+import { GetLocationStockDetailUseCase } from '../../application/use-cases/getLocationStockDetail.js';
 import { InventoryController } from './inventory.controller.js';
 
 // --- Composition root ---
@@ -28,6 +30,8 @@ const controller = new InventoryController({
     assignLotToLocation: new AssignLotToLocationUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
     listMovements: new ListMovementsUseCase(inventoryRepository, branchRepository, warehouseRepository, locationRepository),
     registerInventoryAdjustment: new RegisterInventoryAdjustmentUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
+    getLotLocationDetails: new GetLotLocationDetailsUseCase(inventoryRepository),
+    getLocationStockDetail: new GetLocationStockDetailUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
 });
 
 const router = Router();
@@ -66,6 +70,25 @@ const routes = [
         permission: 'inventory.lots.view',
         description: 'Obtener un lote de inventario',
         handler: controller.getOneLot,
+        middlewares: []
+    },
+    {
+        // Para el formulario de traslados: solo las ubicaciones donde este
+        // lote realmente tiene existencias, no todas las del almacén.
+        method: 'GET',
+        path: '/lots/:id/locations',
+        permission: 'inventory.lots.view',
+        description: 'Ubicaciones donde un lote tiene existencias',
+        handler: controller.getLotLocations,
+        middlewares: []
+    },
+    {
+        // Para el detalle de Ubicaciones, que hoy no muestra contenido.
+        method: 'GET',
+        path: '/locations/:id/stock',
+        permission: 'inventory.lots.view',
+        description: 'Existencias (lote + producto + cantidad) de una ubicación',
+        handler: controller.getLocationStock,
         middlewares: []
     },
     {

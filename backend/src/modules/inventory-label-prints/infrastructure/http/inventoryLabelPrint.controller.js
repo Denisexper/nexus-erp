@@ -2,10 +2,12 @@ import {
   InventoryLotNotFoundForLabelError,
   InvalidQuantityPrintedError,
   ReprintReasonRequiredError,
+  InventoryLabelPrintNotFoundError,
 } from '../../domain/errors.js';
+import { streamLabelSheetPdf } from '../reports/pdfLabelReport.js';
 
 const BAD_REQUEST_ERRORS = [InvalidQuantityPrintedError, ReprintReasonRequiredError];
-const NOT_FOUND_ERRORS = [InventoryLotNotFoundForLabelError];
+const NOT_FOUND_ERRORS = [InventoryLotNotFoundForLabelError, InventoryLabelPrintNotFoundError];
 
 const toLabelPrintDTO = (labelPrint) => ({
   _id: labelPrint.id,
@@ -33,9 +35,10 @@ const toLabelPayloadDTO = ({ labelPrint, lot }) => ({
 });
 
 export class InventoryLabelPrintController {
-  constructor({ printLabel, listLabelPrints }) {
+  constructor({ printLabel, listLabelPrints, getLabelPrintForPdf }) {
     this.printLabelUseCase = printLabel;
     this.listLabelPrintsUseCase = listLabelPrints;
+    this.getLabelPrintForPdfUseCase = getLabelPrintForPdf;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -74,6 +77,17 @@ export class InventoryLabelPrintController {
       });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo el historial de impresiones');
+    }
+  };
+
+  downloadPdf = async (req, res) => {
+    try {
+      const { labelPrint, lot } = await this.getLabelPrintForPdfUseCase.execute(req.params.id, req.user.companyId);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=etiquetas_${lot.lotCode}_${Date.now()}.pdf`);
+      streamLabelSheetPdf(lot, labelPrint, res);
+    } catch (error) {
+      this.#handleError(res, error, 'Error generando el PDF de etiquetas');
     }
   };
 }

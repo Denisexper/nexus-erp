@@ -11,6 +11,12 @@ export class InventoryLotNotFoundForLabelError extends DomainError {
   }
 }
 
+export class InventoryLabelPrintNotFoundError extends DomainError {
+  constructor() {
+    super('El registro de impresión de etiqueta indicado no existe');
+  }
+}
+
 export class InvalidQuantityPrintedError extends DomainError {
   constructor() {
     super('La cantidad de etiquetas a imprimir debe ser mayor que cero');

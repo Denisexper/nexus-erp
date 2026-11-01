@@ -27,6 +27,11 @@ export class MongoInventoryLabelPrintRepository extends InventoryLabelPrintRepos
         return InventoryLabelPrintModel.countDocuments({ inventoryLot: lotId });
     }
 
+    async findById(id) {
+        const doc = await InventoryLabelPrintModel.findById(id).populate({ path: 'user', select: 'name email' });
+        return toDomain(doc);
+    }
+
     async create(labelPrint) {
         const doc = await InventoryLabelPrintModel.create({
             inventoryLot: labelPrint.inventoryLot,

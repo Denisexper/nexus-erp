@@ -7,6 +7,10 @@ export class InventoryLabelPrintRepository {
     throw new Error('InventoryLabelPrintRepository.countByLot no implementado');
   }
 
+  async findById(_id) {
+    throw new Error('InventoryLabelPrintRepository.findById no implementado');
+  }
+
   async create(_labelPrint) {
     throw new Error('InventoryLabelPrintRepository.create no implementado');
   }

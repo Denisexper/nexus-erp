@@ -63,12 +63,22 @@ const toLotDTO = (lot) => ({
 });
 
 export class InventoryController {
-  constructor({ listInventoryLots, getInventoryLotById, assignLotToLocation, listMovements, registerInventoryAdjustment }) {
+  constructor({
+    listInventoryLots,
+    getInventoryLotById,
+    assignLotToLocation,
+    listMovements,
+    registerInventoryAdjustment,
+    getLotLocationDetails,
+    getLocationStockDetail,
+  }) {
     this.listInventoryLotsUseCase = listInventoryLots;
     this.getInventoryLotByIdUseCase = getInventoryLotById;
     this.assignLotToLocationUseCase = assignLotToLocation;
     this.listMovementsUseCase = listMovements;
     this.registerInventoryAdjustmentUseCase = registerInventoryAdjustment;
+    this.getLotLocationDetailsUseCase = getLotLocationDetails;
+    this.getLocationStockDetailUseCase = getLocationStockDetail;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -178,6 +188,37 @@ export class InventoryController {
       });
     } catch (error) {
       this.#handleError(res, error, 'Error obteniendo movimientos de inventario');
+    }
+  };
+
+  getLotLocations = async (req, res) => {
+    try {
+      const details = await this.getLotLocationDetailsUseCase.execute(req.params.id, req.user.companyId);
+      res.status(200).json({
+        msj: details.length === 0 ? 'este lote no tiene existencias en ninguna ubicación' : 'Ubicaciones del lote obtenidas correctamente',
+        data: details.map((d) => ({
+          location: { _id: d.location?._id, code: d.location?.code, warehouse: d.location?.warehouse },
+          quantity: d.quantity,
+        })),
+      });
+    } catch (error) {
+      this.#handleError(res, error, 'Error obteniendo las ubicaciones del lote');
+    }
+  };
+
+  getLocationStock = async (req, res) => {
+    try {
+      const details = await this.getLocationStockDetailUseCase.execute(req.params.id, req.user.companyId);
+      res.status(200).json({
+        msj: details.length === 0 ? 'esta ubicación no tiene existencias' : 'Existencias de la ubicación obtenidas correctamente',
+        data: details.map((d) => ({
+          inventoryLot: { _id: d.inventoryLot?._id, lotCode: d.inventoryLot?.lotCode },
+          product: d.inventoryLot?.product,
+          quantity: d.quantity,
+        })),
+      });
+    } catch (error) {
+      this.#handleError(res, error, 'Error obteniendo las existencias de la ubicación');
     }
   };
 }

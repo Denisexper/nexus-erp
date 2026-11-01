@@ -217,6 +217,22 @@ export class MongoInventoryRepository extends InventoryRepository {
         return detail?.quantity ?? 0;
     }
 
+    async findLocationDetailsByLot(lotId) {
+        const docs = await InventoryLocationDetailModel.find({ inventoryLot: lotId, quantity: { $gt: 0 } })
+            .populate({ path: 'location', select: 'code warehouse type' });
+        return docs.map((d) => ({ location: d.location, quantity: d.quantity }));
+    }
+
+    async findLotDetailsByLocation(locationId) {
+        const docs = await InventoryLocationDetailModel.find({ location: locationId, quantity: { $gt: 0 } })
+            .populate({
+                path: 'inventoryLot',
+                select: 'lotCode product',
+                populate: { path: 'product', select: 'name internalCode' },
+            });
+        return docs.map((d) => ({ inventoryLot: d.inventoryLot, quantity: d.quantity }));
+    }
+
     async recordTransferLeg({ lot, fromWarehouse, toWarehouse, fromLocation, toLocation, quantity, company, user, referenceId }) {
         const session = await mongoose.startSession();
         try {
