@@ -1,8 +1,11 @@
 import { NO_MATCH_ID, resolveLocationIdsForCompany } from '#shared/lib/tenantScope.js';
 
+// ERS 6.9.16: Kardex por producto, lote, almacén, ubicación o rango de
+// fechas — reemplaza al kardex.listMovements viejo, mismo criterio de
+// tenant scoping (todo movimiento tiene `location`, se escopa por ahí).
 export class ListMovementsUseCase {
-  constructor(kardexRepository, branchRepository, warehouseRepository, locationRepository) {
-    this.kardexRepository = kardexRepository;
+  constructor(inventoryRepository, branchRepository, warehouseRepository, locationRepository) {
+    this.inventoryRepository = inventoryRepository;
     this.branchRepository = branchRepository;
     this.warehouseRepository = warehouseRepository;
     this.locationRepository = locationRepository;
@@ -19,6 +22,6 @@ export class ListMovementsUseCase {
         : { $in: companyLocationIds };
     }
 
-    return this.kardexRepository.findAll({ ...criteria, location: locationFilter });
+    return this.inventoryRepository.findMovements({ ...criteria, location: locationFilter });
   }
 }

@@ -11,6 +11,7 @@ import { MongoInventoryRepository } from '../persistence/MongoInventoryRepositor
 import { ListInventoryLotsUseCase } from '../../application/use-cases/listInventoryLots.js';
 import { GetInventoryLotByIdUseCase } from '../../application/use-cases/getInventoryLotById.js';
 import { AssignLotToLocationUseCase } from '../../application/use-cases/assignLotToLocation.js';
+import { ListMovementsUseCase } from '../../application/use-cases/listMovements.js';
 import { InventoryController } from './inventory.controller.js';
 
 // --- Composition root ---
@@ -23,6 +24,7 @@ const controller = new InventoryController({
     listInventoryLots: new ListInventoryLotsUseCase(inventoryRepository),
     getInventoryLotById: new GetInventoryLotByIdUseCase(inventoryRepository),
     assignLotToLocation: new AssignLotToLocationUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
+    listMovements: new ListMovementsUseCase(inventoryRepository, branchRepository, warehouseRepository, locationRepository),
 });
 
 const router = Router();
@@ -63,6 +65,16 @@ const routes = [
         description: 'Asignar mercancía de un lote a una ubicación física',
         handler: controller.assignLot,
         middlewares: [logAction({ ...inventoryLotAudit, action: 'update', resource: 'inventory_lots', responseKey: 'data' })]
+    },
+    {
+        // Fase 4: reemplaza al kardex.getMovements viejo — mismo propósito
+        // (consulta de solo lectura), ahora sobre datos reales con lote y costo.
+        method: 'GET',
+        path: '/movements',
+        permission: 'inventory.kardex.view',
+        description: 'Consultar movimientos de inventario (Kardex)',
+        handler: controller.getAllMovements,
+        middlewares: []
     }
 ];
 

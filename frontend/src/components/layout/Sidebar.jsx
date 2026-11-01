@@ -125,8 +125,7 @@ function Sidebar() {
         <Show when={
           auth.hasPermission('warehouse_categories.view') ||
           auth.hasPermission('warehouses.view') ||
-          auth.hasPermission('locations.view') ||
-          auth.hasPermission('kardex.view')
+          auth.hasPermission('locations.view')
         }>
           <NavSection id="almacenes" title="Almacenes">
             <Show when={auth.hasPermission('warehouse_categories.view')}>
@@ -159,23 +158,18 @@ function Sidebar() {
               </A>
             </Show>
 
-            <Show when={auth.hasPermission('kardex.view')}>
-              <A href="/kardex" class={navLinkClass('/kardex')}>
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                </svg>
-                Kardex
-              </A>
-            </Show>
           </NavSection>
         </Show>
 
         {/* Inventario (ERS v1.0, cap. 6.9) — lotes + asignación a ubicación
-            (Fase 1) + traslados entre almacenes (Fase 3). Reemplaza en el
-            tiempo al Kardex manual de arriba (ver roadmap: se retira en una
-            fase posterior). */}
-        <Show when={auth.hasPermission('inventory.lots.view') || auth.hasPermission('inventory.transfer')}>
+            (Fase 1), traslados entre almacenes (Fase 3) y el Kardex (Fase 4,
+            ahora una consulta de solo lectura — reemplaza a la pantalla de
+            carga manual que vivía en Almacenes). */}
+        <Show when={
+          auth.hasPermission('inventory.lots.view') ||
+          auth.hasPermission('inventory.transfer') ||
+          auth.hasPermission('inventory.kardex.view')
+        }>
           <NavSection id="inventario" title="Inventario">
             <Show when={auth.hasPermission('inventory.lots.view')}>
               <A href="/inventory/lots" class={navLinkClass('/inventory/lots')}>
@@ -193,6 +187,15 @@ function Sidebar() {
                     d="M9 17l-5 5m0 0l-5-5m5 5V3m11 1l5 5m0 0l5-5m-5 5V21" />
                 </svg>
                 Traslados
+              </A>
+            </Show>
+            <Show when={auth.hasPermission('inventory.kardex.view')}>
+              <A href="/inventory/kardex" class={navLinkClass('/inventory/kardex')}>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                Kardex
               </A>
             </Show>
           </NavSection>
