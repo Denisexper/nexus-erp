@@ -30,6 +30,7 @@ const toLocationDTO = (location) => ({
   level: location.level,
   position: location.position,
   capacity: location.capacity,
+  type: location.type,
   notes: location.notes,
   isActive: location.isActive,
   createdAt: location.createdAt,
@@ -42,9 +43,9 @@ const pickDefinedFields = (body, keys) =>
     return changes;
   }, {});
 
-const CREATE_FIELDS = ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'notes'];
+const CREATE_FIELDS = ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'notes'];
 // `warehouse` no es editable después de creada la ubicación (misma regla que company/branch en los módulos anteriores).
-const UPDATE_FIELDS = ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'notes'];
+const UPDATE_FIELDS = ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'notes'];
 const BATCH_FIELDS = [
   'warehouse',
   'capacity',
@@ -90,12 +91,13 @@ export class LocationController {
 
   getAll = async (req, res) => {
     try {
-      const { search, warehouse, isActive, page = 1, limit = 10 } = req.query;
+      const { search, warehouse, isActive, type, page = 1, limit = 10 } = req.query;
       const result = await this.listLocationsUseCase.execute({
         companyId: req.user.companyId,
         search,
         warehouse,
         isActive,
+        type,
         page,
         limit,
       });

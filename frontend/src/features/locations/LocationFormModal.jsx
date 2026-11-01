@@ -21,6 +21,7 @@ function LocationFormModal(props) {
   const [level, setLevel] = createSignal("");
   const [position, setPosition] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
+  const [type, setType] = createSignal("storage");
   const [notes, setNotes] = createSignal("");
 
   const [loading, setLoading] = createSignal(false);
@@ -41,6 +42,7 @@ function LocationFormModal(props) {
     setLevel(location?.level || "");
     setPosition(location?.position || "");
     setCapacity(location?.capacity ?? "");
+    setType(location?.type || "storage");
     setNotes(location?.notes || "");
     setError("");
   });
@@ -58,6 +60,7 @@ function LocationFormModal(props) {
       level: level(),
       position: position(),
       capacity: Number(capacity()),
+      type: type(),
       notes: notes(),
     };
 
@@ -204,6 +207,20 @@ function LocationFormModal(props) {
               value={capacity()}
               onInput={(e) => setCapacity(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Tipo
+            </label>
+            <select
+              class="input-field w-full"
+              value={type()}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="storage">Almacenamiento</option>
+              <option value="vehicle">Vehículo (tránsito de traslados)</option>
+            </select>
           </div>
 
           <div>

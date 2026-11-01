@@ -238,8 +238,13 @@ function Locations() {
                     {(location) => (
                       <tr class="border-b border-gray-100 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
                         <td class="px-6 py-4">
-                          <p class="text-sm font-medium text-gray-900 dark:text-white">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
                             {location.code}
+                            <Show when={location.type === "vehicle"}>
+                              <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                                🚚 Vehículo
+                              </span>
+                            </Show>
                           </p>
                           <p class="text-xs text-gray-500 dark:text-gray-400">
                             {location.notes || "-"}

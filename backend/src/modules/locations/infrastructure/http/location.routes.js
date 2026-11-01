@@ -52,8 +52,8 @@ const requireOwnCompanyLocation = async (req, res, next) => {
 
 const locationAudit = {
     entityModel: LocationModel,
-    snapshot: { fields: ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'] },
-    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'],
+    snapshot: { fields: ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'isActive'] },
+    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'isActive'],
     // Location no tiene campo `name`: su identidad human-readable es el código.
     resolveEntityName: (entity) => entity.code
 };

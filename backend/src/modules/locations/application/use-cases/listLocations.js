@@ -7,7 +7,7 @@ export class ListLocationsUseCase {
     this.warehouseRepository = warehouseRepository;
   }
 
-  async execute({ companyId, search, warehouse, isActive, page = 1, limit = 10 } = {}) {
+  async execute({ companyId, search, warehouse, isActive, type, page = 1, limit = 10 } = {}) {
     const pageNum = Number(page) || 1;
     const limitNum = Number(limit) || 10;
 
@@ -23,6 +23,7 @@ export class ListLocationsUseCase {
       search,
       warehouse: warehouseFilter,
       isActive,
+      type,
       page: pageNum,
       limit: limitNum,
     });
