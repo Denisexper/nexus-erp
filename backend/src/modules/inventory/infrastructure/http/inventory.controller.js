@@ -7,6 +7,9 @@ import {
   LocationNotFoundForInventoryError,
   InactiveLocationForInventoryError,
   VehicleLocationNotValidForPlacementError,
+  InvalidAdjustmentQuantityError,
+  InsufficientQuantityForAdjustmentError,
+  AdjustmentReasonRequiredError,
 } from '../../domain/errors.js';
 
 const BAD_REQUEST_ERRORS = [
@@ -17,6 +20,9 @@ const BAD_REQUEST_ERRORS = [
   LocationNotFoundForInventoryError,
   InactiveLocationForInventoryError,
   VehicleLocationNotValidForPlacementError,
+  InvalidAdjustmentQuantityError,
+  InsufficientQuantityForAdjustmentError,
+  AdjustmentReasonRequiredError,
 ];
 
 const NOT_FOUND_ERRORS = [InventoryLotNotFoundError];
@@ -57,11 +63,12 @@ const toLotDTO = (lot) => ({
 });
 
 export class InventoryController {
-  constructor({ listInventoryLots, getInventoryLotById, assignLotToLocation, listMovements }) {
+  constructor({ listInventoryLots, getInventoryLotById, assignLotToLocation, listMovements, registerInventoryAdjustment }) {
     this.listInventoryLotsUseCase = listInventoryLots;
     this.getInventoryLotByIdUseCase = getInventoryLotById;
     this.assignLotToLocationUseCase = assignLotToLocation;
     this.listMovementsUseCase = listMovements;
+    this.registerInventoryAdjustmentUseCase = registerInventoryAdjustment;
   }
 
   #handleError(res, error, fallbackMsj) {
@@ -123,6 +130,20 @@ export class InventoryController {
       res.status(200).json({ msj: 'Mercancía ubicada correctamente', data: toLotDTO(lot) });
     } catch (error) {
       this.#handleError(res, error, 'Error ubicando el lote de inventario');
+    }
+  };
+
+  adjustLot = async (req, res) => {
+    try {
+      const { location, quantity, direction, movementType, reason } = req.body;
+      const movement = await this.registerInventoryAdjustmentUseCase.execute(
+        { inventoryLot: req.params.id, location, quantity, direction, movementType, reason },
+        req.user.companyId,
+        req.user.id,
+      );
+      res.status(201).json({ msj: 'Ajuste registrado correctamente', newInventoryMovement: toMovementDTO(movement) });
+    } catch (error) {
+      this.#handleError(res, error, 'Error registrando el ajuste de inventario');
     }
   };
 

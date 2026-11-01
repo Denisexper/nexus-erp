@@ -34,4 +34,11 @@ export const inventoryTransfersApi = {
       body: JSON.stringify(data),
     });
   },
+
+  resolveIncident(id, data) {
+    return http.request(`/inventory-transfers/${id}/resolve-incident`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
 };

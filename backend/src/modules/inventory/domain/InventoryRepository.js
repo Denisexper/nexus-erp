@@ -78,4 +78,16 @@ export class InventoryRepository {
   async findMovements(_criteria) {
     throw new Error('InventoryRepository.findMovements no implementado');
   }
+
+  // Ajuste manual valorizado (Fase 5, RN-INV-012 devoluciones / ajustes
+  // generales): a diferencia de recordInventoryAdjustment (usado
+  // internamente por traslados, que NUNCA toca el costo promedio), este SÍ
+  // actualiza inventory_cost_averages — es una pérdida o ganancia real de
+  // inventario declarada por una persona (conteo físico, daño, devolución
+  // aceptada), no un movimiento interno de traslado. 'increase' usa
+  // lot.unitCost (vuelve al mismo lote); 'decrease' valora la salida al
+  // costo promedio vigente de la empresa+producto, no al costo del lote.
+  async recordValuedAdjustment(_data) {
+    throw new Error('InventoryRepository.recordValuedAdjustment no implementado');
+  }
 }

@@ -352,4 +352,70 @@ export class MongoInventoryRepository extends InventoryRepository {
 
         return { items: docs.map(toMovementDomain), total };
     }
+
+    async recordValuedAdjustment({ lot, warehouse, location, quantity, direction, movementType, company, user, referenceId, referenceType }) {
+        const session = await mongoose.startSession();
+        try {
+            let movement;
+
+            await session.withTransaction(async () => {
+                const product = lot.product?._id || lot.product;
+                const existingAverage = await InventoryCostAverageModel.findOne({ company, product }).session(session);
+                const previousQty = existingAverage?.quantityOnHand || 0;
+                const previousValue = existingAverage?.inventoryValue || 0;
+
+                let unitCost;
+                let newQty;
+                let newValue;
+
+                if (direction === 'increase') {
+                    // Vuelve al mismo lote: se valora a su propio costo (RN-INV-012).
+                    unitCost = lot.unitCost;
+                    const totalCost = round2(unitCost * quantity);
+                    newQty = previousQty + quantity;
+                    newValue = round2(previousValue + totalCost);
+
+                    [movement] = await InventoryMovementModel.create(
+                        [{ product, inventoryLot: lot.id, warehouse, location, movementType, movementDate: new Date(), quantityIn: quantity, quantityOut: 0, unitCost, totalCost, referenceType, referenceId, user }],
+                        { session },
+                    );
+
+                    await InventoryLocationDetailModel.findOneAndUpdate(
+                        { inventoryLot: lot.id, location },
+                        { $inc: { quantity } },
+                        { upsert: true, session },
+                    );
+                } else {
+                    // Salida: se valora al costo promedio vigente de la empresa+producto
+                    // (metodología de costo promedio ponderado), no al costo del lote.
+                    unitCost = existingAverage?.averageUnitCost || lot.unitCost;
+                    const totalCost = round2(unitCost * quantity);
+                    newQty = previousQty - quantity;
+                    newValue = round2(previousValue - totalCost);
+
+                    [movement] = await InventoryMovementModel.create(
+                        [{ product, inventoryLot: lot.id, warehouse, location, movementType, movementDate: new Date(), quantityIn: 0, quantityOut: quantity, unitCost, totalCost, referenceType, referenceId, user }],
+                        { session },
+                    );
+
+                    await InventoryLocationDetailModel.findOneAndUpdate(
+                        { inventoryLot: lot.id, location },
+                        { $inc: { quantity: -quantity } },
+                        { session },
+                    );
+                }
+
+                const newAverageCost = newQty > 0 ? round2(newValue / newQty) : 0;
+                await InventoryCostAverageModel.findOneAndUpdate(
+                    { company, product },
+                    { quantityOnHand: Math.max(newQty, 0), inventoryValue: Math.max(newValue, 0), averageUnitCost: newAverageCost },
+                    { upsert: true, session },
+                );
+            });
+
+            return movement;
+        } finally {
+            await session.endSession();
+        }
+    }
 }

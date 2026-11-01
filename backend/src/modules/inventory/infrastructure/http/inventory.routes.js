@@ -7,11 +7,13 @@ import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/per
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 
 import { InventoryLotModel } from '../persistence/inventoryLotMongooseModel.js';
+import { InventoryMovementModel } from '../persistence/inventoryMovementMongooseModel.js';
 import { MongoInventoryRepository } from '../persistence/MongoInventoryRepository.js';
 import { ListInventoryLotsUseCase } from '../../application/use-cases/listInventoryLots.js';
 import { GetInventoryLotByIdUseCase } from '../../application/use-cases/getInventoryLotById.js';
 import { AssignLotToLocationUseCase } from '../../application/use-cases/assignLotToLocation.js';
 import { ListMovementsUseCase } from '../../application/use-cases/listMovements.js';
+import { RegisterInventoryAdjustmentUseCase } from '../../application/use-cases/registerInventoryAdjustment.js';
 import { InventoryController } from './inventory.controller.js';
 
 // --- Composition root ---
@@ -25,6 +27,7 @@ const controller = new InventoryController({
     getInventoryLotById: new GetInventoryLotByIdUseCase(inventoryRepository),
     assignLotToLocation: new AssignLotToLocationUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
     listMovements: new ListMovementsUseCase(inventoryRepository, branchRepository, warehouseRepository, locationRepository),
+    registerInventoryAdjustment: new RegisterInventoryAdjustmentUseCase(inventoryRepository, locationRepository, branchRepository, warehouseRepository),
 });
 
 const router = Router();
@@ -34,6 +37,13 @@ const inventoryLotAudit = {
     snapshot: { fields: ['company', 'lotCode', 'product', 'purchaseDetail', 'quantityReceived', 'quantityAssigned', 'unitCost', 'totalCost', 'status'] },
     // InventoryLot no tiene campo `name`: usamos el código visible (LOT-00001).
     resolveEntityName: (entity) => entity.lotCode,
+};
+
+const movementAudit = {
+    entityModel: InventoryMovementModel,
+    snapshot: { fields: ['product', 'inventoryLot', 'warehouse', 'location', 'movementType', 'quantityIn', 'quantityOut', 'unitCost', 'totalCost', 'referenceType', 'referenceId'] },
+    // InventoryMovement no tiene campo `name`: describimos el ajuste por tipo+cantidad.
+    resolveEntityName: (entity) => `${entity.movementType === 'return' ? 'Devolución' : 'Ajuste'} · ${entity.quantityIn || entity.quantityOut} u.`,
 };
 
 // Módulo de Inventario (ERS v1.0, cap. 6.9), Fase 1: lotes + asignación a
@@ -75,6 +85,16 @@ const routes = [
         description: 'Consultar movimientos de inventario (Kardex)',
         handler: controller.getAllMovements,
         middlewares: []
+    },
+    {
+        // Fase 5: ajuste/devolución manual (ERS RN-INV-012) — la única vía
+        // para corregir existencias por fuera de compras/traslados.
+        method: 'POST',
+        path: '/lots/:id/adjust',
+        permission: 'inventory.adjust',
+        description: 'Registrar ajuste o devolución manual sobre un lote',
+        handler: controller.adjustLot,
+        middlewares: [logAction({ ...movementAudit, action: 'create', resource: 'inventory_movements', responseKey: 'newInventoryMovement' })]
     }
 ];
 
