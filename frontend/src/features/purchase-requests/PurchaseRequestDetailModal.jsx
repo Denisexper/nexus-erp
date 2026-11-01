@@ -17,6 +17,11 @@ import PurchaseQuotationComparisonModal from "../purchase-quotations/PurchaseQuo
 // esta solicitud (ver createPurchaseQuotation.js en el backend).
 const QUOTED_STATUSES = ["partially_quoted", "quoted", "partially_ordered", "completed"];
 
+// Estados en los que todavía tiene sentido mandar el RFQ a un proveedor
+// (mismos que PurchaseRequests.jsx usa para habilitar "consolidar" y
+// PurchaseQuotationCreateModal para el selector de "agregar desde solicitud").
+const RFQ_STATUSES = ["submitted", "partially_quoted"];
+
 function PurchaseRequestDetailModal(props) {
   const auth = useAuth();
 
@@ -35,6 +40,7 @@ function PurchaseRequestDetailModal(props) {
   const [editingLine, setEditingLine] = createSignal(null);
   const [actionLoading, setActionLoading] = createSignal(false);
   const [showComparisonModal, setShowComparisonModal] = createSignal(false);
+  const [generatingPdf, setGeneratingPdf] = createSignal(false);
 
   const isDraft = () => purchaseRequest()?.status === "draft";
 
@@ -114,6 +120,29 @@ function PurchaseRequestDetailModal(props) {
       "¿Cancelar esta solicitud? Esta acción no se puede deshacer.",
     );
 
+  // RFQ para mandarle a un proveedor (mismo patrón que
+  // PurchaseRequestConsolidatedModal, que solo cubría 2+ solicitudes
+  // seleccionadas — el backend acepta cualquier cantidad de ids).
+  const generatePdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const blob = await purchaseRequestsApi.getConsolidatedPdf([purchaseRequest()._id]);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `solicitud_cotizacion_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast.success("PDF de solicitud generado");
+    } catch (error) {
+      showToast.error(error.message || "Error al generar el PDF de solicitud");
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
   return (
     <>
       <DetailModal
@@ -185,10 +214,20 @@ function PurchaseRequestDetailModal(props) {
                 Ver cotizaciones
               </button>
             </Show>
+            <Show when={RFQ_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_requests.export")}>
+              <button
+                disabled={generatingPdf()}
+                onClick={generatePdf}
+                class="text-xs px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 transition-colors disabled:opacity-50"
+              >
+                {generatingPdf() ? "Generando..." : "Generar PDF de solicitud"}
+              </button>
+            </Show>
             <Show
               when={
                 !["draft", "submitted"].includes(purchaseRequest()?.status) &&
-                !(QUOTED_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_quotations.view"))
+                !(QUOTED_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_quotations.view")) &&
+                !(RFQ_STATUSES.includes(purchaseRequest()?.status) && auth.hasPermission("purchase_requests.export"))
               }
             >
               <p class="text-xs text-gray-500 dark:text-night-400">
