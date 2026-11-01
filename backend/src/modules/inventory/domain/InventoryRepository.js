@@ -43,4 +43,31 @@ export class InventoryRepository {
   async getLocationStock(_locationId) {
     throw new Error('InventoryRepository.getLocationStock no implementado');
   }
+
+  // Saldo actual de un lote específico en una ubicación específica — usado
+  // por inventory-transfers para validar disponibilidad antes de despachar.
+  async getLotQuantityAtLocation(_lotId, _locationId) {
+    throw new Error('InventoryRepository.getLotQuantityAtLocation no implementado');
+  }
+
+  // Operación atómica (transacción Mongo) reusada por inventory-transfers
+  // para cada "pata" de un traslado (origen->vehículo al despachar,
+  // vehículo->destino al recibir): escribe una salida en fromLocation
+  // (fromWarehouse) y una entrada en toLocation (toWarehouse) — se piden
+  // ambos almacenes por separado porque fromLocation/toLocation casi
+  // siempre pertenecen a almacenes distintos. Ambos movimientos quedan
+  // como movementType 'transfer'. A diferencia de assignLotToLocation,
+  // NUNCA toca inventory_cost_averages (RN-INV-015). Devuelve los dos
+  // InventoryMovement creados.
+  async recordTransferLeg(_data) {
+    throw new Error('InventoryRepository.recordTransferLeg no implementado');
+  }
+
+  // Ajuste de una sola ubicación (ej. merma detectada al recibir un traslado
+  // con menos cantidad de la despachada): un movimiento 'adjustment' de
+  // salida + resta del saldo en esa ubicación. Tampoco toca el costo
+  // promedio (la pérdida física no cambia el costo unitario del resto).
+  async recordInventoryAdjustment(_data) {
+    throw new Error('InventoryRepository.recordInventoryAdjustment no implementado');
+  }
 }

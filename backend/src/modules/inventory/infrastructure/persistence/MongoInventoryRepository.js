@@ -181,4 +181,122 @@ export class MongoInventoryRepository extends InventoryRepository {
         ]);
         return result[0]?.stock ?? 0;
     }
+
+    async getLotQuantityAtLocation(lotId, locationId) {
+        const detail = await InventoryLocationDetailModel.findOne({ inventoryLot: lotId, location: locationId });
+        return detail?.quantity ?? 0;
+    }
+
+    async recordTransferLeg({ lot, fromWarehouse, toWarehouse, fromLocation, toLocation, quantity, company, user, referenceId }) {
+        const session = await mongoose.startSession();
+        try {
+            let movements;
+
+            await session.withTransaction(async () => {
+                const unitCost = lot.unitCost;
+                const totalCost = round2(unitCost * quantity);
+                const product = lot.product?._id || lot.product;
+
+                movements = await InventoryMovementModel.create(
+                    [
+                        {
+                            product,
+                            inventoryLot: lot.id,
+                            warehouse: fromWarehouse,
+                            location: fromLocation,
+                            movementType: 'transfer',
+                            movementDate: new Date(),
+                            quantityIn: 0,
+                            quantityOut: quantity,
+                            unitCost,
+                            totalCost,
+                            referenceType: 'transfer',
+                            referenceId,
+                            user,
+                        },
+                        {
+                            product,
+                            inventoryLot: lot.id,
+                            warehouse: toWarehouse,
+                            location: toLocation,
+                            movementType: 'transfer',
+                            movementDate: new Date(),
+                            quantityIn: quantity,
+                            quantityOut: 0,
+                            unitCost,
+                            totalCost,
+                            referenceType: 'transfer',
+                            referenceId,
+                            user,
+                        },
+                    ],
+                    // Mongoose exige `ordered: true` explícito al crear varios
+                    // documentos dentro de una sesión transaccional.
+                    { session, ordered: true },
+                );
+
+                await InventoryLocationDetailModel.findOneAndUpdate(
+                    { inventoryLot: lot.id, location: fromLocation },
+                    { $inc: { quantity: -quantity } },
+                    { session },
+                );
+
+                await InventoryLocationDetailModel.findOneAndUpdate(
+                    { inventoryLot: lot.id, location: toLocation },
+                    { $inc: { quantity } },
+                    { upsert: true, session },
+                );
+                // RN-INV-015: un traslado nunca toca inventory_cost_averages —
+                // el costo promedio es global por empresa+producto y no cambia
+                // por mover mercancía de una ubicación/almacén a otro.
+            });
+
+            return movements;
+        } finally {
+            await session.endSession();
+        }
+    }
+
+    async recordInventoryAdjustment({ lot, warehouse, location, quantity, referenceId, user }) {
+        const session = await mongoose.startSession();
+        try {
+            let movement;
+
+            await session.withTransaction(async () => {
+                const unitCost = lot.unitCost;
+                const totalCost = round2(unitCost * quantity);
+
+                [movement] = await InventoryMovementModel.create(
+                    [
+                        {
+                            product: lot.product?._id || lot.product,
+                            inventoryLot: lot.id,
+                            warehouse,
+                            location,
+                            movementType: 'adjustment',
+                            movementDate: new Date(),
+                            quantityIn: 0,
+                            quantityOut: quantity,
+                            unitCost,
+                            totalCost,
+                            referenceType: 'adjustment',
+                            referenceId,
+                            user,
+                        },
+                    ],
+                    { session },
+                );
+
+                await InventoryLocationDetailModel.findOneAndUpdate(
+                    { inventoryLot: lot.id, location },
+                    { $inc: { quantity: -quantity } },
+                    { session },
+                );
+            });
+
+            return movement;
+        } finally {
+            await session.endSession();
+        }
+    }
 }

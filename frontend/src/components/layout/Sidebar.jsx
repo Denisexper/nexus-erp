@@ -171,18 +171,30 @@ function Sidebar() {
           </NavSection>
         </Show>
 
-        {/* Inventario (ERS v1.0, cap. 6.9) — Fase 1: lotes + asignación a
-            ubicación. Reemplaza en el tiempo al Kardex manual de arriba
-            (ver roadmap: se retira en una fase posterior). */}
-        <Show when={auth.hasPermission('inventory.lots.view')}>
+        {/* Inventario (ERS v1.0, cap. 6.9) — lotes + asignación a ubicación
+            (Fase 1) + traslados entre almacenes (Fase 3). Reemplaza en el
+            tiempo al Kardex manual de arriba (ver roadmap: se retira en una
+            fase posterior). */}
+        <Show when={auth.hasPermission('inventory.lots.view') || auth.hasPermission('inventory.transfer')}>
           <NavSection id="inventario" title="Inventario">
-            <A href="/inventory/lots" class={navLinkClass('/inventory/lots')}>
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              Lotes
-            </A>
+            <Show when={auth.hasPermission('inventory.lots.view')}>
+              <A href="/inventory/lots" class={navLinkClass('/inventory/lots')}>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                Lotes
+              </A>
+            </Show>
+            <Show when={auth.hasPermission('inventory.transfer')}>
+              <A href="/inventory/transfers" class={navLinkClass('/inventory/transfers')}>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17l-5 5m0 0l-5-5m5 5V3m11 1l5 5m0 0l5-5m-5 5V21" />
+                </svg>
+                Traslados
+              </A>
+            </Show>
           </NavSection>
         </Show>
 

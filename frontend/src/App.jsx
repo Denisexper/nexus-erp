@@ -30,6 +30,7 @@ const SupplierContacts = lazy(() =>
 const Products = lazy(() => import("./features/products/Products"));
 const Kardex = lazy(() => import("./features/kardex/Kardex"));
 const InventoryLots = lazy(() => import("./features/inventory/InventoryLots"));
+const InventoryTransfers = lazy(() => import("./features/inventory/InventoryTransfers"));
 const ExpenseTypes = lazy(() =>
   import("./features/expense-types/ExpenseTypes"),
 );
@@ -67,6 +68,7 @@ function App() {
           <Route path="/locations" component={Locations} />
           <Route path="/kardex" component={Kardex} />
           <Route path="/inventory/lots" component={InventoryLots} />
+          <Route path="/inventory/transfers" component={InventoryTransfers} />
           <Route path="/countries" component={Countries} />
           <Route path="/categories" component={Categories} />
           <Route path="/sub-categories" component={SubCategories} />
