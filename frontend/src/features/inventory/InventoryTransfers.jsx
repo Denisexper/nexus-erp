@@ -107,7 +107,7 @@ function InventoryTransfers() {
 
   const writeOffFromIncident = (transfer) => {
     showToast.confirm(
-      `¿Dar por perdida la mercancía del traslado ${transfer.transferCode}? Esto descuenta la existencia y el costo promedio de forma permanente. No se puede deshacer.`,
+      `¿Dar por perdida la mercancía del traslado ${transfer.transferCode}? El traslado se cerrará sin recepción. No se puede deshacer.`,
       async () => {
         setActionLoading(true);
         try {
