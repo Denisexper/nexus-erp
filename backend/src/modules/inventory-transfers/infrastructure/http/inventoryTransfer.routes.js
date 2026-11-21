@@ -30,7 +30,7 @@ const controller = new InventoryTransferController({
     dispatchTransfer: new DispatchTransferUseCase(inventoryTransferRepository, inventoryRepository),
     receiveTransfer: new ReceiveTransferUseCase(inventoryTransferRepository, inventoryRepository),
     reportIncident: new ReportTransferIncidentUseCase(inventoryTransferRepository),
-    resolveIncident: new ResolveIncidentUseCase(inventoryTransferRepository, inventoryRepository),
+    resolveIncident: new ResolveIncidentUseCase(inventoryTransferRepository),
     listTransfers: new ListTransfersUseCase(inventoryTransferRepository),
     getTransferById: new GetTransferByIdUseCase(inventoryTransferRepository),
 });

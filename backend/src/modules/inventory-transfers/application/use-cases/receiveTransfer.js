@@ -1,10 +1,11 @@
 import { InventoryTransferNotFoundError, InvalidTransferStatusTransitionError, InvalidReceivedQuantityError } from '../../domain/errors.js';
 
-// EN_TRANSITO -> RECIBIDO (ERS 6.9.19): registra, por cada línea, una salida
-// de la ubicación vehículo y una entrada en la ubicación de destino, mismo
-// lote y costo. Si llega menos de lo despachado (merma), se escribe además
-// un movimiento 'adjustment' compensatorio para que no quede "flotando" en
-// la ubicación vehículo (ver recordInventoryAdjustment del módulo núcleo).
+// EN_TRANSITO -> RECIBIDO (ERS 6.9.19): registra, por cada línea, un único
+// movimiento 'transfer' de origen a destino con la cantidad que de verdad
+// llegó (mismo lote y costo, nunca toca el costo promedio — RN-INV-015). Si
+// llega menos de lo despachado, la diferencia simplemente no se escribe en
+// ningún lado — nunca salió del origen en el libro, así que no hace falta
+// ningún ajuste de merma aparte.
 export class ReceiveTransferUseCase {
   constructor(inventoryTransferRepository, inventoryRepository) {
     this.inventoryTransferRepository = inventoryTransferRepository;
@@ -17,8 +18,8 @@ export class ReceiveTransferUseCase {
     if (transfer.status !== 'in_transit') throw new InvalidTransferStatusTransitionError(transfer.status, 'received');
 
     const receiptByDetailId = new Map(receipts.map((r) => [String(r.detailId), r.quantityReceived]));
-    const vehicleLocationId = transfer.vehicleLocation?._id || transfer.vehicleLocation;
-    const vehicleWarehouseId = transfer.vehicleLocation?.warehouse;
+    const sourceWarehouseId = transfer.sourceWarehouse?._id || transfer.sourceWarehouse;
+    const destinationWarehouseId = transfer.destinationWarehouse?._id || transfer.destinationWarehouse;
 
     for (const detail of transfer.details) {
       const quantityReceived = receiptByDetailId.has(detail.id) ? Number(receiptByDetailId.get(detail.id)) : detail.quantityDispatched;
@@ -31,26 +32,14 @@ export class ReceiveTransferUseCase {
       if (quantityReceived > 0) {
         await this.inventoryRepository.recordTransferLeg({
           lot: fullLot,
-          fromWarehouse: vehicleWarehouseId,
-          toWarehouse: transfer.destinationWarehouse?._id || transfer.destinationWarehouse,
-          fromLocation: vehicleLocationId,
+          fromWarehouse: sourceWarehouseId,
+          toWarehouse: destinationWarehouseId,
+          fromLocation: detail.sourceLocation?._id || detail.sourceLocation,
           toLocation: destinationLocationId,
           quantity: quantityReceived,
           company,
           user,
           referenceId: transfer.id,
-        });
-      }
-
-      const shrinkage = detail.quantityDispatched - quantityReceived;
-      if (shrinkage > 0.0001) {
-        await this.inventoryRepository.recordInventoryAdjustment({
-          lot: fullLot,
-          warehouse: vehicleWarehouseId,
-          location: vehicleLocationId,
-          quantity: shrinkage,
-          referenceId: transfer.id,
-          user,
         });
       }
 

@@ -303,49 +303,6 @@ export class MongoInventoryRepository extends InventoryRepository {
         }
     }
 
-    async recordInventoryAdjustment({ lot, warehouse, location, quantity, referenceId, user }) {
-        const session = await mongoose.startSession();
-        try {
-            let movement;
-
-            await session.withTransaction(async () => {
-                const unitCost = lot.unitCost;
-                const totalCost = round2(unitCost * quantity);
-
-                [movement] = await InventoryMovementModel.create(
-                    [
-                        {
-                            product: lot.product?._id || lot.product,
-                            inventoryLot: lot.id,
-                            warehouse,
-                            location,
-                            movementType: 'adjustment',
-                            movementDate: new Date(),
-                            quantityIn: 0,
-                            quantityOut: quantity,
-                            unitCost,
-                            totalCost,
-                            referenceType: 'adjustment',
-                            referenceId,
-                            user,
-                        },
-                    ],
-                    { session },
-                );
-
-                await InventoryLocationDetailModel.findOneAndUpdate(
-                    { inventoryLot: lot.id, location },
-                    { $inc: { quantity: -quantity } },
-                    { session },
-                );
-            });
-
-            return movement;
-        } finally {
-            await session.endSession();
-        }
-    }
-
     async findMovements({ location, product, inventoryLot, warehouse, movementType, dateFrom, dateTo, page = 1, limit = 20 } = {}) {
         const filter = {};
         if (location) filter.location = location;

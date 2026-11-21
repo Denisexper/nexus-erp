@@ -63,25 +63,16 @@ export class InventoryRepository {
     throw new Error('InventoryRepository.findLotDetailsByLocation no implementado');
   }
 
-  // Operación atómica (transacción Mongo) reusada por inventory-transfers
-  // para cada "pata" de un traslado (origen->vehículo al despachar,
-  // vehículo->destino al recibir): escribe una salida en fromLocation
-  // (fromWarehouse) y una entrada en toLocation (toWarehouse) — se piden
-  // ambos almacenes por separado porque fromLocation/toLocation casi
-  // siempre pertenecen a almacenes distintos. Ambos movimientos quedan
-  // como movementType 'transfer'. A diferencia de assignLotToLocation,
-  // NUNCA toca inventory_cost_averages (RN-INV-015). Devuelve los dos
-  // InventoryMovement creados.
+  // Operación atómica (transacción Mongo) usada por inventory-transfers al
+  // recibir un traslado: escribe una salida en fromLocation (fromWarehouse)
+  // y una entrada en toLocation (toWarehouse) — se piden ambos almacenes
+  // por separado porque fromLocation/toLocation casi siempre pertenecen a
+  // almacenes distintos. Ambos movimientos quedan como movementType
+  // 'transfer'. A diferencia de assignLotToLocation, NUNCA toca
+  // inventory_cost_averages (RN-INV-015). Devuelve los dos InventoryMovement
+  // creados.
   async recordTransferLeg(_data) {
     throw new Error('InventoryRepository.recordTransferLeg no implementado');
-  }
-
-  // Ajuste de una sola ubicación (ej. merma detectada al recibir un traslado
-  // con menos cantidad de la despachada): un movimiento 'adjustment' de
-  // salida + resta del saldo en esa ubicación. Tampoco toca el costo
-  // promedio (la pérdida física no cambia el costo unitario del resto).
-  async recordInventoryAdjustment(_data) {
-    throw new Error('InventoryRepository.recordInventoryAdjustment no implementado');
   }
 
   // Consulta de movimientos (ERS 6.9.16, "Kardex y consultas"): por
@@ -93,13 +84,13 @@ export class InventoryRepository {
   }
 
   // Ajuste manual valorizado (Fase 5, RN-INV-012 devoluciones / ajustes
-  // generales): a diferencia de recordInventoryAdjustment (usado
-  // internamente por traslados, que NUNCA toca el costo promedio), este SÍ
-  // actualiza inventory_cost_averages — es una pérdida o ganancia real de
-  // inventario declarada por una persona (conteo físico, daño, devolución
-  // aceptada), no un movimiento interno de traslado. 'increase' usa
-  // lot.unitCost (vuelve al mismo lote); 'decrease' valora la salida al
-  // costo promedio vigente de la empresa+producto, no al costo del lote.
+  // generales): a diferencia de recordTransferLeg (usado por traslados, que
+  // NUNCA toca el costo promedio), este SÍ actualiza inventory_cost_averages
+  // — es una pérdida o ganancia real de inventario declarada por una
+  // persona (conteo físico, daño, devolución aceptada), no un movimiento
+  // interno de traslado. 'increase' usa lot.unitCost (vuelve al mismo
+  // lote); 'decrease' valora la salida al costo promedio vigente de la
+  // empresa+producto, no al costo del lote.
   async recordValuedAdjustment(_data) {
     throw new Error('InventoryRepository.recordValuedAdjustment no implementado');
   }

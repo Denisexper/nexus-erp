@@ -7,14 +7,14 @@ const VALID_ACTIONS = ['resume', 'write_off'];
 // traslados — ahora sí se implementa):
 //   - 'resume': el problema se resolvió (ej. camión reparado), el traslado
 //     vuelve a 'in_transit' tal cual estaba, sin tocar el inventario.
-//   - 'write_off': la mercancía se da por perdida — se registra un ajuste
-//     valorizado de salida por cada línea (mismo costo promedio vigente,
-//     SÍ afecta inventory_cost_averages, a diferencia del ajuste de merma
-//     parcial de receiveTransfer) y el traslado cierra en 'resolved'.
+//   - 'write_off': la mercancía se da por perdida. Como receiveTransfer ya
+//     no mueve nada del origen hasta que de verdad llega, la pérdida nunca
+//     salió del origen en el libro — no hace falta ningún ajuste de
+//     inventario, solo se cierra el traslado en 'resolved' con las líneas
+//     en 0 recibido.
 export class ResolveIncidentUseCase {
-  constructor(inventoryTransferRepository, inventoryRepository) {
+  constructor(inventoryTransferRepository) {
     this.inventoryTransferRepository = inventoryTransferRepository;
-    this.inventoryRepository = inventoryRepository;
   }
 
   async execute(transferId, { action, notes }, company, user) {
@@ -28,26 +28,7 @@ export class ResolveIncidentUseCase {
       return this.inventoryTransferRepository.updateStatus(transfer.id, { status: 'in_transit', notes });
     }
 
-    const vehicleLocationId = transfer.vehicleLocation?._id || transfer.vehicleLocation;
-    const vehicleWarehouseId = transfer.vehicleLocation?.warehouse;
-
     for (const detail of transfer.details) {
-      const lotId = detail.inventoryLot?._id || detail.inventoryLot;
-      const fullLot = await this.inventoryRepository.findLotById(lotId, company);
-
-      await this.inventoryRepository.recordValuedAdjustment({
-        lot: fullLot,
-        warehouse: vehicleWarehouseId,
-        location: vehicleLocationId,
-        quantity: detail.quantityDispatched,
-        direction: 'decrease',
-        movementType: 'adjustment',
-        referenceType: 'transfer',
-        referenceId: transfer.id,
-        company,
-        user,
-      });
-
       await this.inventoryTransferRepository.updateDetailReceived(detail.id, 0);
     }
 

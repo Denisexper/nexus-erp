@@ -3,8 +3,9 @@ import { inventoryTransfersApi } from "../../services/inventoryTransfers.api";
 import { showToast } from "../../utils/toast";
 
 // Recibir (ERS 6.9.19): por defecto llega lo mismo que se despachó; si se
-// reduce alguna cantidad, el backend registra automáticamente un ajuste
-// compensatorio por la merma (ver receiveTransfer.js).
+// reduce alguna cantidad, el movimiento que escribe el backend ya solo
+// refleja lo que de verdad llegó — no hace falta ningún ajuste aparte
+// (ver receiveTransfer.js).
 function TransferReceiveModal(props) {
   const [quantities, setQuantities] = createSignal({});
   const [loading, setLoading] = createSignal(false);

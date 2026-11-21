@@ -2,8 +2,9 @@ import { createSignal, Show } from "solid-js";
 import { inventoryTransfersApi } from "../../services/inventoryTransfers.api";
 import { showToast } from "../../utils/toast";
 
-// EN_TRANSITO -> INCIDENCIA (ERS 6.9.19): la mercancía queda parada en el
-// vehículo, sin moverse; la resolución manual queda fuera de alcance.
+// EN_TRANSITO -> INCIDENCIA (ERS 6.9.19): solo marca el traslado con el
+// problema reportado, sin mover inventario (la mercancía sigue en origen
+// en el libro hasta que se reciba o se resuelva la incidencia).
 function ReportIncidentModal(props) {
   const [notes, setNotes] = createSignal("");
   const [loading, setLoading] = createSignal(false);
