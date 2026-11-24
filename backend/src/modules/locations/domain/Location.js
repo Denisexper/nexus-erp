@@ -8,6 +8,7 @@ export class Location {
     level = '',
     position = '',
     capacity,
+    type = 'storage',
     notes,
     isActive = true,
     createdAt,
@@ -21,6 +22,7 @@ export class Location {
     this.level = level;
     this.position = position;
     this.capacity = capacity;
+    this.type = type; // 'storage' | 'vehicle' (traslados, ERS 6.9.19)
     this.notes = notes;
     this.isActive = isActive;
     this.createdAt = createdAt;

@@ -5,7 +5,7 @@
 // pertenece a su company.
 export const NO_MATCH_ID = '000000000000000000000000';
 
-// Warehouse/Location/KardexMovement no tienen un campo `company` propio: solo
+// Warehouse/Location/InventoryMovement no tienen un campo `company` propio: solo
 // llegan a la company por cadena (branch -> company, warehouse -> branch ->
 // company, location -> warehouse -> branch -> company). Estos helpers
 // resuelven esa cadena una vez por request, para que cada módulo no

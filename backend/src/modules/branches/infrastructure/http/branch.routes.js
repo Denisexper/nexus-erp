@@ -7,7 +7,7 @@ import { MongoGeoRepository } from '#modules/geo/infrastructure/persistence/Mong
 import { MongoCompanyRepository } from '#modules/companies/infrastructure/persistence/MongoCompanyRepository.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
 import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
-import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
 import { DeactivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/deactivateWarehouse.js';
 import { ActivateWarehouseUseCase } from '#modules/warehouses/application/use-cases/activateWarehouse.js';
 
@@ -27,12 +27,12 @@ const companyRepository = new MongoCompanyRepository();
 const geoRepository = new MongoGeoRepository();
 const warehouseRepository = new MongoWarehouseRepository();
 const locationRepository = new MongoLocationRepository();
-const kardexRepository = new MongoKardexRepository();
+const inventoryRepository = new MongoInventoryRepository();
 
 // Misma cascada que expone /warehouses/:id/deactivate (branch -> warehouses
 // -> ubicaciones), reinstanciada acá para que desactivar/activar una
 // sucursal arrastre sus almacenes.
-const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, kardexRepository);
+const deactivateWarehouseUseCase = new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, inventoryRepository);
 const activateWarehouseUseCase = new ActivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository);
 
 const controller = new BranchController({

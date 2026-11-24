@@ -6,6 +6,7 @@ import {
   PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
+  RetaceoNotApplicableAfterLocationAssignmentError,
 } from '../../domain/errors.js';
 
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
@@ -27,10 +28,11 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 // que reflejan lo realmente recibido, que puede diferir de lo ordenado en
 // una recepción parcial.
 export class CreateRetaceoUseCase {
-  constructor(retaceoRepository, purchaseRepository, purchaseOrderRepository) {
+  constructor(retaceoRepository, purchaseRepository, purchaseOrderRepository, inventoryRepository) {
     this.retaceoRepository = retaceoRepository;
     this.purchaseRepository = purchaseRepository;
     this.purchaseOrderRepository = purchaseOrderRepository;
+    this.inventoryRepository = inventoryRepository;
   }
 
   async execute(
@@ -124,6 +126,17 @@ export class CreateRetaceoUseCase {
       });
     });
 
+    // ERS 6.9: el retaceo solo puede corregir el costo de lotes que todavía
+    // no se asignaron a una ubicación (ver RetaceoNotApplicableAfterLocationAssignmentError).
+    // Se valida todo primero y recién después se escribe, para no dejar
+    // corregido un lote si otro de la misma compra ya no lo admite.
+    const purchaseDetailIds = details.map((d) => d.purchaseDetail);
+    const lots = await this.inventoryRepository.findLotsByPurchaseDetailIds(purchaseDetailIds, company);
+    const lotByPurchaseDetail = new Map(lots.map((lot) => [String(lot.purchaseDetail), lot]));
+    for (const lot of lots) {
+      if (lot.status !== 'pending_placement') throw new RetaceoNotApplicableAfterLocationAssignmentError();
+    }
+
     const totalCost = round2(totalFob + freight + expenses + dai);
     const code = await this.retaceoRepository.getNextCode(company);
 
@@ -148,6 +161,14 @@ export class CreateRetaceoUseCase {
       status: 'registered',
     });
 
-    return this.retaceoRepository.create({ retaceo, details });
+    const created = await this.retaceoRepository.create({ retaceo, details });
+
+    for (const detail of details) {
+      const lot = lotByPurchaseDetail.get(String(detail.purchaseDetail));
+      if (!lot) continue; // la compra puede tener líneas sin lote si Inventario todavía no corrió para esa línea
+      await this.inventoryRepository.updateLotCost(lot.id, { unitCost: detail.unitCost, totalCost: detail.totalCost });
+    }
+
+    return created;
   }
 }

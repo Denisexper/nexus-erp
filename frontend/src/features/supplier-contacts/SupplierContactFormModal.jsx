@@ -1,7 +1,8 @@
-import { createSignal, createEffect, createResource, Show, For } from "solid-js";
+import { createSignal, createEffect, Show } from "solid-js";
 import { supplierContactsApi } from "../../services/supplierContacts.api";
 import { suppliersApi } from "../../services/suppliers.api";
 import { showToast } from "../../utils/toast";
+import SearchableSelect from "../../components/SearchableSelect";
 
 // supplier llega poblado desde el backend (subdocumento Mongoose) o como id
 // crudo; aquí normalizamos a un id de string.
@@ -15,6 +16,7 @@ function SupplierContactFormModal(props) {
   const isEditing = () => !!props.contact;
 
   const [supplier, setSupplier] = createSignal("");
+  const [supplierLabel, setSupplierLabel] = createSignal("");
   const [fullName, setFullName] = createSignal("");
   const [phone, setPhone] = createSignal("");
   const [email, setEmail] = createSignal("");
@@ -22,15 +24,13 @@ function SupplierContactFormModal(props) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  // Solo proveedores activos: un proveedor inactivo no debería recibir nuevos contactos.
-  const [suppliers] = createResource(() =>
-    suppliersApi.getAll({ isActive: true, limit: 1000 }),
-  );
-
   // Precargar el formulario al abrir en modo edición (o limpiarlo en modo creación)
   createEffect(() => {
     const contact = props.contact;
     setSupplier(extractId(contact?.supplier));
+    setSupplierLabel(
+      contact?.supplier && typeof contact.supplier === "object" ? contact.supplier.name : "",
+    );
     setFullName(contact?.fullName || "");
     setPhone(contact?.phone || "");
     setEmail(contact?.email || "");
@@ -87,27 +87,23 @@ function SupplierContactFormModal(props) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Proveedor *
             </label>
-            <Show
-              when={!suppliers.loading}
-              fallback={
-                <div class="input-field bg-gray-100 dark:bg-gray-800">
-                  Cargando...
-                </div>
-              }
-            >
-              <select
-                class="input-field w-full disabled:opacity-60"
-                required
-                disabled={isEditing()}
-                value={supplier()}
-                onChange={(e) => setSupplier(e.target.value)}
-              >
-                <option value="">Selecciona...</option>
-                <For each={suppliers()?.data}>
-                  {(s) => <option value={s._id}>{s.name}</option>}
-                </For>
-              </select>
-            </Show>
+            <SearchableSelect
+              required
+              disabled={isEditing()}
+              value={supplier()}
+              displayLabel={supplierLabel()}
+              onChange={(id, item) => {
+                setSupplier(id);
+                setSupplierLabel(item?.name || "");
+              }}
+              placeholder="Buscar proveedor..."
+              fetchOptions={async (search) => {
+                const res = await suppliersApi.getAll({ search, isActive: true, limit: 20 });
+                return res.data || [];
+              }}
+              getOptionLabel={(s) => s.name}
+              getOptionSubLabel={(s) => s.code}
+            />
             <Show when={isEditing()}>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 El proveedor de un contacto no puede modificarse.

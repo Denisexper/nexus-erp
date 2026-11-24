@@ -9,6 +9,7 @@ import Pagination from "../../components/Pagination";
 import { showToast } from "../../utils/toast";
 import SupplierContactFormModal from "./SupplierContactFormModal";
 import SupplierContactHistoryModal from "./SupplierContactHistoryModal";
+import SearchableSelect from "../../components/SearchableSelect";
 
 function SupplierContacts() {
   const auth = useAuth();
@@ -24,6 +25,7 @@ function SupplierContacts() {
 
   const [searchInput, setSearchInput] = createSignal("");
   const [supplierInput, setSupplierInput] = createSignal("");
+  const [supplierInputLabel, setSupplierInputLabel] = createSignal("");
   const [statusInput, setStatusInput] = createSignal("");
 
   const [appliedFilters, setAppliedFilters] = createSignal({
@@ -31,10 +33,6 @@ function SupplierContacts() {
     supplier: "",
     isActive: "",
   });
-
-  const [suppliersList] = createResource(() =>
-    suppliersApi.getAll({ limit: 1000 }),
-  );
 
   const [contacts, { refetch }] = createResource(
     () => ({
@@ -73,6 +71,7 @@ function SupplierContacts() {
   const clearFilters = () => {
     setSearchInput("");
     setSupplierInput("");
+    setSupplierInputLabel("");
     setStatusInput("");
     setAppliedFilters({ search: "", supplier: "", isActive: "" });
     setCurrentPage(1);
@@ -160,16 +159,21 @@ function SupplierContacts() {
                 onKeyPress={(e) => e.key === "Enter" && applyFilters()}
               />
 
-              <select
-                class="input-field"
+              <SearchableSelect
                 value={supplierInput()}
-                onChange={(e) => setSupplierInput(e.target.value)}
-              >
-                <option value="">Todos los proveedores</option>
-                <For each={suppliersList()?.data}>
-                  {(s) => <option value={s._id}>{s.name}</option>}
-                </For>
-              </select>
+                displayLabel={supplierInputLabel()}
+                onChange={(id, item) => {
+                  setSupplierInput(id);
+                  setSupplierInputLabel(item?.name || "");
+                }}
+                placeholder="Todos los proveedores"
+                fetchOptions={async (search) => {
+                  const res = await suppliersApi.getAll({ search, limit: 20 });
+                  return res.data || [];
+                }}
+                getOptionLabel={(s) => s.name}
+                getOptionSubLabel={(s) => s.code}
+              />
 
               <select
                 class="input-field"

@@ -17,8 +17,10 @@ export class PurchaseQuotationRepository {
 
   // Crea la cotización completa (cabecera + líneas + gastos + tablas puente
   // de vínculo/trazabilidad con las solicitudes de origen) en una sola
-  // operación, igual criterio que kardex.createMany para transferencias:
-  // escrituras secuenciales, sin transacción (el resto de la app tampoco usa).
+  // operación: escrituras secuenciales, sin transacción (igual criterio que
+  // purchases.create/retaceos.create; el módulo inventory sí usa
+  // transacciones puntuales donde una falla parcial dejaría un movimiento
+  // inmutable huérfano — ver MongoInventoryRepository).
   async create(_quotationData) {
     throw new Error('PurchaseQuotationRepository.create no implementado');
   }

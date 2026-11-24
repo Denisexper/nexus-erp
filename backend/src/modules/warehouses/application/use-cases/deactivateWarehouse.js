@@ -6,11 +6,11 @@ import { WarehouseNotFoundError } from '../../domain/errors.js';
 // a una ubicación inactiva con stock, así que no queda inventario "atrapado"
 // detrás de un almacén desactivado.
 export class DeactivateWarehouseUseCase {
-  constructor(warehouseRepository, branchRepository, locationRepository, kardexRepository) {
+  constructor(warehouseRepository, branchRepository, locationRepository, inventoryRepository) {
     this.warehouseRepository = warehouseRepository;
     this.branchRepository = branchRepository;
     this.locationRepository = locationRepository;
-    this.kardexRepository = kardexRepository;
+    this.inventoryRepository = inventoryRepository;
   }
 
   async execute(id, companyId) {
@@ -22,7 +22,7 @@ export class DeactivateWarehouseUseCase {
 
     const { items: locations } = await this.locationRepository.findAll({ warehouse: id, isActive: true, limit: 10000 });
     for (const location of locations) {
-      const totalStock = await this.kardexRepository.getTotalStockByLocation(location.id);
+      const totalStock = await this.inventoryRepository.getLocationStock(location.id);
       if (totalStock > 0) continue;
       await this.locationRepository.update(location.id, { isActive: false });
     }

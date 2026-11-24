@@ -4,7 +4,7 @@ import { checkPermission } from '#shared/middleware/checkPermission.middleware.j
 import { logAction } from '#modules/logs/infrastructure/audit/logAction.middleware.js';
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoWarehouseRepository } from '#modules/warehouses/infrastructure/persistence/MongoWarehouseRepository.js';
-import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 import { resolveWarehouseIdsForCompany } from '#shared/lib/tenantScope.js';
 
@@ -22,7 +22,7 @@ import { LocationController } from './location.controller.js';
 // --- Composition root ---
 const locationRepository = new MongoLocationRepository();
 const warehouseRepository = new MongoWarehouseRepository();
-const kardexRepository = new MongoKardexRepository();
+const inventoryRepository = new MongoInventoryRepository();
 const branchRepository = new MongoBranchRepository();
 
 const controller = new LocationController({
@@ -32,7 +32,7 @@ const controller = new LocationController({
     createLocationsBatch: new CreateLocationsBatchUseCase(locationRepository, warehouseRepository, branchRepository),
     updateLocation: new UpdateLocationUseCase(locationRepository, branchRepository, warehouseRepository),
     activateLocation: new ActivateLocationUseCase(locationRepository, branchRepository, warehouseRepository),
-    deactivateLocation: new DeactivateLocationUseCase(locationRepository, kardexRepository, branchRepository, warehouseRepository),
+    deactivateLocation: new DeactivateLocationUseCase(locationRepository, inventoryRepository, branchRepository, warehouseRepository),
 });
 
 const router = Router();
@@ -52,8 +52,8 @@ const requireOwnCompanyLocation = async (req, res, next) => {
 
 const locationAudit = {
     entityModel: LocationModel,
-    snapshot: { fields: ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'] },
-    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'isActive'],
+    snapshot: { fields: ['warehouse', 'code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'isActive'] },
+    compareFields: ['code', 'aisle', 'rack', 'level', 'position', 'capacity', 'type', 'isActive'],
     // Location no tiene campo `name`: su identidad human-readable es el código.
     resolveEntityName: (entity) => entity.code
 };

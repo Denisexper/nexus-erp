@@ -5,6 +5,7 @@ import { logAction } from '#modules/logs/infrastructure/audit/logAction.middlewa
 import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/entityHistory.handler.js';
 import { MongoPurchaseOrderRepository } from '#modules/purchase-orders/infrastructure/persistence/MongoPurchaseOrderRepository.js';
 import { MongoPurchaseRepository } from '#modules/purchases/infrastructure/persistence/MongoPurchaseRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
 
 import { RetaceoModel } from '../persistence/retaceoMongooseModel.js';
 import { MongoRetaceoRepository } from '../persistence/MongoRetaceoRepository.js';
@@ -17,11 +18,12 @@ import { RetaceoController } from './retaceo.controller.js';
 const retaceoRepository = new MongoRetaceoRepository();
 const purchaseOrderRepository = new MongoPurchaseOrderRepository();
 const purchaseRepository = new MongoPurchaseRepository();
+const inventoryRepository = new MongoInventoryRepository();
 
 const controller = new RetaceoController({
     listRetaceos: new ListRetaceosUseCase(retaceoRepository),
     getRetaceoById: new GetRetaceoByIdUseCase(retaceoRepository),
-    createRetaceo: new CreateRetaceoUseCase(retaceoRepository, purchaseRepository, purchaseOrderRepository),
+    createRetaceo: new CreateRetaceoUseCase(retaceoRepository, purchaseRepository, purchaseOrderRepository, inventoryRepository),
 });
 
 const router = Router();

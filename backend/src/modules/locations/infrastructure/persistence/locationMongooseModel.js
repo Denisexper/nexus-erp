@@ -20,6 +20,14 @@ const locationSchema = new Schema({
         required: [true, 'La capacidad es obligatoria'],
         min: [1, 'La capacidad debe ser mayor que cero']
     },
+    // ERS v1.0 6.9.19: ubicación de tránsito para traslados entre almacenes
+    // (ej. "Camión 1"). Aditivo: los documentos existentes caen en 'storage'
+    // por el default, sin necesidad de migración.
+    type: {
+        type: String,
+        enum: ['storage', 'vehicle'],
+        default: 'storage'
+    },
     notes: {
         type: String,
         trim: true

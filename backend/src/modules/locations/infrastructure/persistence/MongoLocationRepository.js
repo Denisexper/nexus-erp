@@ -15,6 +15,7 @@ const toDomain = (doc) =>
               level: doc.level,
               position: doc.position,
               capacity: doc.capacity,
+              type: doc.type,
               notes: doc.notes,
               isActive: doc.isActive,
               createdAt: doc.createdAt,
@@ -31,7 +32,7 @@ const assertValidId = (id) => {
 const POPULATE = { path: 'warehouse', select: 'name branch' };
 
 export class MongoLocationRepository extends LocationRepository {
-    async findAll({ search, warehouse, isActive, page = 1, limit = 10 } = {}) {
+    async findAll({ search, warehouse, isActive, type, page = 1, limit = 10 } = {}) {
         const filter = {};
 
         if (search) {
@@ -43,6 +44,8 @@ export class MongoLocationRepository extends LocationRepository {
         if (isActive !== undefined && isActive !== '') {
             filter.isActive = isActive === true || isActive === 'true';
         }
+
+        if (type) filter.type = type;
 
         const skip = (page - 1) * limit;
 
@@ -92,6 +95,7 @@ export class MongoLocationRepository extends LocationRepository {
             level: location.level,
             position: location.position,
             capacity: location.capacity,
+            type: location.type,
             notes: location.notes,
         });
         const populated = await doc.populate(POPULATE);

@@ -6,6 +6,7 @@ import {
   PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
+  RetaceoNotApplicableAfterLocationAssignmentError,
 } from '../../domain/errors.js';
 
 const BAD_REQUEST_ERRORS = [
@@ -14,6 +15,7 @@ const BAD_REQUEST_ERRORS = [
   PurchaseAlreadyRetaceadoError,
   InvalidDaiAmountError,
   InvalidFreightAmountError,
+  RetaceoNotApplicableAfterLocationAssignmentError,
 ];
 
 const NOT_FOUND_ERRORS = [RetaceoNotFoundError, PurchaseNotFoundForRetaceoError];

@@ -6,7 +6,7 @@ import { createEntityHistoryHandler } from '#modules/logs/infrastructure/audit/e
 import { MongoBranchRepository } from '#modules/branches/infrastructure/persistence/MongoBranchRepository.js';
 import { MongoWarehouseCategoryRepository } from '#modules/warehouse-categories/infrastructure/persistence/MongoWarehouseCategoryRepository.js';
 import { MongoLocationRepository } from '#modules/locations/infrastructure/persistence/MongoLocationRepository.js';
-import { MongoKardexRepository } from '#modules/kardex/infrastructure/persistence/MongoKardexRepository.js';
+import { MongoInventoryRepository } from '#modules/inventory/infrastructure/persistence/MongoInventoryRepository.js';
 
 import { WarehouseModel } from '../persistence/warehouseMongooseModel.js';
 import { MongoWarehouseRepository } from '../persistence/MongoWarehouseRepository.js';
@@ -23,7 +23,7 @@ const warehouseRepository = new MongoWarehouseRepository();
 const branchRepository = new MongoBranchRepository();
 const warehouseCategoryRepository = new MongoWarehouseCategoryRepository();
 const locationRepository = new MongoLocationRepository();
-const kardexRepository = new MongoKardexRepository();
+const inventoryRepository = new MongoInventoryRepository();
 
 const controller = new WarehouseController({
     listWarehouses: new ListWarehousesUseCase(warehouseRepository, branchRepository),
@@ -31,7 +31,7 @@ const controller = new WarehouseController({
     createWarehouse: new CreateWarehouseUseCase(warehouseRepository, branchRepository, warehouseCategoryRepository),
     updateWarehouse: new UpdateWarehouseUseCase(warehouseRepository, warehouseCategoryRepository, branchRepository),
     activateWarehouse: new ActivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository),
-    deactivateWarehouse: new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, kardexRepository),
+    deactivateWarehouse: new DeactivateWarehouseUseCase(warehouseRepository, branchRepository, locationRepository, inventoryRepository),
 });
 
 const router = Router();

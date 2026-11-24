@@ -17,8 +17,8 @@ export class BranchRepository {
   }
 
   // Usado por módulos que se conectan a la company por cadena (branch ->
-  // company), como warehouses/locations/kardex, para resolver "qué branches
-  // son míos" antes de filtrar.
+  // company), como warehouses/locations/inventory, para resolver "qué
+  // branches son míos" antes de filtrar.
   async findIdsByCompany(_companyId) {
     throw new Error('BranchRepository.findIdsByCompany no implementado');
   }
