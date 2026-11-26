@@ -16,6 +16,8 @@ import companiesRoutes, { companyRoutes as companyRoutesMetadata } from "#module
 import publicCompaniesRoutes from "#modules/companies/infrastructure/http/publicCompany.routes.js";
 import geoRoutes, { geoRoutes as geoRoutesMetadata } from "#modules/geo/infrastructure/http/geo.routes.js";
 import branchesRoutes, { branchRoutes as branchRoutesMetadata } from "#modules/branches/infrastructure/http/branch.routes.js";
+import employeesRoutes, { employeeRoutes as employeeRoutesMetadata } from "#modules/employees/infrastructure/http/employee.routes.js";
+import vehiclesRoutes, { vehicleRoutes as vehicleRoutesMetadata } from "#modules/vehicles/infrastructure/http/vehicle.routes.js";
 import warehouseCategoriesRoutes, { warehouseCategoryRoutes as warehouseCategoryRoutesMetadata } from "#modules/warehouse-categories/infrastructure/http/warehouseCategory.routes.js";
 import warehousesRoutes, { warehouseRoutes as warehouseRoutesMetadata } from "#modules/warehouses/infrastructure/http/warehouse.routes.js";
 import locationsRoutes, { locationRoutes as locationRoutesMetadata } from "#modules/locations/infrastructure/http/location.routes.js";
@@ -81,7 +83,7 @@ mongoConnect().then(async () => {
 
   await seedGeo();
 
-  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, expenseTypeRoutesMetadata, purchaseRequestRoutesMetadata, purchaseRequestDetailRoutesMetadata, purchaseQuotationRoutesMetadata, purchaseOrderRoutesMetadata, retaceoRoutesMetadata, purchaseRoutesMetadata, purchaseOrderExpenseDocumentRoutesMetadata, purchaseQuotationDocumentRoutesMetadata, inventoryRoutesMetadata, inventoryLabelPrintRoutesMetadata, inventoryTransferRoutesMetadata];
+  const routeModules = [userRoutesMetadata, roleRoutesMetadata, logRoutesMetadata, companyRoutesMetadata, geoRoutesMetadata, branchRoutesMetadata, employeeRoutesMetadata, vehicleRoutesMetadata, warehouseCategoryRoutesMetadata, warehouseRoutesMetadata, locationRoutesMetadata, countryRoutesMetadata, categoryRoutesMetadata, unitRoutesMetadata, subCategoryRoutesMetadata, supplierRoutesMetadata, supplierContactRoutesMetadata, productRoutesMetadata, productImageRoutesMetadata, expenseTypeRoutesMetadata, purchaseRequestRoutesMetadata, purchaseRequestDetailRoutesMetadata, purchaseQuotationRoutesMetadata, purchaseOrderRoutesMetadata, retaceoRoutesMetadata, purchaseRoutesMetadata, purchaseOrderExpenseDocumentRoutesMetadata, purchaseQuotationDocumentRoutesMetadata, inventoryRoutesMetadata, inventoryLabelPrintRoutesMetadata, inventoryTransferRoutesMetadata];
 
   // Auto-descubrir y sincronizar permisos desde la metadata de las rutas
   const syncDiscoveredPermissions = new SyncDiscoveredPermissionsUseCase(new MongoPermissionRepository());
@@ -106,6 +108,8 @@ server.use("/api", logsRoutes);
 server.use("/api/companies", companiesRoutes);
 server.use("/api/geo", geoRoutes);
 server.use("/api/branches", branchesRoutes);
+server.use("/api/employees", employeesRoutes);
+server.use("/api/vehicles", vehiclesRoutes);
 server.use("/api/warehouse-categories", warehouseCategoriesRoutes);
 server.use("/api/warehouses", warehousesRoutes);
 server.use("/api/locations", locationsRoutes);
