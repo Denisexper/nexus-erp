@@ -28,6 +28,22 @@ export async function resolveLocationIdsForCompany(companyId, branchRepository, 
   return locationRepository.findIdsByWarehouses(warehouseIds);
 }
 
+// Employee no tiene `company` propio: llega por cadena (employee -> branch ->
+// company), igual que warehouse. Vehicle llega un salto más allá (vehicle ->
+// employee -> branch -> company), igual que location con warehouse.
+
+export async function resolveEmployeeIdsForCompany(companyId, branchRepository, employeeRepository) {
+  if (!companyId) return undefined;
+  const branchIds = await resolveBranchIdsForCompany(companyId, branchRepository);
+  return employeeRepository.findIdsByBranches(branchIds);
+}
+
+export async function resolveVehicleIdsForCompany(companyId, branchRepository, employeeRepository, vehicleRepository) {
+  if (!companyId) return undefined;
+  const employeeIds = await resolveEmployeeIdsForCompany(companyId, branchRepository, employeeRepository);
+  return vehicleRepository.findIdsByEmployees(employeeIds);
+}
+
 // Category/Supplier sí tienen `company` propio (como Branch). SubCategory y
 // SupplierContact no: llegan a la company por cadena (subCategory -> category
 // -> company, supplierContact -> supplier -> company), igual que

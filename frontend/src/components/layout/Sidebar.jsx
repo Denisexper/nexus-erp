@@ -161,6 +161,35 @@ function Sidebar() {
           </NavSection>
         </Show>
 
+        {/* Flota (ERS v1.1, cap. 6.9 — vehículos/traslados) — empleados
+            (conductores) y vehículos usados en los traslados entre almacenes. */}
+        <Show when={
+          auth.hasPermission('employees.view') ||
+          auth.hasPermission('vehicles.view')
+        }>
+          <NavSection id="flota" title="Flota">
+            <Show when={auth.hasPermission('employees.view')}>
+              <A href="/employees" class={navLinkClass('/employees')}>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Empleados
+              </A>
+            </Show>
+
+            <Show when={auth.hasPermission('vehicles.view')}>
+              <A href="/vehicles" class={navLinkClass('/vehicles')}>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 13l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5M5 13h14M5 13a2 2 0 00-2 2v3a1 1 0 001 1h1a2 2 0 002-2m14-2a2 2 0 012 2v3a1 1 0 01-1 1h-1a2 2 0 01-2-2m-14 0h14" />
+                </svg>
+                Vehículos
+              </A>
+            </Show>
+          </NavSection>
+        </Show>
+
         {/* Inventario (ERS v1.0, cap. 6.9) — lotes + asignación a ubicación
             (Fase 1), traslados entre almacenes (Fase 3) y el Kardex (Fase 4,
             ahora una consulta de solo lectura — reemplaza a la pantalla de
